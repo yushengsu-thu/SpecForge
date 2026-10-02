@@ -553,6 +553,8 @@ Run the same command with `--backend fsdp` and identical arguments. The common
 model geometry is a controlled comparison, not a released DFlash2 checkpoint.
 These timings exclude target capture, feature transport, checkpoint I/O, and
 serving; they do not establish convergence or acceptance quality.
+See the [controlled two-H200 comparison](../benchmarks/torchtitan-h200.md) for
+the measured configuration, raw results, and numerical validation.
 
 The distributed numerical gate needs no model downloads:
 

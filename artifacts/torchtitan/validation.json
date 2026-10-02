@@ -1,0 +1,478 @@
+{
+  "torch_2_13": [
+    {
+      "family": "dflash",
+      "sharding": "FULL_SHARD",
+      "reference_norm": 0.14946985244750977,
+      "reference_loss": 4.355143070220947,
+      "loss_denominators": [
+        51.0,
+        45.0,
+        27.0,
+        21.0
+      ],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999945759773254,
+        "grad_norm_relative_error": 9.969342278624773e-08
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 0.0008566084434278309,
+        "exp_avg_sq_relative_l2": 2.5605781047488563e-05,
+        "fp32_update_relative_l2": 0.027542827650904655,
+        "fp32_update_cosine": 0.9996153116226196,
+        "grad_norm_relative_error": 1.6947881873662114e-06
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 0.0008566084434278309,
+        "exp_avg_sq_relative_l2": 2.5605781047488563e-05,
+        "fp32_update_relative_l2": 0.027542827650904655,
+        "fp32_update_cosine": 0.9996153116226196,
+        "grad_norm_relative_error": 1.7944814312544631e-06
+      }
+    },
+    {
+      "family": "dflash",
+      "sharding": "SHARD_GRAD_OP",
+      "reference_norm": 0.14946985244750977,
+      "reference_loss": 4.355143070220947,
+      "loss_denominators": [
+        51.0,
+        45.0,
+        27.0,
+        21.0
+      ],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999945759773254,
+        "grad_norm_relative_error": 9.969342278624773e-08
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 0.0008566084434278309,
+        "exp_avg_sq_relative_l2": 2.5605781047488563e-05,
+        "fp32_update_relative_l2": 0.027542827650904655,
+        "fp32_update_cosine": 0.9996153116226196,
+        "grad_norm_relative_error": 1.6947881873662114e-06
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 0.0008566084434278309,
+        "exp_avg_sq_relative_l2": 2.5605781047488563e-05,
+        "fp32_update_relative_l2": 0.027542827650904655,
+        "fp32_update_cosine": 0.9996153116226196,
+        "grad_norm_relative_error": 1.7944814312544631e-06
+      }
+    },
+    {
+      "family": "dflash2",
+      "sharding": "FULL_SHARD",
+      "reference_norm": 0.16242949664592743,
+      "reference_loss": 4.358553409576416,
+      "loss_denominators": [
+        51.0,
+        45.0,
+        27.0,
+        21.0
+      ],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999953508377075,
+        "grad_norm_relative_error": 0.0
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 0.0008277753950096667,
+        "exp_avg_sq_relative_l2": 2.5416267817490734e-05,
+        "fp32_update_relative_l2": 0.008848833851516247,
+        "fp32_update_cosine": 0.9999561905860901,
+        "grad_norm_relative_error": 8.440011562815842e-06
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 0.0008277753950096667,
+        "exp_avg_sq_relative_l2": 2.5416267817490734e-05,
+        "fp32_update_relative_l2": 0.008848833851516247,
+        "fp32_update_cosine": 0.9999561905860901,
+        "grad_norm_relative_error": 8.440011562815842e-06
+      }
+    },
+    {
+      "family": "dflash2",
+      "sharding": "SHARD_GRAD_OP",
+      "reference_norm": 0.16242949664592743,
+      "reference_loss": 4.358553409576416,
+      "loss_denominators": [
+        51.0,
+        45.0,
+        27.0,
+        21.0
+      ],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999953508377075,
+        "grad_norm_relative_error": 0.0
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 0.0008277753950096667,
+        "exp_avg_sq_relative_l2": 2.5416267817490734e-05,
+        "fp32_update_relative_l2": 0.008848833851516247,
+        "fp32_update_cosine": 0.9999561905860901,
+        "grad_norm_relative_error": 8.440011562815842e-06
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 0.0008277753950096667,
+        "exp_avg_sq_relative_l2": 2.5416267817490734e-05,
+        "fp32_update_relative_l2": 0.008848833851516247,
+        "fp32_update_cosine": 0.9999561905860901,
+        "grad_norm_relative_error": 8.440011562815842e-06
+      }
+    },
+    {
+      "family": "dspark",
+      "sharding": "FULL_SHARD",
+      "reference_norm": 0.45655059814453125,
+      "reference_loss": 1.6990249156951904,
+      "loss_denominators": [],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999993443489075,
+        "grad_norm_relative_error": 0.0
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 8.858824730850756e-05,
+        "exp_avg_sq_relative_l2": 5.580297965934733e-07,
+        "fp32_update_relative_l2": 0.02681756764650345,
+        "fp32_update_cosine": 0.9996397495269775,
+        "grad_norm_relative_error": 6.527715111712706e-08
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 8.858824730850756e-05,
+        "exp_avg_sq_relative_l2": 5.580297965934733e-07,
+        "fp32_update_relative_l2": 0.02681756764650345,
+        "fp32_update_cosine": 0.9996397495269775,
+        "grad_norm_relative_error": 6.527715111712706e-08
+      }
+    },
+    {
+      "family": "dspark",
+      "sharding": "SHARD_GRAD_OP",
+      "reference_norm": 0.45655059814453125,
+      "reference_loss": 1.6990249156951904,
+      "loss_denominators": [],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999993443489075,
+        "grad_norm_relative_error": 0.0
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 8.858824730850756e-05,
+        "exp_avg_sq_relative_l2": 5.580297965934733e-07,
+        "fp32_update_relative_l2": 0.02681756764650345,
+        "fp32_update_cosine": 0.9996397495269775,
+        "grad_norm_relative_error": 6.527715111712706e-08
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 8.858824730850756e-05,
+        "exp_avg_sq_relative_l2": 5.580297965934733e-07,
+        "fp32_update_relative_l2": 0.02681756764650345,
+        "fp32_update_cosine": 0.9996397495269775,
+        "grad_norm_relative_error": 6.527715111712706e-08
+      }
+    }
+  ],
+  "torch_2_14": [
+    {
+      "family": "dflash",
+      "sharding": "FULL_SHARD",
+      "reference_norm": 0.14946985244750977,
+      "reference_loss": 4.355143070220947,
+      "loss_denominators": [
+        51.0,
+        45.0,
+        27.0,
+        21.0
+      ],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999945759773254,
+        "grad_norm_relative_error": 9.969342278624773e-08
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 0.0008566084434278309,
+        "exp_avg_sq_relative_l2": 2.5605781047488563e-05,
+        "fp32_update_relative_l2": 0.027542827650904655,
+        "fp32_update_cosine": 0.9996153116226196,
+        "grad_norm_relative_error": 1.6947881873662114e-06
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 0.0008566084434278309,
+        "exp_avg_sq_relative_l2": 2.5605781047488563e-05,
+        "fp32_update_relative_l2": 0.027542827650904655,
+        "fp32_update_cosine": 0.9996153116226196,
+        "grad_norm_relative_error": 1.7944814312544631e-06
+      }
+    },
+    {
+      "family": "dflash",
+      "sharding": "SHARD_GRAD_OP",
+      "reference_norm": 0.14946985244750977,
+      "reference_loss": 4.355143070220947,
+      "loss_denominators": [
+        51.0,
+        45.0,
+        27.0,
+        21.0
+      ],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999945759773254,
+        "grad_norm_relative_error": 9.969342278624773e-08
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 0.0008566084434278309,
+        "exp_avg_sq_relative_l2": 2.5605781047488563e-05,
+        "fp32_update_relative_l2": 0.027542827650904655,
+        "fp32_update_cosine": 0.9996153116226196,
+        "grad_norm_relative_error": 1.6947881873662114e-06
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 0.0008566084434278309,
+        "exp_avg_sq_relative_l2": 2.5605781047488563e-05,
+        "fp32_update_relative_l2": 0.027542827650904655,
+        "fp32_update_cosine": 0.9996153116226196,
+        "grad_norm_relative_error": 1.7944814312544631e-06
+      }
+    },
+    {
+      "family": "dflash2",
+      "sharding": "FULL_SHARD",
+      "reference_norm": 0.16242949664592743,
+      "reference_loss": 4.358553409576416,
+      "loss_denominators": [
+        51.0,
+        45.0,
+        27.0,
+        21.0
+      ],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999953508377075,
+        "grad_norm_relative_error": 0.0
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 0.0008277753950096667,
+        "exp_avg_sq_relative_l2": 2.5416267817490734e-05,
+        "fp32_update_relative_l2": 0.008848833851516247,
+        "fp32_update_cosine": 0.9999561905860901,
+        "grad_norm_relative_error": 8.440011562815842e-06
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 0.0008277753950096667,
+        "exp_avg_sq_relative_l2": 2.5416267817490734e-05,
+        "fp32_update_relative_l2": 0.008848833851516247,
+        "fp32_update_cosine": 0.9999561905860901,
+        "grad_norm_relative_error": 8.440011562815842e-06
+      }
+    },
+    {
+      "family": "dflash2",
+      "sharding": "SHARD_GRAD_OP",
+      "reference_norm": 0.16242949664592743,
+      "reference_loss": 4.358553409576416,
+      "loss_denominators": [
+        51.0,
+        45.0,
+        27.0,
+        21.0
+      ],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999953508377075,
+        "grad_norm_relative_error": 0.0
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 0.0008277753950096667,
+        "exp_avg_sq_relative_l2": 2.5416267817490734e-05,
+        "fp32_update_relative_l2": 0.008848833851516247,
+        "fp32_update_cosine": 0.9999561905860901,
+        "grad_norm_relative_error": 8.440011562815842e-06
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 0.0008277753950096667,
+        "exp_avg_sq_relative_l2": 2.5416267817490734e-05,
+        "fp32_update_relative_l2": 0.008848833851516247,
+        "fp32_update_cosine": 0.9999561905860901,
+        "grad_norm_relative_error": 8.440011562815842e-06
+      }
+    },
+    {
+      "family": "dspark",
+      "sharding": "FULL_SHARD",
+      "reference_norm": 0.45655059814453125,
+      "reference_loss": 1.6990249156951904,
+      "loss_denominators": [],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999993443489075,
+        "grad_norm_relative_error": 0.0
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 8.858824730850756e-05,
+        "exp_avg_sq_relative_l2": 5.580297965934733e-07,
+        "fp32_update_relative_l2": 0.02681756764650345,
+        "fp32_update_cosine": 0.9996397495269775,
+        "grad_norm_relative_error": 6.527715111712706e-08
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 8.858824730850756e-05,
+        "exp_avg_sq_relative_l2": 5.580297965934733e-07,
+        "fp32_update_relative_l2": 0.02681756764650345,
+        "fp32_update_cosine": 0.9996397495269775,
+        "grad_norm_relative_error": 6.527715111712706e-08
+      }
+    },
+    {
+      "family": "dspark",
+      "sharding": "SHARD_GRAD_OP",
+      "reference_norm": 0.45655059814453125,
+      "reference_loss": 1.6990249156951904,
+      "loss_denominators": [],
+      "fsdp": {
+        "exp_avg_relative_l2": 0.0,
+        "exp_avg_sq_relative_l2": 0.0,
+        "fp32_update_relative_l2": 0.0,
+        "fp32_update_cosine": 0.9999993443489075,
+        "grad_norm_relative_error": 0.0
+      },
+      "torchtitan": {
+        "exp_avg_relative_l2": 8.858824730850756e-05,
+        "exp_avg_sq_relative_l2": 5.580297965934733e-07,
+        "fp32_update_relative_l2": 0.02681756764650345,
+        "fp32_update_cosine": 0.9996397495269775,
+        "grad_norm_relative_error": 6.527715111712706e-08
+      },
+      "resume_bitwise_equal": true,
+      "plain_cpu_export": true,
+      "frozen_teacher_tables_unchanged": true,
+      "torchtitan_vs_fsdp": {
+        "exp_avg_relative_l2": 8.858824730850756e-05,
+        "exp_avg_sq_relative_l2": 5.580297965934733e-07,
+        "fp32_update_relative_l2": 0.02681756764650345,
+        "fp32_update_cosine": 0.9996397495269775,
+        "grad_norm_relative_error": 6.527715111712706e-08
+      }
+    }
+  ],
+  "public_cli": {
+    "status": "pass",
+    "runtime": "2.13.0+cu130",
+    "family": "DFlash2",
+    "ranks": 2,
+    "backend": "torchtitan",
+    "sharding": "FULL_SHARD",
+    "accumulation_steps": 2,
+    "full_vs_cut1_resume2": "bitwise_equal",
+    "compared": [
+      "all_draft_weights",
+      "each_rank_fp32_masters",
+      "each_rank_adam_state",
+      "scheduler",
+      "rng",
+      "training_counters"
+    ],
+    "draft_tensor_count": 36,
+    "draft_parameters": 25952,
+    "full_log": [
+      {
+        "step": 1,
+        "loss": 11.3163423538208,
+        "grad_norm": 4.4320855140686035,
+        "lr": 0.002
+      },
+      {
+        "step": 1,
+        "loss": 11.3163423538208,
+        "grad_norm": 4.4320855140686035,
+        "lr": 0.002
+      },
+      {
+        "step": 2,
+        "loss": 12.37978744506836,
+        "grad_norm": 4.328808307647705,
+        "lr": 0.002
+      },
+      {
+        "step": 2,
+        "loss": 12.37978744506836,
+        "grad_norm": 4.328808307647705,
+        "lr": 0.002
+      }
+    ],
+    "resumed_log": [
+      {
+        "step": 2,
+        "loss": 12.37978744506836,
+        "grad_norm": 4.328808307647705,
+        "lr": 0.002
+      },
+      {
+        "step": 2,
+        "loss": 12.37978744506836,
+        "grad_norm": 4.328808307647705,
+        "lr": 0.002
+      }
+    ]
+  }
+}
