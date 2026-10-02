@@ -553,6 +553,8 @@ def _common_launch_kwargs(
         algorithm=algorithm,
         modality=cfg.model.input_modality,
         optimizer_factory=_optimizer_factory(cfg),
+        backend_name=t.backend,
+        sharding_strategy=t.fsdp_sharding,
         run_id=cfg.run_id,
         output_dir=cfg.output_dir,
         batch_size=t.batch_size,

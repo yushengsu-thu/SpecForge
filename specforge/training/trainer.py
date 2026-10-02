@@ -9,7 +9,7 @@
 """Domain ``Trainer``: the caller-facing training object.
 
 Composes (ref source + FeatureStore) -> FeatureDataLoader (the data path) and
-model + an injected step factory -> FSDPTrainingBackend -> TrainerCore ->
+model + an injected step factory -> TrainingBackend -> TrainerCore ->
 TrainerController (the trainer seam) behind one object with a ``.fit()``.
 Online / offline / disaggregated is invisible here: it is fully absorbed by the
 ref source + store the Trainer is handed — the loader IS the stream.
@@ -87,6 +87,8 @@ class Trainer:
         model,
         target_head,
         optimizer_factory,
+        backend_name: str = "fsdp",
+        sharding_strategy: Optional[str] = None,
         run_id: str,
         output_dir: str,
         batch_size: int,
@@ -119,6 +121,10 @@ class Trainer:
         on_fit_failure: Optional[Callable[[BaseException], None]] = None,
         on_fit_finally: Optional[Callable[[], None]] = None,
     ):
+        if backend_name not in ("fsdp", "torchtitan"):
+            raise ValueError(f"unsupported training backend {backend_name!r}")
+        if backend_name == "torchtitan" and algorithm_name not in ("dflash", "dspark"):
+            raise ValueError("TorchTitan backend supports dflash and dspark")
         ref_source = dict(ref_source)
         data_prepositioned = bool(ref_source.pop("prepositioned", False))
         defer_queue_ack = bool(ref_source.pop("defer_ack_until_durable", False))
@@ -256,7 +262,15 @@ class Trainer:
         if configure_schedule is not None:
             configure_schedule(effective_total_steps)
 
+        parallel = ParallelConfig.from_distributed(
+            tp_size=tp_size,
+            sp_ulysses_size=sp_ulysses_size,
+            sp_ring_size=sp_ring_size,
+            sharding_strategy=sharding_strategy,
+        )
         standard_checkpoint_extra = {
+            "training_backend": backend_name,
+            "backend_sharding": parallel.sharding_strategy,
             "dataset_size": dataset_size,
             "batch_size": batch_size,
             "accumulation_steps": accumulation_steps,
@@ -314,6 +328,18 @@ class Trainer:
                 persisted_available = key in state
                 comparison_current = current
                 comparison_persisted = persisted
+                if key == "training_backend" and key not in state:
+                    # Checkpoints predating backend selection used FSDP1.
+                    comparison_persisted = "fsdp"
+                    persisted_available = True
+                if (
+                    key == "backend_sharding"
+                    and key not in state
+                    and backend_name == "torchtitan"
+                ):
+                    raise ValueError(
+                        "TorchTitan resume requires recorded backend_sharding"
+                    )
                 if key == MODEL_PROVENANCE_CONTRACT_KEY and key in state:
                     from specforge.training.provenance import (
                         model_provenance_for_resume_comparison,
@@ -425,15 +451,14 @@ class Trainer:
             # drop the full draft state before the wrap
             del state, saved_weights
 
-        parallel = ParallelConfig.from_distributed(
-            tp_size=tp_size,
-            sp_ulysses_size=sp_ulysses_size,
-            sp_ring_size=sp_ring_size,
-        )
-        backend = FSDPTrainingBackend(parallel, optimizer_factory=optimizer_factory)
-        # FSDP-wrap the composite model and build the optimizer over the inner draft
-        # AFTER wrapping; the strategy MUST run forward through the wrapped module so
-        # FSDP is actually in the forward/backward path (not bypassed at >1 rank).
+        backend_cls = FSDPTrainingBackend
+        if backend_name == "torchtitan":
+            from specforge.training.torchtitan_backend import TorchTitanTrainingBackend
+
+            backend_cls = TorchTitanTrainingBackend
+        backend = backend_cls(parallel, optimizer_factory=optimizer_factory)
+        # Build the optimizer after the backend establishes parameter shards.
+        # Strategies must call the returned model to retain distributed hooks.
         wrapped = backend.prepare_model(model, optimizer_target=model.draft_model)
         if resume is not None:
             backend.load_state_dict(resume["backend"])
