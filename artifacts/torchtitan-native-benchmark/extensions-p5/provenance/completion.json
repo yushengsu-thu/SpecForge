@@ -1,0 +1,10 @@
+{
+  "completed_trials": 36,
+  "all_child_exit_codes_zero": true,
+  "comparison_written": true,
+  "graph_gate_passed": false,
+  "observed_orchestrator_exit_code": null,
+  "observed_compute_processes_after_completion": [],
+  "devices_checked": 8,
+  "no_trial_restarts": true
+}

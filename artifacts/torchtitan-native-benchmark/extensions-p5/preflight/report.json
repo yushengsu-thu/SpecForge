@@ -1,0 +1,29 @@
+{
+  "checks": [
+    {
+      "algorithm": "dflash",
+      "comparison_contract_equal": true,
+      "reference_loss": 12.442012786865234,
+      "candidate_loss": 12.44200325012207,
+      "first_forward_absolute_error": 9.5367431640625e-06,
+      "first_forward_passed": true
+    },
+    {
+      "algorithm": "dflash2",
+      "comparison_contract_equal": true,
+      "reference_loss": 12.441120147705078,
+      "candidate_loss": 12.441163063049316,
+      "first_forward_absolute_error": 4.291534423828125e-05,
+      "first_forward_passed": true
+    },
+    {
+      "algorithm": "dspark",
+      "comparison_contract_equal": true,
+      "reference_loss": 2.990997791290283,
+      "candidate_loss": 2.991025447845459,
+      "first_forward_absolute_error": 2.765655517578125e-05,
+      "first_forward_passed": true
+    }
+  ],
+  "passed": true
+}

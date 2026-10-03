@@ -1,0 +1,21 @@
+{
+  "observed_at_utc": "2026-10-03T07:23:05.495690+00:00",
+  "monitoring_session_exit_code": 255,
+  "reason": "rx radixark-service rollout restarted SSH relay; websocket close1012 and broken pipe",
+  "remote_matrix_pid_survived": 2081897,
+  "completed_trials_at_reconnect": 28,
+  "all_completed_child_exit_codes_zero": true,
+  "active_trial_at_reconnect": "dflash2-graph-full-3",
+  "active_torchrun_pid": 2088384,
+  "active_worker_pids": [
+    2088390,
+    2088391
+  ],
+  "visible_gpus": [
+    4,
+    5
+  ],
+  "restarted_or_duplicated_trials": false,
+  "matrix_source_or_driver_modified": false,
+  "note": "Original remotely redirected orchestrator continued. SSH monitoring status is separate from the per-trial process exit codes and final comparison gate."
+}

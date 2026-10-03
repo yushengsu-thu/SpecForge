@@ -1,0 +1,38 @@
+[
+  {
+    "name": "dflash-fsdp214-1",
+    "exit_code": 0,
+    "started": 1791010329.63454,
+    "finished": 1791010361.9355335
+  },
+  {
+    "name": "dflash-titan-cuda-1",
+    "exit_code": 0,
+    "started": 1791010361.9476295,
+    "finished": 1791010410.2671185
+  },
+  {
+    "name": "dflash2-fsdp214-1",
+    "exit_code": 0,
+    "started": 1791010410.2774851,
+    "finished": 1791010443.1804569
+  },
+  {
+    "name": "dflash2-titan-cuda-1",
+    "exit_code": 0,
+    "started": 1791010443.1909325,
+    "finished": 1791010495.3146412
+  },
+  {
+    "name": "dspark-titan-cuda-1",
+    "exit_code": 0,
+    "started": 1791010495.3252797,
+    "finished": 1791010546.0977917
+  },
+  {
+    "name": "dspark-fsdp214-1",
+    "exit_code": 0,
+    "started": 1791010546.108157,
+    "finished": 1791010579.860695
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "reference_trial": "work/extension-bench-p4-evidence/raw/dflash2-fsdp214-1.json",
+  "reference_trial_sha256": "2bb45f876e9813e79c733524369738e6f37afe78cc58fea7115bb472d75ab44d",
+  "core_commit": "5a35ff35b0ba939242f294907892a2d8955a52b9",
+  "reference_seed": 2026,
+  "seq_length": 4096,
+  "purpose": "CPU-only isolated RoPE counterfactual; not full-model training or performance evidence"
+}

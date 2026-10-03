@@ -1,0 +1,20 @@
+{
+  "benchmark_commit": "8bf591727ad3b3a2287c777997f8c6da352f28cd",
+  "core_commit": "5a35ff35b0ba939242f294907892a2d8955a52b9",
+  "command": "cd /scratch/specforge-torchtitan-20261003/buffer-fix-tests && CUDA_VISIBLE_DEVICES= PYTHONPATH=/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions /scratch/specforge-torchtitan-20261003/venv/bin/python -m unittest discover -s tests/test_training -p test_training_backend_benchmark.py -v > cpu-tests.log 2>&1",
+  "result": {
+    "exit_code": 0,
+    "tests": 26,
+    "seconds": 4.312,
+    "skipped": 0
+  },
+  "raw_log": "cpu-tests.log",
+  "source_sha256": {
+    "scripts/benchmark_training_backends.py": "8fb76e358157b71c4234a2f8fb0991ecba114fa0b43a351be4e0c53ae2513955",
+    "scripts/training_benchmark_recipes.py": "7918a8e501e259eb7194d82573527e013cb34eb78b58f6d8b7b5fc539d9fa1a5",
+    "scripts/training_backend_matrix.py": "e26a15b6fb9bffcac91c577c70edc446686b9938155ee71f9a84cfa604b44fe5",
+    "tests/test_training/test_training_backend_benchmark.py": "f777ace606a8d2029f6ce091255de5e4688be5ae62c1ae48437262018d52fc44"
+  },
+  "remote_file_hashes_verified_equal": true,
+  "scope": "CPU only; no GPU/full-model forward/performance claim"
+}

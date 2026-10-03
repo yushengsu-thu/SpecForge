@@ -1,0 +1,9 @@
+{
+  "core_commit": "5a35ff35b0ba939242f294907892a2d8955a52b9",
+  "files": {
+    "specforge/modeling/auto.py": "9dd22e9c627edc9d770adf0b3e783c5954746d2dd83b412e3f4695bd7f4e6c68",
+    "specforge/algorithms/model_providers.py": "fc20efc035c3809ff6fad86638ceb1157a3e53356c8b2cdb80e66390eea6fdaa",
+    "specforge/training/backend.py": "0b47b95e0aebbcd6f44aa94e17a62906ebcab36a44eb1fb4e7b7e4abbe5741f2",
+    "specforge/training/torchtitan/model.py": "4e7d4baf555c6770062aa82dafbb5c8f066c71d8c13b0f53a1d1c7a462a5b894"
+  }
+}

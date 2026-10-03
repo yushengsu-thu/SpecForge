@@ -1,0 +1,39 @@
+W1003 06:51:50.708000 2080088 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 06:51:50.735000 2080088 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+{
+  "device": "cpu",
+  "python": "3.12.3",
+  "versions": {
+    "torch": "2.14.0",
+    "transformers": "5.12.1"
+  },
+  "cuda_visible_devices": "",
+  "source": {
+    "file": "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/transformers/models/qwen3/modeling_qwen3.py",
+    "sha256": "fbdcfeeb1b54135ca67ba7df924da92f4b264e1252b517eea2de989289ebaeab"
+  },
+  "config_sha256": "ef84fd2ecdec2dfd11e7c090b7f0e7028c2ad3324313d8d03203b35d76618a96",
+  "probe_sha256": "5c2231a253b3f353d79dd6dd92771cdedb07e5a412d277b0f9ffc97330dfa6b3",
+  "positions": [
+    0,
+    4095
+  ],
+  "fresh_state_dict_keys": [],
+  "legacy_state_dict_keys": [],
+  "fresh_nonpersistent_buffer_names": [
+    "inv_freq",
+    "original_inv_freq"
+  ],
+  "inv_freq_numel": 64,
+  "inv_freq_different_elements": 63,
+  "inv_freq_max_absolute_difference": 0.0011547207832336426,
+  "phase_max_absolute_difference_radians": 4.728581428527832,
+  "cos_shape": [
+    1,
+    4096,
+    128
+  ],
+  "cos_different_elements": 252628,
+  "cos_max_absolute_difference": 2.0,
+  "sin_max_absolute_difference": 2.0
+}

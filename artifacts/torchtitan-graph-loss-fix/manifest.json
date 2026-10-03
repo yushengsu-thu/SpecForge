@@ -1,5 +1,5 @@
 {
-  "README.md": "fbd709263292b71423ae02de11faccd4924c16d134caa66f7e8b7ec958c050a3",
+  "README.md": "23dbc74fca364a4564201599e483655531d1490b47dc47acb24975a67543a50e",
   "convolution/README.md": "9f5520f71e276cae0bdfd5483291a9adfbe4b57965cc9ca20f794e7fd51c88b0",
   "convolution/conv-fix-tests-213.log": "7939b60c0629371429a29cacb07f1f13d9ecf67cf050b1920895518430fca0e7",
   "convolution/conv-fix-tests-214.log": "6feb788c14d52923edce8670ecb8963258343920faa92c04e677bb19bf14c9e5",
@@ -209,5 +209,19 @@
   "native-cuda-final/tp2/tp2-resume.log": "7a2c83ed49dd1d50049f23d953f3dc4ed9a90d74554c1912439cab233f8a6991",
   "native-cuda-final/tp2/tp2-resume.yaml": "de243f52c47a8eaa43389ed52ab243c62eb45d0565a70b56d06ecf6d2274929e",
   "native-cuda-final/tp2/verification.json": "0743ef435342a399010fcab875b7abfca84d5c4b1f44e1402c8d48846234789e",
-  "native-cuda-final/tp2/verify_native_loss_fix_tp2.py": "17071d1af5df98635013f30a24c1e71d52a3dd053bf48b900b506fdf1969d18d"
+  "native-cuda-final/tp2/verify_native_loss_fix_tp2.py": "17071d1af5df98635013f30a24c1e71d52a3dd053bf48b900b506fdf1969d18d",
+  "rope-buffer-audit/README.md": "7208aaedf959da2e2c4d48e199f2d54691ce4ea909144f335ec020dac0ef9d72",
+  "rope-buffer-audit/config.json": "ef84fd2ecdec2dfd11e7c090b7f0e7028c2ad3324313d8d03203b35d76618a96",
+  "rope-buffer-audit/cpu-tests-verification.json": "62f8ac9b221130f9da8b5d3a4846c9662f774ace725caef62c4b2d727e3cd273",
+  "rope-buffer-audit/cpu-tests.log": "fc723338ae0b7a510c824db773810c2a72e784ec559c18bf8907f41f48bdee7a",
+  "rope-buffer-audit/manifest.json": "8a64d0e7c6dd039a4866685be12853e80ae6d3dbfbf1b641f13da66157b2c2c5",
+  "rope-buffer-audit/probe.log": "6b3001ea4f8b0244e3c40a10b99fe503ec2bbdd1c4e5acf9f82bfbafa4ea4d1f",
+  "rope-buffer-audit/probe.py": "5c2231a253b3f353d79dd6dd92771cdedb07e5a412d277b0f9ffc97330dfa6b3",
+  "rope-buffer-audit/production-source-hashes.json": "dc000320c59a63ec40b0bdb876638d90feb0813cd6dec7150675e02d591be057",
+  "rope-buffer-audit/provenance.json": "7e1f2fd0c26eba803a4e6b9a4560d1811fe5efdd3520af12893173c097bdbaf7",
+  "rope-buffer-audit/report.json": "d3306ec94fc562fd1b46b38b09bfc375973a84bef66973d0338b760352b4b752",
+  "rope-buffer-audit/tested-source/scripts/benchmark_training_backends.py.txt": "8fb76e358157b71c4234a2f8fb0991ecba114fa0b43a351be4e0c53ae2513955",
+  "rope-buffer-audit/tested-source/scripts/training_backend_matrix.py.txt": "e26a15b6fb9bffcac91c577c70edc446686b9938155ee71f9a84cfa604b44fe5",
+  "rope-buffer-audit/tested-source/scripts/training_benchmark_recipes.py.txt": "7918a8e501e259eb7194d82573527e013cb34eb78b58f6d8b7b5fc539d9fa1a5",
+  "rope-buffer-audit/tested-source/tests/test_training/test_training_backend_benchmark.py.txt": "f777ace606a8d2029f6ce091255de5e4688be5ae62c1ae48437262018d52fc44"
 }

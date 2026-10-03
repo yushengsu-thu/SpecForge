@@ -54,7 +54,7 @@ complete attribution of a 30-step trajectory:
   output matches. Forcing one grouping merely to match a tolerance can make
   the derivative less accurate against FP64.
 
-The corrected full-size DFlash2 probe still fails the predeclared
+An earlier corrected full-size DFlash2 probe still fails the predeclared
 `atol=1e-5, rtol=1e-4` native-versus-Graph loss gate. Maximum absolute difference
 is `0.0368411541` over 30 windows. The earlier pair's maximum was `0.51697063`;
 both paths' arithmetic was corrected, so this is a descriptive before/after
@@ -62,6 +62,37 @@ comparison, not a single-variable estimate. **Do not call this a passed
 matched-quality gate.** `full-trajectories/` contains raw losses and the failed
 gate, and its concurrently run probe timings are excluded from performance
 claims.
+
+## Separate FSDP/native initialization confound
+
+`rope-buffer-audit/` identifies an additional benchmark confound. Legacy FSDP
+construction rounded nonpersistent RoPE frequencies through BF16 before FSDP
+widened buffers to FP32; native Titan restored fresh FP32 frequencies. Identical
+persistent state hashes did not cover these values. An isolated CPU control
+finds 63/64 changed frequencies and up to 4.73 radians of phase error at position
+4095. This does not attribute every full-model trajectory difference to RoPE.
+
+Benchmark commit `8bf591727ad3b3a2287c777997f8c6da352f28cd` explicitly normalizes
+these buffers to the same fresh FP32 reference and checks initial/per-rank/live
+post-training fingerprints. All 26 final CPU tests pass; persistent state hashes
+are unchanged for all three real tiny constructors. This modifies the benchmark
+fixture only; legacy production behavior is unchanged. Old p4 FSDP/native
+comparisons are withdrawn as initialization-confounded historical diagnostics.
+The native/Graph pair already used the same fresh buffer path, so its failed
+strict gate is unaffected by this finding. Replacement GPU checks and timings
+are separately archived with their complete commands and source hashes.
+
+## Final shared-buffer matrix
+
+The p5 matrix has 36 successful child training processes with exact source,
+input and initial buffer identities. All nine native/Graph pairs still fail the
+unchanged `atol=1e-5, rtol=1e-4` trajectory gate. Maximum absolute differences
+are `0.040533` (DFlash), `0.042302` (DFlash2), and `0.005556` (DSpark) across
+three repeats and 30 windows each. These are experimental Graph results,
+not a matched-quality pass. FSDP/native trajectories also differ and their full
+cause is not established merely by recording different gradient precision.
+See the [complete matrix](../torchtitan-native-benchmark/extensions-p5/README.md)
+for every trial, the unchanged failed gates, initialization audit and timing scope.
 
 ## Lifecycle and repeatability
 
@@ -104,8 +135,8 @@ matrix ended and their elapsed times are excluded from performance claims.
   probes did not retain complete shell launch manifests; their README states
   that limitation. First-update and final matrix runs retain commands.
 
-The separately archived final performance matrix includes the official
+The separately archived [final performance matrix](../torchtitan-native-benchmark/extensions-p5/README.md) includes the official
 PyTorch 2.13 FSDP baseline, a PyTorch 2.14 FSDP control, compiled native TorchTitan
-with CUDA graphs, and full GraphTrainer. Failed Graph loss gates keep its
-timings in a diagnostic section; they do not suppress unrelated FSDP/native
+with CUDA graphs, and full GraphTrainer. Initial persistent state and nonpersistent buffers are explicitly aligned. Failed
+Graph loss gates keep its timings in a diagnostic section; they do not suppress unrelated FSDP/native
 measurements or turn them into matched-convergence claims.
