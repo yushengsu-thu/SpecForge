@@ -1,0 +1,77 @@
+W1003 01:20:04.221000 1991015 torch/distributed/run.py:982] 
+W1003 01:20:04.221000 1991015 torch/distributed/run.py:982] *****************************************
+W1003 01:20:04.221000 1991015 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1003 01:20:04.221000 1991015 torch/distributed/run.py:982] *****************************************
+/scratch/specforge-torchtitan-20261003/SpecForge-full-titan/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/SpecForge-full-titan/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+[rank1]:W1003 01:20:13.978000 1991332 torch/distributed/tensor/_redistribute.py:394] While redistributing from (_StridedShard(dim=0, sf=2), Shard(dim=0)) to (Replicate(), Replicate()), 2 sequential all_gather operations will be performed. This is suboptimal: multiple collective operations have higher latency (separate kernel launches and synchronization points) and may give inconsistent results between ranks due to different reduction orders. it is not possible to merge non-ascending order all_gather operations.
+[rank0]:W1003 01:20:13.978000 1991331 torch/distributed/tensor/_redistribute.py:394] While redistributing from (_StridedShard(dim=0, sf=2), Shard(dim=0)) to (Replicate(), Replicate()), 2 sequential all_gather operations will be performed. This is suboptimal: multiple collective operations have higher latency (separate kernel launches and synchronization points) and may give inconsistent results between ranks due to different reduction orders. it is not possible to merge non-ascending order all_gather operations.
+[rank0]:W1003 01:20:14.088000 1991331 torch/distributed/tensor/_redistribute.py:394] While redistributing from (_NormPartial(2.0), _NormPartial(2.0)) to (Replicate(), Replicate()), 2 sequential all_reduce operations will be performed. This is suboptimal: multiple collective operations have higher latency (separate kernel launches and synchronization points) and may give inconsistent results between ranks due to different reduction orders. To optimize, flatten mesh dimensions ["fsdp", "tp"] so DTensor can use a single operation instead.
+[rank1]:W1003 01:20:14.090000 1991332 torch/distributed/tensor/_redistribute.py:394] While redistributing from (_NormPartial(2.0), _NormPartial(2.0)) to (Replicate(), Replicate()), 2 sequential all_reduce operations will be performed. This is suboptimal: multiple collective operations have higher latency (separate kernel launches and synchronization points) and may give inconsistent results between ranks due to different reduction orders. To optimize, flatten mesh dimensions ["fsdp", "tp"] so DTensor can use a single operation instead.
+[
+  {
+    "algorithm": "dflash",
+    "tp": 2,
+    "dp": 1,
+    "cp": 1,
+    "loss_type": "dflash",
+    "lk_loss_type": null,
+    "activation_checkpoint": false,
+    "compile": false,
+    "compute_dtype": "torch.bfloat16",
+    "fused_head": true,
+    "fused_conv": true,
+    "reference_loss": 4.246874809265137,
+    "distributed_loss": 4.246874809265137,
+    "max_gradient_abs_error": 0.00022044777870178223,
+    "checked_gradients": 25,
+    "native_gradient_norm": 0.23007802665233612,
+    "native_optimizer_step": true,
+    "optimizer_update_relative_error": 0.0471319779753685,
+    "optimizer_update_cosine": 0.9988893270492554
+  },
+  {
+    "algorithm": "dflash2",
+    "tp": 2,
+    "dp": 1,
+    "cp": 1,
+    "loss_type": "dflash",
+    "lk_loss_type": null,
+    "activation_checkpoint": false,
+    "compile": false,
+    "compute_dtype": "torch.bfloat16",
+    "fused_head": true,
+    "fused_conv": true,
+    "reference_loss": 4.247269153594971,
+    "distributed_loss": 4.247175693511963,
+    "max_gradient_abs_error": 0.00021746382117271423,
+    "checked_gradients": 36,
+    "native_gradient_norm": 0.17620237171649933,
+    "native_optimizer_step": true,
+    "optimizer_update_relative_error": 0.07552366703748703,
+    "optimizer_update_cosine": 0.9971479773521423
+  },
+  {
+    "algorithm": "dspark",
+    "tp": 2,
+    "dp": 1,
+    "cp": 1,
+    "loss_type": "kl",
+    "lk_loss_type": null,
+    "activation_checkpoint": false,
+    "compile": false,
+    "compute_dtype": "torch.bfloat16",
+    "fused_head": true,
+    "fused_conv": true,
+    "reference_loss": 1.7512421607971191,
+    "distributed_loss": 1.7512688636779785,
+    "max_gradient_abs_error": 0.0005922578275203705,
+    "checked_gradients": 31,
+    "native_gradient_norm": 0.8568174242973328,
+    "native_optimizer_step": true,
+    "optimizer_update_relative_error": 0.11166539788246155,
+    "optimizer_update_cosine": 0.9937645196914673
+  }
+]

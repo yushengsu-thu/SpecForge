@@ -1,0 +1,52 @@
+W1003 00:49:24.747000 1980148 torch/distributed/run.py:982] 
+W1003 00:49:24.747000 1980148 torch/distributed/run.py:982] *****************************************
+W1003 00:49:24.747000 1980148 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1003 00:49:24.747000 1980148 torch/distributed/run.py:982] *****************************************
+/scratch/specforge-torchtitan-20261003/SpecForge-full-titan/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/SpecForge-full-titan/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+[
+  {
+    "algorithm": "dflash",
+    "tp": 1,
+    "dp": 1,
+    "cp": 2,
+    "loss_type": "dflash",
+    "lk_loss_type": null,
+    "activation_checkpoint": false,
+    "compile": false,
+    "reference_loss": 4.53125,
+    "distributed_loss": 4.53125,
+    "max_gradient_abs_error": 0.000507354736328125,
+    "checked_gradients": 25
+  },
+  {
+    "algorithm": "dflash2",
+    "tp": 1,
+    "dp": 1,
+    "cp": 2,
+    "loss_type": "dflash",
+    "lk_loss_type": null,
+    "activation_checkpoint": false,
+    "compile": false,
+    "reference_loss": 4.494563579559326,
+    "distributed_loss": 4.494082927703857,
+    "max_gradient_abs_error": 0.0008650273084640503,
+    "checked_gradients": 36
+  },
+  {
+    "algorithm": "dspark",
+    "tp": 1,
+    "dp": 1,
+    "cp": 2,
+    "loss_type": "dflash",
+    "lk_loss_type": null,
+    "activation_checkpoint": false,
+    "compile": false,
+    "reference_loss": 1.6973134279251099,
+    "distributed_loss": 1.697321891784668,
+    "max_gradient_abs_error": 0.0002060718834400177,
+    "checked_gradients": 31
+  }
+]

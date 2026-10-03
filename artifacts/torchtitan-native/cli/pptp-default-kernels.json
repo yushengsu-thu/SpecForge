@@ -1,0 +1,36 @@
+{
+  "parallelism": {
+    "pp": 2,
+    "tp": 2,
+    "dp": 1,
+    "cp": 1
+  },
+  "schedule": "1F1B",
+  "default_fused_kernels": true,
+  "optimizer_steps": 2,
+  "batch_size": 4,
+  "accumulation_steps": 2,
+  "algorithms": {
+    "dflash": {
+      "exit_code": 0,
+      "export_keys": 25,
+      "pp2tp2_vs_pp2_bf16_max_weight_abs_error": 0.004071682225912809,
+      "pp2tp2_vs_pp2_bf16_relative_weight_l2_error": 0.0007042461074888706,
+      "checkpoint_key_count": 31
+    },
+    "dflash2": {
+      "exit_code": 0,
+      "export_keys": 36,
+      "pp2tp2_vs_pp2_bf16_max_weight_abs_error": 0.003982788883149624,
+      "pp2tp2_vs_pp2_bf16_relative_weight_l2_error": 0.00044397093006409705,
+      "checkpoint_key_count": 42
+    },
+    "dspark": {
+      "exit_code": 0,
+      "export_keys": 29,
+      "pp2tp2_vs_pp2_bf16_max_weight_abs_error": 0.003958672285079956,
+      "pp2tp2_vs_pp2_bf16_relative_weight_l2_error": 0.0005721906782127917,
+      "checkpoint_key_count": 35
+    }
+  }
+}

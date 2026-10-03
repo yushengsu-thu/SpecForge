@@ -1,0 +1,20 @@
+{
+  "checkpoint_bitwise_equal": true,
+  "differences": [],
+  "compared": {
+    "tensors": 152,
+    "values": 560
+  },
+  "export_keys": 36,
+  "resume_export_bitwise_equal": true,
+  "pipeline_vs_unpartitioned_bf16": {
+    "gpipe": {
+      "max_weight_abs_error": 0.002470416948199272,
+      "relative_weight_l2_error": 0.00027935003163293004
+    },
+    "1f1b": {
+      "max_weight_abs_error": 0.002470416948199272,
+      "relative_weight_l2_error": 0.00027935003163293004
+    }
+  }
+}

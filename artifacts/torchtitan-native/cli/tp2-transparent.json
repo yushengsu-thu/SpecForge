@@ -1,0 +1,9 @@
+{
+  "dcp_all_state_bitwise_equal": true,
+  "draft_export_bitwise_equal": true,
+  "draft_keys": 36,
+  "kernel_environment": {
+    "SPECFORGE_DFLASH_FUSED_HEAD": "0",
+    "SPECFORGE_DFLASH2_FUSED_CONV": "0"
+  }
+}

@@ -1,0 +1,21 @@
+........................................................................................................s........................................ [ 55%]
+.....sssssssss.................................................. [ 80%]
+..............sss...................................      [100%]
+=============================== warnings summary ===============================
+specforge/modeling/draft/llama3_eagle.py:33
+  /scratch/specforge-torchtitan-20261003/SpecForge-full-titan/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+    warnings.warn(
+
+tests/test_runtime/test_checkpoint_resume.py::TestTrainerResumeEntrypoint::test_bound_algorithm_resume_contract_is_saved_and_validated
+tests/test_runtime/test_checkpoint_resume.py::TestTrainerResumeEntrypoint::test_completed_checkpoint_resume_is_a_checkpoint_noop
+tests/test_runtime/test_checkpoint_resume.py::TestTrainerResumeEntrypoint::test_direct_builder_requires_bound_provenance_for_omitted_embedding
+tests/test_runtime/test_checkpoint_resume.py::TestTrainerResumeEntrypoint::test_legacy_checkpoint_recovers_horizon_from_scheduler_state
+tests/test_runtime/test_checkpoint_resume.py::TestTrainerResumeEntrypoint::test_resume_continues_where_the_run_stopped
+tests/test_runtime/test_checkpoint_resume.py::TestTrainerResumeEntrypoint::test_resume_rejects_a_changed_implicit_schedule_horizon
+tests/test_runtime/test_checkpoint_resume.py::TestTrainerResumeEntrypoint::test_resume_rejects_gradient_clip_drift
+tests/test_runtime/test_checkpoint_resume.py::TestTrainerResumeEntrypoint::test_resume_rejects_partial_weights_except_provider_owned_omissions
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/optim/lr_scheduler.py:1426: UserWarning: To get the last learning rate computed by the scheduler, please use `get_last_lr()`.
+    _warn_get_lr_called_within_step(self)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+248 passed, 17 skipped, 9 warnings, 162 subtests passed in 10.22s

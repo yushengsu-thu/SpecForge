@@ -1,0 +1,24 @@
+{
+  "default_fused_kernels": true,
+  "checkpoint_bitwise_equal": true,
+  "differences": [],
+  "compared": {
+    "tensors": 152,
+    "values": 560
+  },
+  "export_keys": 36,
+  "resume_export_bitwise_equal": true,
+  "compile_three_steps": true,
+  "parallelism": {
+    "tp": 2,
+    "cp": 1,
+    "pp": 1,
+    "dp": 1
+  },
+  "algorithm": "dflash2",
+  "continuous_optimizer_steps": 3,
+  "resume_after_step": 1,
+  "kernel_policy": "Unmodified defaults: fused head=1 and fused convolution=1; compile may use its native eager decomposition.",
+  "compile_recompiles": 2,
+  "compile_recompile_reason": "One requires_grad=False -> True warmup recompile per rank; no mode-identity guard failures."
+}

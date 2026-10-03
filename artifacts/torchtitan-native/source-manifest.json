@@ -1,0 +1,26 @@
+{
+  "core_commit": "36eb793a4fba7fabb441821e9cb7b3f8279bca97",
+  "torchtitan_commit": "086bf6c166ec85c1298eb5596fa9bf95f6a2d840",
+  "environment": {
+    "python": "3.12.3",
+    "torch": "2.14.0+cu130",
+    "torchtitan": "0.3.0",
+    "gpu": "H200",
+    "cuda": "13.0"
+  },
+  "sha256": {
+    "specforge/training/torchtitan/metrics.py": "96c8a7729b26609553f48753523c03e57b00af8293ef47b3faad567203895747",
+    "specforge/training/torchtitan/frontend.py": "4a97d2d003074bb1ea2ce6a50b92cc338ff56a2932d64d5fd1e0541c9fb67dd2",
+    "specforge/training/torchtitan/__init__.py": "19084dea9e5e6dae18a3cc4ac097daa5d9219906567d4d116b9fdf306d58c3b9",
+    "specforge/training/torchtitan/runtime.py": "47c6df24dbc578fa6acb3779b5fcbb31d8c0442ee5f5b1d82ad986cb93ed3c1a",
+    "specforge/training/torchtitan/model.py": "4e7d4baf555c6770062aa82dafbb5c8f066c71d8c13b0f53a1d1c7a462a5b894",
+    "specforge/training/torchtitan/loss.py": "c8f2fff28da5b9abb15e530d20f292a4d702e34cd56eb1dcf73b11ee46afa926",
+    "specforge/training/torchtitan/pipeline.py": "7fb37d441ae9c430d5d84df5046a26956194e449d55bdd478aa5963d112e8f1e",
+    "specforge/training/torchtitan/parallelize.py": "d5863c6572a44bbc1d9adb8058fc913a9bcd285bb0bec810a5c5a9bcfe76d2fa",
+    "specforge/training/torchtitan/data.py": "dd88b86ec2006cd1d225720d2330837bfb543594233f01c636218c39869edab0",
+    "specforge/algorithms/common/dflash_family_model.py": "85eb1dadafdd58346f735c825b6c4144e640b39bd1ecd3782e0c58221ef06ce3",
+    "specforge/config/schema.py": "9c060569e085568a8c84e3839e02324f7e0db7b8f65f0ce58c92f8c87fe27327",
+    "tests/test_training/test_torchtitan_parallel.py": "a8a41bd985057d4cdb5cd5d4d544ffd4905bc450a62666faa367ce4ae24a9dbe",
+    "tests/test_training/test_torchtitan_runtime.py": "b1c0825b27b9f0a35fda075f8d30f026b58704e682bc22a2b435be2e9ac633d4"
+  }
+}
