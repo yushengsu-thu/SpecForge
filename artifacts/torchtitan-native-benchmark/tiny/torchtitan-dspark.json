@@ -1,0 +1,157 @@
+{
+  "benchmark": "native-torchtitan-v1",
+  "backend": "torchtitan",
+  "synthetic_features": true,
+  "trainer_build_seconds_max_rank_including_cpu_init_and_hashes": 5.037254901602864,
+  "recipe_source": "/scratch/specforge-torchtitan-20261003/native-bench-snapshot-0116/configs/qwen3-4b-dflash.json",
+  "counts": {
+    "trainable_parameters": 22793,
+    "frozen_parameters": 8192
+  },
+  "comparison_contract": {
+    "config": {
+      "architectures": [
+        "DSparkDraftModel"
+      ],
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "block_size": 4,
+      "bos_token_id": 1,
+      "dflash_config": {
+        "mask_token_id": 127,
+        "target_layer_ids": [
+          1,
+          2
+        ],
+        "attention_mode": "gqa",
+        "projector_type": "dspark",
+        "markov_head_type": "vanilla",
+        "markov_rank": 8,
+        "confidence_head_alpha": 1.0,
+        "enable_confidence_head": true,
+        "confidence_head_with_markov": true,
+        "block_size": 4
+      },
+      "dtype": "bfloat16",
+      "eos_token_id": 2,
+      "head_dim": 8,
+      "hidden_act": "silu",
+      "hidden_size": 32,
+      "initializer_range": 0.02,
+      "intermediate_size": 64,
+      "layer_types": [
+        "full_attention",
+        "full_attention"
+      ],
+      "max_position_embeddings": 4096,
+      "max_window_layers": 5,
+      "model_type": "qwen3",
+      "num_attention_heads": 4,
+      "num_hidden_layers": 2,
+      "num_key_value_heads": 2,
+      "num_target_layers": 4,
+      "rms_norm_eps": 1e-06,
+      "rope_scaling": null,
+      "rope_theta": 10000.0,
+      "sliding_window": null,
+      "tie_word_embeddings": false,
+      "use_cache": true,
+      "use_sliding_window": false,
+      "vocab_size": 128,
+      "pad_token_id": 0
+    },
+    "seed": 2026,
+    "world_size": 2,
+    "data_degree": 2,
+    "batch_size": 1,
+    "accumulation_steps": 2,
+    "seq_length": 32,
+    "num_anchors": 4,
+    "objective_chunk_blocks": 0,
+    "attention": "eager",
+    "sharding": "SHARD_GRAD_OP",
+    "learning_rate": 0.0001,
+    "initial_draft_sha256": "e394889ccbb87ca0cfca03bcf3cd6df18cb73783dc581f14187444dda609529b",
+    "frozen_target_sha256": "170ea0598c98614c50ba01adb1ee05da582a73f127e8cbb082cfefec1f7c5e46",
+    "features_and_anchors_by_rank": [
+      {
+        "data_rank": 0,
+        "features": [
+          "8745f00faf9312650b93c4259cd6a09a7ae53c3a52ec3428a90b2c965ea4961a",
+          "60d14c2aea0c739db1cc1f2900f23ec5b47e903c284ac5f38174138ee0bd45a1"
+        ],
+        "anchors": "8aaba397dc6e2d7bed0827a870d047f69b2c011b280e60821e7cee30e9ac488a"
+      },
+      {
+        "data_rank": 1,
+        "features": [
+          "ae0442a60cad6728bb91b0ffad69c59f07d187510bc89d4e55d939eb126e4656",
+          "15a98628562619d36d42b48a7e8d0b00be9de5d2e6cdc846def030219e7ff66e"
+        ],
+        "anchors": "80a827d266142c2463484ec7a85cd1ce57d8177915348908a9c10213e5584165"
+      }
+    ],
+    "warmup_steps": 1,
+    "steps": 3,
+    "feature_residency": "pinned CPU input IDs/loss masks; cached GPU hidden states"
+  },
+  "runtime": {
+    "tp_size": 1,
+    "compile": false,
+    "cuda_graphs": false,
+    "parameter_storage": "float32",
+    "gradient_reduce_dtype": "float32",
+    "compute_dtype": "bfloat16",
+    "adam_state_dtype": "float32",
+    "kernel_environment": {
+      "SPECFORGE_DFLASH_FUSED_HEAD": "0",
+      "SPECFORGE_DFLASH2_FUSED_CONV": "0"
+    }
+  },
+  "versions": {
+    "torch": "2.14.0",
+    "torchtitan": "0.3.0",
+    "transformers": "5.12.1",
+    "triton": "3.8.0"
+  },
+  "cuda": "13.0",
+  "device": "NVIDIA H200",
+  "source_sha256": {
+    "specforge/training/backend.py": "0b47b95e0aebbcd6f44aa94e17a62906ebcab36a44eb1fb4e7b7e4abbe5741f2",
+    "specforge/training/controller.py": "16322d15235ea7001f60b7b24e0de92bbb8a5f3b6b80da799b9bfbf17719d9f0",
+    "specforge/optimizer.py": "a136f17a4612eb31c842ddac79c35bfdcb1e62ab410046433bfd6008265ddc81",
+    "specforge/algorithms/common/dflash_family_model.py": "c18f9b481cf15b40c2e8787ca025230b86f46b1df91e4f297c412005cfb220c3",
+    "specforge/training/torchtitan/runtime.py": "02e76d77a2d5dc4891a2041cb098998d2183ade6074de4a21e9ec7d48f456619",
+    "specforge/training/torchtitan/frontend.py": "d3a5d678c78db377cb7e4becf175faa7577d1584b6e6ddc85781b27a6722b40d",
+    "specforge/training/torchtitan/model.py": "4e7d4baf555c6770062aa82dafbb5c8f066c71d8c13b0f53a1d1c7a462a5b894",
+    "specforge/training/torchtitan/parallelize.py": "3e6330cadba2da22c5e9c1e4f241d513dfe1d1f0fc8778a8d495b632df017701",
+    "specforge/training/torchtitan/data.py": "dd88b86ec2006cd1d225720d2330837bfb543594233f01c636218c39869edab0",
+    "specforge/training/torchtitan/loss.py": "c8f2fff28da5b9abb15e530d20f292a4d702e34cd56eb1dcf73b11ee46afa926"
+  },
+  "recipe_helpers_sha256": "8d18afd7320f183621ae76de55a5307072abdbcc93986581361d6b10f9eba735",
+  "benchmark_sha256": "5d4ffb71b70e41657c409fed9f123082ff3402e533ae3cbd5f5e3215b70f3507",
+  "warmup_step_seconds_max_rank": [
+    1.0737828090786934
+  ],
+  "first_step_seconds_max_rank": 1.0737828090786934,
+  "step_seconds_max_rank": [
+    0.03217172063887119,
+    0.031083790585398674,
+    0.03298236057162285
+  ],
+  "losses_including_warmup": [
+    1.2742834091186523,
+    1.2669219970703125,
+    1.2527788877487183,
+    1.2462255954742432
+  ],
+  "baseline_allocated_bytes_max_rank": 33805312,
+  "peak_allocated_bytes_max_rank": 34040320,
+  "peak_reserved_bytes_max_rank": 39845888,
+  "feature_cache_gpu_bytes_max_rank": 12288,
+  "input_context_tokens_per_optimizer_window": 128,
+  "optimizer_step_seconds_mean": 0.032079290598630905,
+  "optimizer_step_seconds_median": 0.03217172063887119,
+  "optimizer_step_seconds_p95": 0.03298236057162285,
+  "input_context_tokens_per_second": 3990.1131730594702
+}
