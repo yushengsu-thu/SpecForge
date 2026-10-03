@@ -1,0 +1,6 @@
+Selected completion/failure lines only; full metrics are in the raw JSON.
+Original full-log SHA256: ad0dbff77f9c0031fc8caf341afaacc25103fd69e40c7fa9057816692aeffab6
+Absolute work paths, IP addresses and host names are redacted when present.
+
+[titan] 2026-10-03 03:30:27,061 - root - INFO - Training completed
+[titan] 2026-10-03 03:30:29,052 - root - INFO - Training completed

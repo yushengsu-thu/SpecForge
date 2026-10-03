@@ -1,0 +1,1911 @@
+{
+  "torch": "2.14.0+cu130",
+  "torchao": "0.18.0",
+  "gpu": "NVIDIA H200",
+  "source_sha256": {
+    "specforge/training/torchtitan/model.py": "04bd2f6d031c225f2ac0b346addc834a13ea031727bbf9129170b757a70624e0",
+    "specforge/training/torchtitan/parallelize.py": "782b94514f2951ee26e4072cbae080744e93d347b5b9cd69ef9e1c038a721a58",
+    "specforge/training/torchtitan/quantization.py": "0b0fce2f1e1a84be36fee90c7e77541288c0f84fd89006d4cfbe061d8912cd8f",
+    "tests/test_training/test_torchtitan_fp8_parallel.py": "a6670e15c6391209de01ab7ba3648b030c8a2fc4cc5d1c9ec2a20c34f7ba650f"
+  },
+  "dcp_roundtrip": [
+    {
+      "algorithm": "dflash",
+      "bitwise_equal": true
+    },
+    {
+      "algorithm": "dflash2",
+      "bitwise_equal": true
+    },
+    {
+      "algorithm": "dspark",
+      "bitwise_equal": true
+    }
+  ],
+  "results": [
+    {
+      "algorithm": "dflash",
+      "step": 1,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 6.641666889190674,
+      "fp8_loss": 6.641666889190674,
+      "loss_relative_error": 0.0003338847018312663,
+      "all_gradients": {
+        "max_abs": 0.001953125,
+        "relative_l2": 0.07204940638550118,
+        "cosine": 0.9974011371165646
+      },
+      "all_updates": {
+        "max_abs": 0.00019999593496322632,
+        "relative_l2": 0.35426522757387746,
+        "cosine": 0.9372501891710416
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.00019999593496322632,
+        "relative_l2": 0.0008668073156149177,
+        "cosine": 0.9999996243233623
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.03131629154086113,
+        "opposite_sign_reference_gradient_l2_fraction": 0.008866195566952229,
+        "small_reference_gradient_cutoff": 1.5792877093190327e-05,
+        "small_reference_gradient_fraction": 0.07602805644273758,
+        "opposite_sign_fraction_within_small_reference": 0.22607187926769257
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": false,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.00142669677734375,
+          "relative_l2": 0.09411462717291619,
+          "cosine": 0.9956028170123425
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.001434326171875,
+          "relative_l2": 0.0950329626062264,
+          "cosine": 0.9955222569184987
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.001953125,
+          "relative_l2": 0.06394201049640347,
+          "cosine": 0.9979600230967095
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.0009307861328125,
+          "relative_l2": 0.0671562589190213,
+          "cosine": 0.9977524394730628
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 0.0003185272216796875,
+          "relative_l2": 0.0942180122413467,
+          "cosine": 0.9960317353506313
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 0.00025713443756103516,
+          "relative_l2": 0.08937985351364611,
+          "cosine": 0.9962046325591621
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.00115966796875,
+          "relative_l2": 0.06893709817566278,
+          "cosine": 0.9976796471869821
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 0.00112152099609375,
+          "relative_l2": 0.06644284093331726,
+          "cosine": 0.9978415858883734
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 0.0006699562072753906,
+          "relative_l2": 0.06527182747608157,
+          "cosine": 0.9978685762350843
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 0.0003814697265625,
+          "relative_l2": 0.06978554674305479,
+          "cosine": 0.9975915075001124
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 0.00016021728515625,
+          "relative_l2": 0.06829702268839107,
+          "cosine": 0.9977065205456321
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.0017452239990234375,
+          "relative_l2": 0.08681272021995412,
+          "cosine": 0.9962393892131227
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.00189971923828125,
+          "relative_l2": 0.08847761546987552,
+          "cosine": 0.9960844864711369
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.001708984375,
+          "relative_l2": 0.05693968074606256,
+          "cosine": 0.9983816249765811
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.001007080078125,
+          "relative_l2": 0.05979340069757251,
+          "cosine": 0.9982114538466323
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 0.00028228759765625,
+          "relative_l2": 0.05879951966716925,
+          "cosine": 0.9987970182107867
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 0.00033055245876312256,
+          "relative_l2": 0.06982517740264649,
+          "cosine": 0.997944895798511
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 0.0008292198181152344,
+          "relative_l2": 0.06575450074745921,
+          "cosine": 0.997846273864669
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 0.000823974609375,
+          "relative_l2": 0.06090137291483334,
+          "cosine": 0.99817935113816
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.0006103515625,
+          "relative_l2": 0.06214230053131808,
+          "cosine": 0.9980821679589347
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 0.00027632713317871094,
+          "relative_l2": 0.06681443738213373,
+          "cosine": 0.9978700437245088
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 0.00013256072998046875,
+          "relative_l2": 0.06435721073247422,
+          "cosine": 0.9979327495977275
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.00045013427734375,
+          "relative_l2": 0.008657272042863436,
+          "cosine": 0.9999627122701074
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.0007956027984619141,
+          "relative_l2": 0.09074642251162768,
+          "cosine": 0.9958764296894861
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 0.00022554397583007812,
+          "relative_l2": 0.08390765498569606,
+          "cosine": 0.9965479279938434
+        }
+      }
+    },
+    {
+      "algorithm": "dflash",
+      "step": 2,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 6.3770833015441895,
+      "fp8_loss": 6.375,
+      "loss_relative_error": 0.00032668563653714955,
+      "all_gradients": {
+        "max_abs": 0.00201416015625,
+        "relative_l2": 0.07898125578490958,
+        "cosine": 0.9968796047157005
+      },
+      "all_updates": {
+        "max_abs": 0.00020002014935016632,
+        "relative_l2": 0.21360770310072824,
+        "cosine": 0.9771556782068243
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.00039988383650779724,
+        "relative_l2": 0.0010487361707690658,
+        "cosine": 0.9999994500768
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.035358551889657974,
+        "opposite_sign_reference_gradient_l2_fraction": 0.010854164138436317,
+        "small_reference_gradient_cutoff": 1.4810679203947075e-05,
+        "small_reference_gradient_fraction": 0.07492700219154358,
+        "opposite_sign_fraction_within_small_reference": 0.23585164546966553
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": true,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.00168609619140625,
+          "relative_l2": 0.10533657909000178,
+          "cosine": 0.9945181799165668
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.001983642578125,
+          "relative_l2": 0.10237536641503293,
+          "cosine": 0.9948630132702754
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.00139617919921875,
+          "relative_l2": 0.07113020417281432,
+          "cosine": 0.9974739011673625
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.0010528564453125,
+          "relative_l2": 0.06995181009172861,
+          "cosine": 0.997553636303677
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 0.0003752708435058594,
+          "relative_l2": 0.11705898418048559,
+          "cosine": 0.9931309302951216
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 0.00044989585876464844,
+          "relative_l2": 0.14967813309693864,
+          "cosine": 0.988940295337482
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.001190185546875,
+          "relative_l2": 0.06209824239571862,
+          "cosine": 0.998132791488971
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 0.000942230224609375,
+          "relative_l2": 0.06636208919840642,
+          "cosine": 0.9978217880075876
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 0.00069427490234375,
+          "relative_l2": 0.06868744886413708,
+          "cosine": 0.9976402825939004
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 0.00029277801513671875,
+          "relative_l2": 0.10556567377322477,
+          "cosine": 0.9944129666436328
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 0.00011396408081054688,
+          "relative_l2": 0.06071613920022759,
+          "cosine": 0.9981934183356018
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.00201416015625,
+          "relative_l2": 0.10034201517926035,
+          "cosine": 0.9950544730765577
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.001674652099609375,
+          "relative_l2": 0.09974489670942212,
+          "cosine": 0.9951771795996586
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.001861572265625,
+          "relative_l2": 0.06392756175709058,
+          "cosine": 0.9979557340820306
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.001094818115234375,
+          "relative_l2": 0.06296293032806653,
+          "cosine": 0.9980159374491733
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 0.00017690658569335938,
+          "relative_l2": 0.07029765923107568,
+          "cosine": 0.9975630532689247
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 0.0001850128173828125,
+          "relative_l2": 0.06820519033146476,
+          "cosine": 0.9977989417839939
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 0.0009479522705078125,
+          "relative_l2": 0.0752206950939246,
+          "cosine": 0.9971879308135636
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 0.001251220703125,
+          "relative_l2": 0.07113936144612297,
+          "cosine": 0.9974683488259756
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.0007781982421875,
+          "relative_l2": 0.06530417816133101,
+          "cosine": 0.9978684924337737
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 0.000274658203125,
+          "relative_l2": 0.08263545740358802,
+          "cosine": 0.9965958123827184
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 0.00018680095672607422,
+          "relative_l2": 0.07855462195679194,
+          "cosine": 0.9969413485741612
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.000415802001953125,
+          "relative_l2": 0.007605201682969631,
+          "cosine": 0.9999713396359969
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.0009613037109375,
+          "relative_l2": 0.09696264800342248,
+          "cosine": 0.9952954230271116
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 0.00022220611572265625,
+          "relative_l2": 0.09127916590196457,
+          "cosine": 0.9958286435369934
+        }
+      }
+    },
+    {
+      "algorithm": "dflash",
+      "step": 3,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 6.550000190734863,
+      "fp8_loss": 6.547916889190674,
+      "loss_relative_error": 0.00031806129845790565,
+      "all_gradients": {
+        "max_abs": 0.002044677734375,
+        "relative_l2": 0.07602764459165177,
+        "cosine": 0.9971063869328651
+      },
+      "all_updates": {
+        "max_abs": 0.00018962658941745758,
+        "relative_l2": 0.17900431317691293,
+        "cosine": 0.983974875017038
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.0005861390382051468,
+        "relative_l2": 0.001162752807740045,
+        "cosine": 0.9999993240034404
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.033488672226667404,
+        "opposite_sign_reference_gradient_l2_fraction": 0.00925716757774353,
+        "small_reference_gradient_cutoff": 1.5210200217552483e-05,
+        "small_reference_gradient_fraction": 0.07292377948760986,
+        "opposite_sign_fraction_within_small_reference": 0.2371792197227478
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": true,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.001861572265625,
+          "relative_l2": 0.09810237844285095,
+          "cosine": 0.995358106785196
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.001434326171875,
+          "relative_l2": 0.09705651244979999,
+          "cosine": 0.9953398388624367
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.001556396484375,
+          "relative_l2": 0.06720341908934303,
+          "cosine": 0.9977419649399268
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.0011444091796875,
+          "relative_l2": 0.07098525433543958,
+          "cosine": 0.9974786185985219
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 0.000255584716796875,
+          "relative_l2": 0.08247169392665794,
+          "cosine": 0.9967303785457413
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 0.00027108192443847656,
+          "relative_l2": 0.09094071470913648,
+          "cosine": 0.9962836111106645
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 0.0645949883940556,
+          "cosine": 0.9979130447118691
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 0.0014495849609375,
+          "relative_l2": 0.07773305915102421,
+          "cosine": 0.9969776112116122
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 0.0006389617919921875,
+          "relative_l2": 0.06769742318131973,
+          "cosine": 0.9977113593775189
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 0.00026702880859375,
+          "relative_l2": 0.06056510023127651,
+          "cosine": 0.9981656021173004
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 0.000152587890625,
+          "relative_l2": 0.07108839448759957,
+          "cosine": 0.9974700457243477
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.00119781494140625,
+          "relative_l2": 0.09137799704377822,
+          "cosine": 0.9959583408165229
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.0010223388671875,
+          "relative_l2": 0.09272302991707533,
+          "cosine": 0.9957557597751243
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.002044677734375,
+          "relative_l2": 0.0661040960865689,
+          "cosine": 0.9978600999241884
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.00146484375,
+          "relative_l2": 0.06163262030809699,
+          "cosine": 0.9981165977268607
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 0.0003566741943359375,
+          "relative_l2": 0.10284699802702468,
+          "cosine": 0.9949364327015533
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 0.0002689361572265625,
+          "relative_l2": 0.08804197862010933,
+          "cosine": 0.9962998476984879
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 0.0008382797241210938,
+          "relative_l2": 0.07847497044856724,
+          "cosine": 0.9969330184516711
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 0.0008392333984375,
+          "relative_l2": 0.06809419857295432,
+          "cosine": 0.997688438148729
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.000640869140625,
+          "relative_l2": 0.06683672535198529,
+          "cosine": 0.9977661225013224
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 0.00037384033203125,
+          "relative_l2": 0.08244490674007264,
+          "cosine": 0.9967357264318355
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 0.00012350082397460938,
+          "relative_l2": 0.052641091569796676,
+          "cosine": 0.9986196688920446
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.0004291534423828125,
+          "relative_l2": 0.00838351448523405,
+          "cosine": 0.9999648815795462
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.000823974609375,
+          "relative_l2": 0.09540869801232327,
+          "cosine": 0.9954776659752855
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 0.000247955322265625,
+          "relative_l2": 0.10378647352105345,
+          "cosine": 0.9951094121668203
+        }
+      }
+    },
+    {
+      "algorithm": "dflash2",
+      "step": 1,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 6.563318729400635,
+      "fp8_loss": 6.564176559448242,
+      "loss_relative_error": 0.00013070066052023321,
+      "all_gradients": {
+        "max_abs": 0.00179290771484375,
+        "relative_l2": 0.07723126815382665,
+        "cosine": 0.9970179522594346
+      },
+      "all_updates": {
+        "max_abs": 0.00019999593496322632,
+        "relative_l2": 0.36093305266933506,
+        "cosine": 0.9348642065396817
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.00019999593496322632,
+        "relative_l2": 0.0006509434740112328,
+        "cosine": 0.9999997881363627
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.03197798877954483,
+        "opposite_sign_reference_gradient_l2_fraction": 0.00938151590526104,
+        "small_reference_gradient_cutoff": 1.3495164239429869e-05,
+        "small_reference_gradient_fraction": 0.08275674283504486,
+        "opposite_sign_fraction_within_small_reference": 0.19505281746387482
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": false,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.0010080337524414062,
+          "relative_l2": 0.10394461566095406,
+          "cosine": 0.9946109284038038
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.00104522705078125,
+          "relative_l2": 0.10350424635938614,
+          "cosine": 0.9946839188285173
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.001556396484375,
+          "relative_l2": 0.06664504947713022,
+          "cosine": 0.9977768655971553
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.0012149810791015625,
+          "relative_l2": 0.06970110460966737,
+          "cosine": 0.9975692661238604
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 0.0002841949462890625,
+          "relative_l2": 0.11240164904532769,
+          "cosine": 0.9936815688111651
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 0.000274658203125,
+          "relative_l2": 0.10518876967229608,
+          "cosine": 0.9944878561047497
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.00091552734375,
+          "relative_l2": 0.06931092723231246,
+          "cosine": 0.9975998459304806
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 0.0007781982421875,
+          "relative_l2": 0.07085657414902881,
+          "cosine": 0.9974985851739943
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 0.0005035400390625,
+          "relative_l2": 0.06792079585526332,
+          "cosine": 0.9976987707029691
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 0.000194549560546875,
+          "relative_l2": 0.05786203795047218,
+          "cosine": 0.9983513224669802
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 0.00018024444580078125,
+          "relative_l2": 0.07990666898725471,
+          "cosine": 0.9968333677442665
+        },
+        "training_model.draft_model.layers.0.attention_conv.base_kernel": {
+          "max_abs": 0.000213623046875,
+          "relative_l2": 0.06540378340208337,
+          "cosine": 0.9978682126852872
+        },
+        "training_model.draft_model.layers.0.attention_conv.kernel_projection.weight": {
+          "max_abs": 0.00128173828125,
+          "relative_l2": 0.07211017558639851,
+          "cosine": 0.9975147137104964
+        },
+        "training_model.draft_model.layers.0.mlp_conv.base_kernel": {
+          "max_abs": 0.00018024444580078125,
+          "relative_l2": 0.07049332668977892,
+          "cosine": 0.9975122545344846
+        },
+        "training_model.draft_model.layers.0.mlp_conv.kernel_projection.weight": {
+          "max_abs": 0.00127410888671875,
+          "relative_l2": 0.09879638496704962,
+          "cosine": 0.9953272237045097
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.00179290771484375,
+          "relative_l2": 0.10146187998662921,
+          "cosine": 0.9949330629883343
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.00150299072265625,
+          "relative_l2": 0.09853424390552304,
+          "cosine": 0.9952750279568746
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.00115966796875,
+          "relative_l2": 0.0654008922568007,
+          "cosine": 0.9978593540575935
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.00081634521484375,
+          "relative_l2": 0.0680931130145035,
+          "cosine": 0.9976798117921444
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 0.0001964569091796875,
+          "relative_l2": 0.10578073255811017,
+          "cosine": 0.9946162660401912
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 0.00024116039276123047,
+          "relative_l2": 0.11744871415646274,
+          "cosine": 0.993233961578365
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 0.000885009765625,
+          "relative_l2": 0.060360268011004886,
+          "cosine": 0.9982638902697317
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 0.00087738037109375,
+          "relative_l2": 0.06347700714072396,
+          "cosine": 0.9980529897585764
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.000762939453125,
+          "relative_l2": 0.06446899614743748,
+          "cosine": 0.9979436604581302
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 0.0002422332763671875,
+          "relative_l2": 0.07788472816693866,
+          "cosine": 0.996995869545181
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 0.0001220703125,
+          "relative_l2": 0.05840179835249541,
+          "cosine": 0.9984392069222052
+        },
+        "training_model.draft_model.layers.1.attention_conv.base_kernel": {
+          "max_abs": 0.0002422332763671875,
+          "relative_l2": 0.07237589396261043,
+          "cosine": 0.9973812434104121
+        },
+        "training_model.draft_model.layers.1.attention_conv.kernel_projection.weight": {
+          "max_abs": 0.00128173828125,
+          "relative_l2": 0.08352311146648153,
+          "cosine": 0.9965127873613154
+        },
+        "training_model.draft_model.layers.1.mlp_conv.base_kernel": {
+          "max_abs": 0.0001220703125,
+          "relative_l2": 0.06225421424056916,
+          "cosine": 0.9981026717140928
+        },
+        "training_model.draft_model.layers.1.mlp_conv.kernel_projection.weight": {
+          "max_abs": 0.0011949539184570312,
+          "relative_l2": 0.06786621920368646,
+          "cosine": 0.9979043341710107
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.0006103515625,
+          "relative_l2": 0.007424303493423831,
+          "cosine": 0.9999735688412471
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.00072479248046875,
+          "relative_l2": 0.09494716565066232,
+          "cosine": 0.9954858287911936
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 0.00021594762802124023,
+          "relative_l2": 0.0978736912341849,
+          "cosine": 0.9952046808270728
+        },
+        "training_model.draft_model.candidate_selector.predecessor_codebook": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        },
+        "training_model.draft_model.candidate_selector.successor_codebook": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        },
+        "training_model.draft_model.candidate_selector.hidden_projection.weight": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        }
+      }
+    },
+    {
+      "algorithm": "dflash2",
+      "step": 2,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 6.462218284606934,
+      "fp8_loss": 6.461371898651123,
+      "loss_relative_error": 0.0001569526211824268,
+      "all_gradients": {
+        "max_abs": 0.0017251968383789062,
+        "relative_l2": 0.0766760909509787,
+        "cosine": 0.9970586525931318
+      },
+      "all_updates": {
+        "max_abs": 0.0002001393586397171,
+        "relative_l2": 0.21199842484964715,
+        "cosine": 0.9775204715115021
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.0004000505432486534,
+        "relative_l2": 0.0007878232389386591,
+        "cosine": 0.9999996896673571
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.031169429421424866,
+        "opposite_sign_reference_gradient_l2_fraction": 0.0106206638738513,
+        "small_reference_gradient_cutoff": 1.4616859516536351e-05,
+        "small_reference_gradient_fraction": 0.08095566928386688,
+        "opposite_sign_fraction_within_small_reference": 0.19069930911064148
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": true,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.0011348724365234375,
+          "relative_l2": 0.09601700930517795,
+          "cosine": 0.9953837556515509
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.0010833740234375,
+          "relative_l2": 0.09917023807891455,
+          "cosine": 0.995097832915079
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.001495361328125,
+          "relative_l2": 0.06198567298351952,
+          "cosine": 0.9980775056502351
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.0009756088256835938,
+          "relative_l2": 0.06924697752140829,
+          "cosine": 0.9975995562974036
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 0.0002117156982421875,
+          "relative_l2": 0.09829336326337201,
+          "cosine": 0.9952128694061709
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 0.0002117156982421875,
+          "relative_l2": 0.10290000519605982,
+          "cosine": 0.994693695038718
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.000667572021484375,
+          "relative_l2": 0.06934442725771256,
+          "cosine": 0.9975934972866713
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 0.00078582763671875,
+          "relative_l2": 0.07154669263237994,
+          "cosine": 0.9974399320323952
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 0.0007815361022949219,
+          "relative_l2": 0.07252090807832794,
+          "cosine": 0.9973693963860679
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 0.000331878662109375,
+          "relative_l2": 0.06227686464450345,
+          "cosine": 0.9980596752653311
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 0.00013446807861328125,
+          "relative_l2": 0.06111479488282977,
+          "cosine": 0.9981308295054903
+        },
+        "training_model.draft_model.layers.0.attention_conv.base_kernel": {
+          "max_abs": 0.00034332275390625,
+          "relative_l2": 0.06853373129051915,
+          "cosine": 0.9976543945722698
+        },
+        "training_model.draft_model.layers.0.attention_conv.kernel_projection.weight": {
+          "max_abs": 0.0017251968383789062,
+          "relative_l2": 0.07426128163350156,
+          "cosine": 0.9975781711998767
+        },
+        "training_model.draft_model.layers.0.mlp_conv.base_kernel": {
+          "max_abs": 0.0001316070556640625,
+          "relative_l2": 0.06270807213646366,
+          "cosine": 0.998050096249175
+        },
+        "training_model.draft_model.layers.0.mlp_conv.kernel_projection.weight": {
+          "max_abs": 0.0007476806640625,
+          "relative_l2": 0.05888313535081546,
+          "cosine": 0.9982649815955318
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.001399993896484375,
+          "relative_l2": 0.09579118588016125,
+          "cosine": 0.9954183631859258
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.0011444091796875,
+          "relative_l2": 0.08823321706151903,
+          "cosine": 0.9961582321637062
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.0011749267578125,
+          "relative_l2": 0.07366916917497003,
+          "cosine": 0.9972828026732963
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.0010833740234375,
+          "relative_l2": 0.07327921507410534,
+          "cosine": 0.9973188222454237
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 0.00022602081298828125,
+          "relative_l2": 0.08589398788388236,
+          "cosine": 0.9963090182607129
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 0.0002288818359375,
+          "relative_l2": 0.07946765589985064,
+          "cosine": 0.9968472930361214
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 0.06614778739488311,
+          "cosine": 0.9978113370150714
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 0.0007915496826171875,
+          "relative_l2": 0.06234639910671064,
+          "cosine": 0.998080812184381
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.000732421875,
+          "relative_l2": 0.06578655422370865,
+          "cosine": 0.9978480200829116
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 0.000255584716796875,
+          "relative_l2": 0.07099122601578428,
+          "cosine": 0.9975974509949774
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 0.0001227855682373047,
+          "relative_l2": 0.061463031353448064,
+          "cosine": 0.9981718061215439
+        },
+        "training_model.draft_model.layers.1.attention_conv.base_kernel": {
+          "max_abs": 0.000247955322265625,
+          "relative_l2": 0.07234093501952261,
+          "cosine": 0.9974172049680485
+        },
+        "training_model.draft_model.layers.1.attention_conv.kernel_projection.weight": {
+          "max_abs": 0.0012631416320800781,
+          "relative_l2": 0.07440485756014972,
+          "cosine": 0.9972588690918966
+        },
+        "training_model.draft_model.layers.1.mlp_conv.base_kernel": {
+          "max_abs": 0.00011801719665527344,
+          "relative_l2": 0.06322045532972917,
+          "cosine": 0.9980270343640674
+        },
+        "training_model.draft_model.layers.1.mlp_conv.kernel_projection.weight": {
+          "max_abs": 0.0010776519775390625,
+          "relative_l2": 0.06423521764809226,
+          "cosine": 0.9980970206113746
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.0006103515625,
+          "relative_l2": 0.007949376415391979,
+          "cosine": 0.9999689604295673
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.001216888427734375,
+          "relative_l2": 0.09373219465409571,
+          "cosine": 0.9956167995051443
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 0.0002053976058959961,
+          "relative_l2": 0.08400841599567958,
+          "cosine": 0.996491206538171
+        },
+        "training_model.draft_model.candidate_selector.predecessor_codebook": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        },
+        "training_model.draft_model.candidate_selector.successor_codebook": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        },
+        "training_model.draft_model.candidate_selector.hidden_projection.weight": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        }
+      }
+    },
+    {
+      "algorithm": "dflash2",
+      "step": 3,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 6.3111748695373535,
+      "fp8_loss": 6.312794208526611,
+      "loss_relative_error": 0.0002565828035585582,
+      "all_gradients": {
+        "max_abs": 0.0015869140625,
+        "relative_l2": 0.07961631259931501,
+        "cosine": 0.9968270285979706
+      },
+      "all_updates": {
+        "max_abs": 0.0001977924257516861,
+        "relative_l2": 0.17843247418870542,
+        "cosine": 0.9840568951738042
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.0005939286202192307,
+        "relative_l2": 0.0008717853062530956,
+        "cosine": 0.9999996199953147
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.03360294923186302,
+        "opposite_sign_reference_gradient_l2_fraction": 0.009589041583240032,
+        "small_reference_gradient_cutoff": 1.3753227904089727e-05,
+        "small_reference_gradient_fraction": 0.07870183140039444,
+        "opposite_sign_fraction_within_small_reference": 0.21129019558429718
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": true,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.00128173828125,
+          "relative_l2": 0.09529822616963164,
+          "cosine": 0.9954749298409948
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.001117706298828125,
+          "relative_l2": 0.0828026495380334,
+          "cosine": 0.9965831270335933
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.001186370849609375,
+          "relative_l2": 0.06703115298219417,
+          "cosine": 0.9977510406410189
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.0011453628540039062,
+          "relative_l2": 0.07107630284379357,
+          "cosine": 0.9974777338698575
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 0.000244140625,
+          "relative_l2": 0.10312947569804728,
+          "cosine": 0.9949173614689155
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 0.000308990478515625,
+          "relative_l2": 0.12041927863538193,
+          "cosine": 0.9929514908509629
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.00095367431640625,
+          "relative_l2": 0.07489913748192074,
+          "cosine": 0.9972048305263486
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 0.001068115234375,
+          "relative_l2": 0.07953962719842171,
+          "cosine": 0.9968349601847122
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 0.0007495880126953125,
+          "relative_l2": 0.07420587210098784,
+          "cosine": 0.9972641779989304
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 0.000293731689453125,
+          "relative_l2": 0.07782383900147684,
+          "cosine": 0.997089970275863
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 0.00014019012451171875,
+          "relative_l2": 0.07276923516761816,
+          "cosine": 0.9974269676810343
+        },
+        "training_model.draft_model.layers.0.attention_conv.base_kernel": {
+          "max_abs": 0.00029754638671875,
+          "relative_l2": 0.07392097909654263,
+          "cosine": 0.9972689556219158
+        },
+        "training_model.draft_model.layers.0.attention_conv.kernel_projection.weight": {
+          "max_abs": 0.001132965087890625,
+          "relative_l2": 0.06428811681839236,
+          "cosine": 0.9979313794365552
+        },
+        "training_model.draft_model.layers.0.mlp_conv.base_kernel": {
+          "max_abs": 0.00014019012451171875,
+          "relative_l2": 0.07157184696511253,
+          "cosine": 0.9974430886712059
+        },
+        "training_model.draft_model.layers.0.mlp_conv.kernel_projection.weight": {
+          "max_abs": 0.000766754150390625,
+          "relative_l2": 0.06700807118869467,
+          "cosine": 0.9977553554871279
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.001251220703125,
+          "relative_l2": 0.11086640318625628,
+          "cosine": 0.9938353227703418
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.0011138916015625,
+          "relative_l2": 0.09636722552477507,
+          "cosine": 0.9954023898525098
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.00147247314453125,
+          "relative_l2": 0.07306745234344361,
+          "cosine": 0.9973271818298308
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.00092315673828125,
+          "relative_l2": 0.07851631949902989,
+          "cosine": 0.9969145161682595
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 0.0003147125244140625,
+          "relative_l2": 0.11574737851560271,
+          "cosine": 0.9934480151400618
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 0.0003662109375,
+          "relative_l2": 0.1211776449447178,
+          "cosine": 0.9929462048226197
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 0.000835418701171875,
+          "relative_l2": 0.07219434917953894,
+          "cosine": 0.9973917130805152
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 0.000762939453125,
+          "relative_l2": 0.07587089958534221,
+          "cosine": 0.9971714398596656
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.000804901123046875,
+          "relative_l2": 0.06821749262588223,
+          "cosine": 0.9977122789598509
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 0.000152587890625,
+          "relative_l2": 0.07263311395690564,
+          "cosine": 0.9973756111441996
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 0.0002765655517578125,
+          "relative_l2": 0.06713821792354531,
+          "cosine": 0.9977581162568083
+        },
+        "training_model.draft_model.layers.1.attention_conv.base_kernel": {
+          "max_abs": 0.0001735687255859375,
+          "relative_l2": 0.07710360782899849,
+          "cosine": 0.9970275359296557
+        },
+        "training_model.draft_model.layers.1.attention_conv.kernel_projection.weight": {
+          "max_abs": 0.0015869140625,
+          "relative_l2": 0.08224820951611478,
+          "cosine": 0.9966486200803255
+        },
+        "training_model.draft_model.layers.1.mlp_conv.base_kernel": {
+          "max_abs": 0.000270843505859375,
+          "relative_l2": 0.06552012888364735,
+          "cosine": 0.9978695283010024
+        },
+        "training_model.draft_model.layers.1.mlp_conv.kernel_projection.weight": {
+          "max_abs": 0.0009918212890625,
+          "relative_l2": 0.07345203680844502,
+          "cosine": 0.9977339051853009
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.00042724609375,
+          "relative_l2": 0.00788798875844387,
+          "cosine": 0.999969557919918
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.00075531005859375,
+          "relative_l2": 0.09317525805363475,
+          "cosine": 0.9956545750812579
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 0.00022205710411071777,
+          "relative_l2": 0.09659334040581893,
+          "cosine": 0.9953427725951856
+        },
+        "training_model.draft_model.candidate_selector.predecessor_codebook": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        },
+        "training_model.draft_model.candidate_selector.successor_codebook": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        },
+        "training_model.draft_model.candidate_selector.hidden_projection.weight": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        }
+      }
+    },
+    {
+      "algorithm": "dspark",
+      "step": 1,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 1.875257134437561,
+      "fp8_loss": 1.8754653930664062,
+      "loss_relative_error": 0.00011105604062322527,
+      "all_gradients": {
+        "max_abs": 0.001953125,
+        "relative_l2": 0.01182404329399511,
+        "cosine": 0.9999301679014886
+      },
+      "all_updates": {
+        "max_abs": 0.00019996985793113708,
+        "relative_l2": 0.2929895652695494,
+        "cosine": 0.9570786517108514
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.00019996985793113708,
+        "relative_l2": 0.0007186189090207222,
+        "cosine": 0.9999997417933473
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.02156052552163601,
+        "opposite_sign_reference_gradient_l2_fraction": 0.001253797672688961,
+        "small_reference_gradient_cutoff": 1.5267087292158976e-05,
+        "small_reference_gradient_fraction": 0.15810677409172058,
+        "opposite_sign_fraction_within_small_reference": 0.11561466753482819
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": false,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.00019884109497070312,
+          "relative_l2": 0.10418213102962152,
+          "cosine": 0.994560035994072
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.000232696533203125,
+          "relative_l2": 0.1048152698065323,
+          "cosine": 0.994502975678873
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.000213623046875,
+          "relative_l2": 0.05931506482301041,
+          "cosine": 0.9982482589055911
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.0002288818359375,
+          "relative_l2": 0.05386041510503316,
+          "cosine": 0.9985508165701871
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 5.173683166503906e-05,
+          "relative_l2": 0.129821913022782,
+          "cosine": 0.992006821456471
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 5.602836608886719e-05,
+          "relative_l2": 0.12283962931432565,
+          "cosine": 0.9925080293507791
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.00012874603271484375,
+          "relative_l2": 0.04993639436063065,
+          "cosine": 0.9987596272964488
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 0.0001068115234375,
+          "relative_l2": 0.04981280419229563,
+          "cosine": 0.9988114515583957
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 8.392333984375e-05,
+          "relative_l2": 0.047415316768244016,
+          "cosine": 0.998875264649225
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 5.435943603515625e-05,
+          "relative_l2": 0.07544507481774378,
+          "cosine": 0.9971576226498191
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 2.1696090698242188e-05,
+          "relative_l2": 0.0592470282794729,
+          "cosine": 0.9982435007894896
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.00016117095947265625,
+          "relative_l2": 0.08874585762679206,
+          "cosine": 0.9960571159682592
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.00018024444580078125,
+          "relative_l2": 0.09743252010760414,
+          "cosine": 0.9952546309219514
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.00024187564849853516,
+          "relative_l2": 0.05403869243273687,
+          "cosine": 0.998538858481765
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.00017213821411132812,
+          "relative_l2": 0.05210226284526831,
+          "cosine": 0.998644545255666
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 6.085634231567383e-05,
+          "relative_l2": 0.08997723141776913,
+          "cosine": 0.9968550206681224
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 6.0558319091796875e-05,
+          "relative_l2": 0.08791512137242623,
+          "cosine": 0.9969619673535157
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 9.059906005859375e-05,
+          "relative_l2": 0.048717609789564194,
+          "cosine": 0.9988126543385049
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 0.00011444091796875,
+          "relative_l2": 0.048022003365734874,
+          "cosine": 0.9988465469086728
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.00016021728515625,
+          "relative_l2": 0.05231872431953997,
+          "cosine": 0.9986482987421714
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 4.482269287109375e-05,
+          "relative_l2": 0.05906832955698656,
+          "cosine": 0.9982686606723749
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 1.800060272216797e-05,
+          "relative_l2": 0.04891162652423655,
+          "cosine": 0.9988055402068752
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.0001678466796875,
+          "relative_l2": 0.009054154596329415,
+          "cosine": 0.9999593940353122
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.0001277923583984375,
+          "relative_l2": 0.09132286449738314,
+          "cosine": 0.9958214448404585
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 3.057718276977539e-05,
+          "relative_l2": 0.09707725803271942,
+          "cosine": 0.995332967797455
+        },
+        "training_model.draft_model.markov_head.markov_w1.weight": {
+          "max_abs": 9.059906005859375e-06,
+          "relative_l2": 0.012144894280454248,
+          "cosine": 0.999927033660071
+        },
+        "training_model.draft_model.markov_head.markov_w2.weight": {
+          "max_abs": 6.381422281265259e-06,
+          "relative_l2": 0.024078847425354672,
+          "cosine": 0.9997102602909506
+        },
+        "training_model.draft_model.markov_head.gate_proj.weight": {
+          "max_abs": 5.885958671569824e-07,
+          "relative_l2": 0.02681756504482666,
+          "cosine": 0.9996447298759573
+        },
+        "training_model.draft_model.markov_head.gate_proj.bias": {
+          "max_abs": 2.7567148208618164e-07,
+          "relative_l2": 0.02511271603491091,
+          "cosine": 0.9996872907505574
+        },
+        "training_model.draft_model.confidence_head.proj.weight": {
+          "max_abs": 0.001953125,
+          "relative_l2": 0.00523780641340534,
+          "cosine": 0.9999863664027709
+        },
+        "training_model.draft_model.confidence_head.proj.bias": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        }
+      }
+    },
+    {
+      "algorithm": "dspark",
+      "step": 2,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 1.879367470741272,
+      "fp8_loss": 1.8790156841278076,
+      "loss_relative_error": 0.00018718351202551275,
+      "all_gradients": {
+        "max_abs": 0.00244140625,
+        "relative_l2": 0.01435326511917728,
+        "cosine": 0.9999040190450931
+      },
+      "all_updates": {
+        "max_abs": 0.00019959546625614166,
+        "relative_l2": 0.1312579238984413,
+        "cosine": 0.9913834421498835
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.00039939209818840027,
+        "relative_l2": 0.0008180858912475484,
+        "cosine": 0.9999996653676458
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.02096131071448326,
+        "opposite_sign_reference_gradient_l2_fraction": 0.0013267055619508028,
+        "small_reference_gradient_cutoff": 1.23966119645047e-05,
+        "small_reference_gradient_fraction": 0.127351775765419,
+        "opposite_sign_fraction_within_small_reference": 0.13579723238945007
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": true,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.00013113021850585938,
+          "relative_l2": 0.09934745315117922,
+          "cosine": 0.9950974677549875
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.000202178955078125,
+          "relative_l2": 0.09635128094977984,
+          "cosine": 0.9954006404772291
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.00026702880859375,
+          "relative_l2": 0.053762375867665524,
+          "cosine": 0.9985707418662558
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.0002079010009765625,
+          "relative_l2": 0.055445180996926,
+          "cosine": 0.998476333261733
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 5.53131103515625e-05,
+          "relative_l2": 0.10307393835771252,
+          "cosine": 0.9947313565765468
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 5.3882598876953125e-05,
+          "relative_l2": 0.09443679711269515,
+          "cosine": 0.9956672117976793
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.00010013580322265625,
+          "relative_l2": 0.05252212195009618,
+          "cosine": 0.9986198176851822
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 8.7738037109375e-05,
+          "relative_l2": 0.051006874450486114,
+          "cosine": 0.9987000714790312
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 0.0001678466796875,
+          "relative_l2": 0.05091087161807314,
+          "cosine": 0.9987109202183452
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 5.626678466796875e-05,
+          "relative_l2": 0.08103601722929855,
+          "cosine": 0.9968700631346961
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 2.5987625122070312e-05,
+          "relative_l2": 0.04851940131748628,
+          "cosine": 0.9988262530515415
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.0001354217529296875,
+          "relative_l2": 0.07467013265451711,
+          "cosine": 0.9972242610038172
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.000152587890625,
+          "relative_l2": 0.08008454415959641,
+          "cosine": 0.9967997801518971
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.000213623046875,
+          "relative_l2": 0.04520312217698247,
+          "cosine": 0.9989816308870749
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.000225067138671875,
+          "relative_l2": 0.04579469263709278,
+          "cosine": 0.998960729790732
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 3.4749507904052734e-05,
+          "relative_l2": 0.08431009866649317,
+          "cosine": 0.9966573347733214
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 3.457069396972656e-05,
+          "relative_l2": 0.07698176604710895,
+          "cosine": 0.9970901044677266
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 9.918212890625e-05,
+          "relative_l2": 0.049978670257154675,
+          "cosine": 0.9987873668229365
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 0.000125885009765625,
+          "relative_l2": 0.05187485719388622,
+          "cosine": 0.9986926537283117
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.0001983642578125,
+          "relative_l2": 0.05732047126865331,
+          "cosine": 0.9983963980685058
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 3.7789344787597656e-05,
+          "relative_l2": 0.05150716146855709,
+          "cosine": 0.9986761487680487
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 1.5020370483398438e-05,
+          "relative_l2": 0.045564751402123835,
+          "cosine": 0.9990081272508164
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.00018310546875,
+          "relative_l2": 0.00962122280334279,
+          "cosine": 0.9999537398107043
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.0001163482666015625,
+          "relative_l2": 0.0883310683797143,
+          "cosine": 0.9960911996424563
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 3.147125244140625e-05,
+          "relative_l2": 0.08965251842278447,
+          "cosine": 0.9959863293255806
+        },
+        "training_model.draft_model.markov_head.markov_w1.weight": {
+          "max_abs": 1.0967254638671875e-05,
+          "relative_l2": 0.012598905250265791,
+          "cosine": 0.9999210971900853
+        },
+        "training_model.draft_model.markov_head.markov_w2.weight": {
+          "max_abs": 7.331371307373047e-06,
+          "relative_l2": 0.024946628341122466,
+          "cosine": 0.9996887905043381
+        },
+        "training_model.draft_model.markov_head.gate_proj.weight": {
+          "max_abs": 8.642673492431641e-07,
+          "relative_l2": 0.04078370499702915,
+          "cosine": 0.999192380022721
+        },
+        "training_model.draft_model.markov_head.gate_proj.bias": {
+          "max_abs": 3.0547380447387695e-07,
+          "relative_l2": 0.03817274034127969,
+          "cosine": 0.9992890960020939
+        },
+        "training_model.draft_model.confidence_head.proj.weight": {
+          "max_abs": 0.00244140625,
+          "relative_l2": 0.006787297488754162,
+          "cosine": 0.9999838356260181
+        },
+        "training_model.draft_model.confidence_head.proj.bias": {
+          "max_abs": 0.0009765625,
+          "relative_l2": 0.00546448087431694,
+          "cosine": 1.0
+        }
+      }
+    },
+    {
+      "algorithm": "dspark",
+      "step": 3,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise",
+      "compile": true,
+      "compiled_feature_projector": true,
+      "converted_fqns": [
+        "layers.0.self_attn.q_proj",
+        "layers.0.self_attn.k_proj",
+        "layers.0.self_attn.v_proj",
+        "layers.0.self_attn.o_proj",
+        "layers.0.mlp.gate_proj",
+        "layers.0.mlp.up_proj",
+        "layers.0.mlp.down_proj",
+        "layers.1.self_attn.q_proj",
+        "layers.1.self_attn.k_proj",
+        "layers.1.self_attn.v_proj",
+        "layers.1.self_attn.o_proj",
+        "layers.1.mlp.gate_proj",
+        "layers.1.mlp.up_proj",
+        "layers.1.mlp.down_proj",
+        "fc"
+      ],
+      "bf16_loss": 1.853965163230896,
+      "fp8_loss": 1.8536304235458374,
+      "loss_relative_error": 0.00018055338296107948,
+      "all_gradients": {
+        "max_abs": 0.0015869140625,
+        "relative_l2": 0.01611140765706931,
+        "cosine": 0.9998759890865538
+      },
+      "all_updates": {
+        "max_abs": 0.0001941230148077011,
+        "relative_l2": 0.09589883603629677,
+        "cosine": 0.9954035038351723
+      },
+      "all_trainable_parameters": {
+        "max_abs": 0.0005868106381967664,
+        "relative_l2": 0.0008762382264642326,
+        "cosine": 0.9999996161032214
+      },
+      "gradient_signs": {
+        "opposite_sign_fraction": 0.02146303281188011,
+        "opposite_sign_reference_gradient_l2_fraction": 0.00165337894577533,
+        "small_reference_gradient_cutoff": 1.0209169886365999e-05,
+        "small_reference_gradient_fraction": 0.11880600452423096,
+        "opposite_sign_fraction_within_small_reference": 0.14240895211696625
+      },
+      "fused_head": true,
+      "fused_conv": true,
+      "numerical_gate_passed": true,
+      "per_parameter_gradient": {
+        "training_model.draft_model.layers.0.self_attn.q_proj.weight": {
+          "max_abs": 0.000179290771484375,
+          "relative_l2": 0.09139223304704114,
+          "cosine": 0.9958170296052984
+        },
+        "training_model.draft_model.layers.0.self_attn.k_proj.weight": {
+          "max_abs": 0.00018310546875,
+          "relative_l2": 0.08412004095134273,
+          "cosine": 0.9964564073506256
+        },
+        "training_model.draft_model.layers.0.self_attn.v_proj.weight": {
+          "max_abs": 0.00023651123046875,
+          "relative_l2": 0.05584219830439306,
+          "cosine": 0.9984445344574887
+        },
+        "training_model.draft_model.layers.0.self_attn.o_proj.weight": {
+          "max_abs": 0.00021266937255859375,
+          "relative_l2": 0.05512806338717282,
+          "cosine": 0.9984799936028698
+        },
+        "training_model.draft_model.layers.0.self_attn.q_norm.weight": {
+          "max_abs": 5.1021575927734375e-05,
+          "relative_l2": 0.11108458960743685,
+          "cosine": 0.9938430663666052
+        },
+        "training_model.draft_model.layers.0.self_attn.k_norm.weight": {
+          "max_abs": 5.245208740234375e-05,
+          "relative_l2": 0.11666120171827828,
+          "cosine": 0.9933097574053891
+        },
+        "training_model.draft_model.layers.0.mlp.gate_proj.weight": {
+          "max_abs": 0.00012874603271484375,
+          "relative_l2": 0.05315268294002442,
+          "cosine": 0.9985866000027745
+        },
+        "training_model.draft_model.layers.0.mlp.up_proj.weight": {
+          "max_abs": 0.00016021728515625,
+          "relative_l2": 0.05216214020813731,
+          "cosine": 0.9986845142203408
+        },
+        "training_model.draft_model.layers.0.mlp.down_proj.weight": {
+          "max_abs": 0.000102996826171875,
+          "relative_l2": 0.05260300257818778,
+          "cosine": 0.9986209876276452
+        },
+        "training_model.draft_model.layers.0.input_layernorm.weight": {
+          "max_abs": 4.076957702636719e-05,
+          "relative_l2": 0.08117170337946024,
+          "cosine": 0.9967191212332127
+        },
+        "training_model.draft_model.layers.0.post_attention_layernorm.weight": {
+          "max_abs": 1.9073486328125e-05,
+          "relative_l2": 0.05051935652483473,
+          "cosine": 0.9987396974272773
+        },
+        "training_model.draft_model.layers.1.self_attn.q_proj.weight": {
+          "max_abs": 0.000141143798828125,
+          "relative_l2": 0.07409058554312373,
+          "cosine": 0.9972697800439368
+        },
+        "training_model.draft_model.layers.1.self_attn.k_proj.weight": {
+          "max_abs": 0.00014591217041015625,
+          "relative_l2": 0.07618326977909287,
+          "cosine": 0.9971017480061837
+        },
+        "training_model.draft_model.layers.1.self_attn.v_proj.weight": {
+          "max_abs": 0.000247955322265625,
+          "relative_l2": 0.04976842313586851,
+          "cosine": 0.9987609394371256
+        },
+        "training_model.draft_model.layers.1.self_attn.o_proj.weight": {
+          "max_abs": 0.00013768672943115234,
+          "relative_l2": 0.04894163917100867,
+          "cosine": 0.99880169820267
+        },
+        "training_model.draft_model.layers.1.self_attn.q_norm.weight": {
+          "max_abs": 4.1961669921875e-05,
+          "relative_l2": 0.10368948804520103,
+          "cosine": 0.9946112803360029
+        },
+        "training_model.draft_model.layers.1.self_attn.k_norm.weight": {
+          "max_abs": 3.8623809814453125e-05,
+          "relative_l2": 0.09074743262592376,
+          "cosine": 0.9959622416859598
+        },
+        "training_model.draft_model.layers.1.mlp.gate_proj.weight": {
+          "max_abs": 0.000152587890625,
+          "relative_l2": 0.05214720262375027,
+          "cosine": 0.9986476026273625
+        },
+        "training_model.draft_model.layers.1.mlp.up_proj.weight": {
+          "max_abs": 9.059906005859375e-05,
+          "relative_l2": 0.0486454335418824,
+          "cosine": 0.9988167603199225
+        },
+        "training_model.draft_model.layers.1.mlp.down_proj.weight": {
+          "max_abs": 0.00011444091796875,
+          "relative_l2": 0.05672089598714674,
+          "cosine": 0.9983925769139983
+        },
+        "training_model.draft_model.layers.1.input_layernorm.weight": {
+          "max_abs": 4.673004150390625e-05,
+          "relative_l2": 0.05211217268299449,
+          "cosine": 0.9986552370595592
+        },
+        "training_model.draft_model.layers.1.post_attention_layernorm.weight": {
+          "max_abs": 1.4424324035644531e-05,
+          "relative_l2": 0.050274346702605575,
+          "cosine": 0.9987496241718181
+        },
+        "training_model.draft_model.norm.weight": {
+          "max_abs": 0.0001220703125,
+          "relative_l2": 0.007903869234173855,
+          "cosine": 0.9999687648411001
+        },
+        "training_model.draft_model.fc.weight": {
+          "max_abs": 0.00011157989501953125,
+          "relative_l2": 0.08884641421771056,
+          "cosine": 0.9960819704607052
+        },
+        "training_model.draft_model.hidden_norm.weight": {
+          "max_abs": 2.6889145374298096e-05,
+          "relative_l2": 0.09320638688044622,
+          "cosine": 0.9956580085356055
+        },
+        "training_model.draft_model.markov_head.markov_w1.weight": {
+          "max_abs": 6.4373016357421875e-06,
+          "relative_l2": 0.01172776741310332,
+          "cosine": 0.9999320645056098
+        },
+        "training_model.draft_model.markov_head.markov_w2.weight": {
+          "max_abs": 5.852431058883667e-06,
+          "relative_l2": 0.021726693359481873,
+          "cosine": 0.9997639483053635
+        },
+        "training_model.draft_model.markov_head.gate_proj.weight": {
+          "max_abs": 4.544854164123535e-07,
+          "relative_l2": 0.026240403921334518,
+          "cosine": 0.9996603827993835
+        },
+        "training_model.draft_model.markov_head.gate_proj.bias": {
+          "max_abs": 1.9371509552001953e-07,
+          "relative_l2": 0.024835104593754577,
+          "cosine": 0.9997147710357035
+        },
+        "training_model.draft_model.confidence_head.proj.weight": {
+          "max_abs": 0.0015869140625,
+          "relative_l2": 0.007748515262697902,
+          "cosine": 0.999976870317826
+        },
+        "training_model.draft_model.confidence_head.proj.bias": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "cosine": 1.0
+        }
+      }
+    }
+  ]
+}

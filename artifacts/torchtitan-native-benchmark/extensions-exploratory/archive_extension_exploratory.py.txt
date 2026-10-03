@@ -1,0 +1,177 @@
+"""Archive preliminary evidence without installing experimental code."""
+
+import difflib
+import hashlib
+import json
+import re
+import shutil
+import subprocess
+from pathlib import Path
+
+WORK = Path(__file__).resolve().parent
+HISTORY = WORK / "extension-bench-history"
+CORE = WORK / "SpecForge-titan-extensions"
+ROOT = WORK / "SpecForge-native-evidence/artifacts/torchtitan-native-benchmark/extensions-exploratory"
+BASE = "36eb793a4fba7fabb441821e9cb7b3f8279bca97"
+inventory = {}
+
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def put(destination, data, *, source=None):
+    path = ROOT / destination
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
+    inventory[destination] = {"sha256": sha(data)}
+    if source is not None:
+        inventory[destination]["source"] = source
+
+
+def copy(source, destination):
+    put(destination, source.read_bytes(), source=str(source.relative_to(WORK)))
+
+
+def as_json(destination, value):
+    put(destination, (json.dumps(value, indent=2) + "\n").encode())
+
+
+def log_excerpt(source, destination):
+    lines = source.read_text(errors="replace").splitlines()
+    selected = []
+    for line in lines:
+        # Full numeric rows are already retained in the adjacent raw JSON.
+        if not any(phrase in line for phrase in (
+            "Training completed", "AssertionError: FP8 numerical gate failed",
+            "test_torchtitan_fp8_parallel FAILED", "bitwise_equal",
+        )):
+            continue
+        if line.startswith("{"):
+            continue
+        line = line.replace("/scratch/specforge-torchtitan-20261003", "<WORKDIR>")
+        line = re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "<IP>", line)
+        line = re.sub(r"\bh200-\d+(?:-\d+)+\b", "<HOST>", line)
+        selected.append(line)
+    text = (
+        "Selected completion/failure lines only; full metrics are in the raw JSON.\n"
+        f"Original full-log SHA256: {sha(source.read_bytes())}\n"
+        "Absolute work paths, IP addresses and host names are redacted when present.\n\n"
+        + "\n".join(selected) + "\n"
+    )
+    put(destination, text.encode(), source=str(source.relative_to(WORK)))
+
+
+tracked = subprocess.check_output(
+    ["git", "ls-tree", "-r", "--name-only", BASE, "specforge"], cwd=CORE, text=True
+).splitlines()
+base = {
+    name: subprocess.check_output(["git", "show", f"{BASE}:{name}"], cwd=CORE)
+    for name in tracked if name.endswith(".py")
+}
+for tag in ("p0", "p1"):
+    reports = sorted((HISTORY / tag).glob("*.json"))
+    measured = [json.loads(p.read_text()) for p in reports if p.name != "launch-manifest.json"]
+    trial = next(record for record in measured if isinstance(record, dict) and "source_sha256" in record)
+    for report in reports:
+        copy(report, f"{tag}/raw/{report.name}")
+    for log in sorted((HISTORY / tag).glob("*.log")):
+        log_excerpt(log, f"{tag}/logs/{log.stem}.excerpt.log")
+    snapshot_root = HISTORY / f"source-{tag}"
+    snapshot = {
+        str(path.relative_to(snapshot_root)): path.read_bytes()
+        for path in sorted((snapshot_root / "specforge").rglob("*.py"))
+    }
+    changed = sorted(name for name in snapshot if snapshot[name] != base.get(name))
+    deleted = sorted(set(base) - set(snapshot))
+    archived = sorted(set(changed) | set(trial["source_sha256"]))
+    for name in archived:
+        put(f"{tag}/source-snapshot/{name}.txt", snapshot[name])
+    for name, expected in trial["source_sha256"].items():
+        assert sha(snapshot[name]) == expected, (tag, name)
+    for record in measured:
+        if isinstance(record, dict) and "source_sha256" in record:
+            assert record["source_sha256"] == trial["source_sha256"], tag
+    patch = ""
+    for name in sorted(set(changed) | set(deleted)):
+        patch += "".join(difflib.unified_diff(
+            base.get(name, b"").decode().splitlines(True),
+            snapshot.get(name, b"").decode().splitlines(True),
+            fromfile=f"a/{name}" if name in base else "/dev/null",
+            tofile=f"b/{name}" if name in snapshot else "/dev/null",
+        ))
+    put(f"{tag}/source-from-{BASE[:7]}.patch", patch.encode())
+    for filename in ("benchmark_training_backends.py", "training_benchmark_recipes.py", "qwen3-4b-dflash.json"):
+        source = HISTORY / f"driver-{tag}" / filename
+        copy(source, f"{tag}/driver-snapshot/{filename}.txt")
+    assert sha((HISTORY / f"driver-{tag}/benchmark_training_backends.py").read_bytes()) == trial["benchmark_sha256"]
+    assert sha((HISTORY / f"driver-{tag}/training_benchmark_recipes.py").read_bytes()) == trial["recipe_helpers_sha256"]
+    as_json(f"{tag}/source-provenance.json", {
+        "label": "PRELIMINARY_NONISOLATED_SINGLE_TRIAL",
+        "performance_claim": "Diagnostic only; not part of p2's repeated matched matrix.",
+        "base_core_commit": BASE,
+        "source_reconstruction": "Apply source-from-36eb793.patch to base commit. Covers all specforge Python modules.",
+        "full_python_source_sha256": {name: sha(data) for name, data in snapshot.items()},
+        "changed_or_added_python_modules": changed,
+        "deleted_python_modules": deleted,
+        "archived_source_modules": archived,
+        "all_recorded_source_driver_recipe_hashes_verified": True,
+        "profiler_json": "Files containing profile are instrumented diagnostic runs; do not use their timing as performance measurements.",
+        "runtime": trial["versions"],
+        "isolation": "A GPU pair was used; exclusive whole-node isolation was not established for these early probes.",
+    })
+
+deferred = WORK / "fp8-deferred-experiment"
+for original, destination in (
+    ("fp8-extension-evidence", "original-matrix"),
+    ("fp8-extension-evidence-final", "final-dcp-matrix"),
+):
+    directory = deferred / "reports" / original
+    for report in sorted(directory.glob("*.json")):
+        copy(report, f"fp8-deferred/{destination}/{report.name}")
+    for log in sorted(directory.glob("*.log")):
+        log_excerpt(log, f"fp8-deferred/{destination}/{log.stem}.excerpt.log")
+for source in sorted((deferred / "source").rglob("*.py")):
+    copy(source, f"fp8-deferred/final-source/{source.relative_to(deferred / 'source')}.txt")
+for filename in ("model.py", "parallelize.py"):
+    copy(deferred / "integration" / filename, f"fp8-deferred/final-source/specforge/training/torchtitan/{filename}.txt")
+original_snapshot = deferred / "reports/fp8-extension-evidence/sources-after-original-matrix"
+for source in sorted(original_snapshot.rglob("*")):
+    if source.is_file():
+        suffix = ".txt" if source.suffix == ".py" else ""
+        copy(source, f"fp8-deferred/post-original-source/{source.relative_to(original_snapshot)}{suffix}")
+final_reports = []
+for path in sorted((ROOT / "fp8-deferred/final-dcp-matrix").glob("tp*.json")):
+    report = json.loads(path.read_text())
+    for name, expected in report["source_sha256"].items():
+        assert sha((ROOT / f"fp8-deferred/final-source/{name}.txt").read_bytes()) == expected, name
+    final_reports.append(report)
+rows = [row for report in final_reports for row in report["results"]]
+as_json("fp8-deferred/summary.json", {
+    "status": "DEFERRED_NUMERICAL_GATE_FAILED",
+    "production_feature": False,
+    "final_source_hashes_verified": True,
+    "runtime_completed_steps": len(rows),
+    "failed_gate_steps": [{k: row[k] for k in ("algorithm", "step", "tp", "dp", "recipe")} for row in rows if not row["numerical_gate_passed"]],
+    "gate": {"loss_relative_error_max": 0.01, "gradient_relative_l2_max": 0.10, "gradient_cosine_min": 0.99, "update_relative_l2_max": 0.25, "update_cosine_min": 0.97, "strict_inequalities": True},
+    "max_loss_relative_error": max(row["loss_relative_error"] for row in rows),
+    "gradient_relative_l2_range": [min(row["all_gradients"]["relative_l2"] for row in rows), max(row["all_gradients"]["relative_l2"] for row in rows)],
+    "first_update_relative_l2_range": [min(row["all_updates"]["relative_l2"] for row in rows if row["step"] == 1), max(row["all_updates"]["relative_l2"] for row in rows if row["step"] == 1)],
+    "final_parameter_relative_l2_range": [min(row["all_trainable_parameters"]["relative_l2"] for row in rows if row["step"] == 3), max(row["all_trainable_parameters"]["relative_l2"] for row in rows if row["step"] == 3)],
+    "dcp_roundtrips": [row for report in final_reports for row in report["dcp_roundtrip"]],
+    "original_source_boundary": "Original matrix lacks embedded execution-time source hashes; post-original-source is the explicitly later preserved snapshot. Final DCP matrix embeds and verifies exact source hashes.",
+    "loss_reporting": "bf16_loss and fp8_loss are rank-zero local losses; loss_relative_error is MAX across ranks and can be nonzero when the two rank-zero scalars match.",
+})
+copy(WORK / "profile_extension_benchmark.py", "p0/profile_extension_benchmark.py.txt")
+copy(Path(__file__).resolve(), "archive_extension_exploratory.py.txt")
+if (ROOT / "README.md").exists():
+    put("README.md", (ROOT / "README.md").read_bytes())
+as_json("archive-manifest.json", {
+    "purpose": "Preserve preliminary or failed experiments separately from the final p2 matrix.",
+    "raw_json_integrity": "Copied byte-for-byte; historical absolute paths identify the old run, not production setup instructions.",
+    "source_installation": "All code is archival .txt or patch text, never an installed FP8 implementation.",
+    "files": inventory,
+})
+for name, record in inventory.items():
+    assert sha((ROOT / name).read_bytes()) == record["sha256"], name
+print(json.dumps({"archive": str(ROOT), "verified_files": len(inventory), "bytes": sum((ROOT / name).stat().st_size for name in inventory)}))

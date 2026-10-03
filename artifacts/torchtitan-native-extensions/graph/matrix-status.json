@@ -1,0 +1,27 @@
+[
+  {
+    "case": "graph-final-dflash2",
+    "exit_code": 0,
+    "seconds": 19.285629510879517
+  },
+  {
+    "case": "graph-final-dflash",
+    "exit_code": 0,
+    "seconds": 16.73271417617798
+  },
+  {
+    "case": "graph-final-dspark",
+    "exit_code": 0,
+    "seconds": 17.03270983695984
+  },
+  {
+    "case": "graph-cut",
+    "exit_code": 0,
+    "seconds": 19.335367679595947
+  },
+  {
+    "case": "graph-resume",
+    "exit_code": 0,
+    "seconds": 21.841472864151
+  }
+]

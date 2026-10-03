@@ -1,0 +1,392 @@
+"""FP8 versus BF16 distributed loss, gradient and Adam update regression.
+
+Run on two Hopper-or-newer GPUs using ``torchrun --standalone
+--nproc-per-node=2 -m tests.test_training.test_torchtitan_fp8_parallel --tp 1
+--compile --recipe rowwise``; use ``--tp 2`` for tensor parallelism. These
+short numerical checks do not establish convergence or serving acceptance.
+"""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import json
+import os
+from dataclasses import replace
+from pathlib import Path
+
+
+def main():
+    os.environ.setdefault("SPECFORGE_DFLASH_FUSED_HEAD", "0")
+    os.environ.setdefault("SPECFORGE_DFLASH2_FUSED_CONV", "0")
+    import torch
+    import torch.distributed as dist
+    import torch.distributed.checkpoint as dcp
+    import torchao
+    from torch.distributed.tensor import DTensor
+    from torchtitan.components.checkpoint import ModelWrapper
+    from torchtitan.components.optimizer import OptimizersContainer, ParamGroupConfig
+    from torchtitan.config import CompileConfig, ParallelismConfig, TrainingConfig
+    from torchtitan.distributed import ParallelDims
+    from torchtitan.distributed.utils import clip_grad_norm_, set_spmd_backend
+
+    from specforge.training.torchtitan.model import SpecForgeTitanModel
+    from specforge.training.torchtitan.parallelize import (
+        HeterogeneousGradientNorms,
+        group_optimizer_parameters_by_mesh,
+        parallelize_dflash,
+    )
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tp", type=int, default=1)
+    parser.add_argument("--compile", action="store_true")
+    parser.add_argument("--recipe", default="rowwise")
+    parser.add_argument("--algorithm", default="all")
+    parser.add_argument("--steps", type=int, default=3)
+    parser.add_argument("--report", default=None)
+    parser.add_argument("--checkpoint-dir", default=None)
+    args = parser.parse_args()
+    repo = Path(__file__).resolve().parents[2]
+    source_sha256 = {
+        name: hashlib.sha256((repo / name).read_bytes()).hexdigest()
+        for name in (
+            "specforge/training/torchtitan/model.py",
+            "specforge/training/torchtitan/parallelize.py",
+            "specforge/training/torchtitan/quantization.py",
+            "tests/test_training/test_torchtitan_fp8_parallel.py",
+        )
+    }
+    torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
+    dist.init_process_group("nccl")
+    set_spmd_backend("partial_dtensor")
+    world = dist.get_world_size()
+    dims = ParallelDims(
+        dp_replicate=1,
+        dp_shard=world // args.tp,
+        tp=args.tp,
+        cp=1,
+        pp=1,
+        ep=1,
+        world_size=world,
+        spmd_backend="partial_dtensor",
+    )
+    dims.build_mesh()
+    dp_rank = dims.get_optional_mesh(
+        "batch", include_singleton_axes=True
+    ).get_local_rank()
+
+    def full(tensor):
+        if isinstance(tensor, DTensor):
+            tensor = tensor.full_tensor()
+        return tensor.detach().float().cpu().flatten()
+
+    def comparison(actual, expected):
+        actual, expected = actual.double(), expected.double()
+        assert torch.isfinite(actual).all()
+        assert torch.isfinite(expected).all()
+        norm = expected.norm()
+        if norm == 0:
+            return {
+                "max_abs": float(actual.abs().max()),
+                "relative_l2": 0.0 if actual.norm() == 0 else None,
+                "cosine": 1.0 if actual.norm() == 0 else None,
+            }
+        return {
+            "max_abs": float((actual - expected).abs().max()),
+            "relative_l2": float((actual - expected).norm() / norm),
+            "cosine": float(
+                torch.nn.functional.cosine_similarity(actual, expected, dim=0)
+            ),
+        }
+
+    algorithms = (
+        ("dflash", "dflash2", "dspark")
+        if args.algorithm == "all"
+        else (args.algorithm,)
+    )
+    results = []
+    checkpoint_results = []
+    for algorithm in algorithms:
+        cfg = SpecForgeTitanModel.Config(
+            algorithm=algorithm,
+            draft_config={
+                "hidden_size": 256,
+                "intermediate_size": 512,
+                "num_attention_heads": 8,
+                "num_key_value_heads": 4,
+                "num_hidden_layers": 2,
+                "num_target_layers": 4,
+                "head_dim": 32,
+                "max_position_embeddings": 128,
+                "vocab_size": 512,
+                "attention_bias": False,
+                "attention_dropout": 0.0,
+                "layer_types": ["full_attention", "full_attention"],
+                "dflash_config": {
+                    "block_size": 4,
+                    "mask_token_id": 511,
+                    "target_layer_ids": [1, 2],
+                    "conv_group_size": 16,
+                    "conv_kernel_size": 2,
+                    "selector_rank": 16,
+                    "selector_top_k": 4,
+                    "markov_rank": 16,
+                    "markov_head_type": "gated",
+                    "enable_confidence_head": True,
+                    "confidence_head_with_markov": True,
+                },
+            },
+            objective={
+                "attention_backend": "eager",
+                "num_anchors": 5,
+                "objective_chunk_blocks": 0,
+            },
+        )
+        models, optimizers = [], []
+        converted = ()
+        for use_fp8 in (False, True):
+            with torch.device("meta"):
+                model = replace(
+                    cfg, fp8_recipe=args.recipe if use_fp8 else None
+                ).build()
+            parallelize_dflash(
+                model,
+                parallel_dims=dims,
+                training=TrainingConfig(
+                    mixed_precision_param="bfloat16", mixed_precision_reduce="float32"
+                ),
+                parallelism=ParallelismConfig(
+                    spmd_backend="partial_dtensor",
+                    enable_sequence_parallel=False,
+                    tensor_parallel_degree=args.tp,
+                ),
+                compile_config=CompileConfig(enable=args.compile),
+                ac_config=None,
+                dump_folder="/tmp/specforge-titan-fp8-parity",
+            )
+            if use_fp8:
+                converted = model.fp8_converted_fqns
+            model.to_empty(device="cuda")
+            model.init_weights()
+            optimizer = OptimizersContainer.Config(
+                param_groups=[
+                    ParamGroupConfig(
+                        pattern=".*",
+                        optimizer_name="AdamW",
+                        optimizer_kwargs={"lr": 0.0001, "weight_decay": 0.01},
+                    )
+                ]
+            ).build(model_parts=[model])
+            group_optimizer_parameters_by_mesh(optimizer, [model], dims)
+            models.append(model)
+            optimizers.append(optimizer)
+        for step in range(args.steps):
+            generator = torch.Generator().manual_seed(143 + step + dp_rank * 100)
+            batch = {
+                "input_ids": torch.randint(0, 511, (1, 37), generator=generator).cuda(),
+                "hidden_states": torch.randn(1, 37, 512, generator=generator)
+                .cuda()
+                .bfloat16(),
+                "loss_mask": torch.ones(1, 37, dtype=torch.long).cuda(),
+                "target_last_hidden_states": torch.randn(
+                    1, 37, 256, generator=generator
+                )
+                .cuda()
+                .bfloat16(),
+                "collect_detailed_metrics": False,
+                "anchor_positions": torch.tensor([[0, 3, 9, 18, 29]], device="cuda"),
+                "block_keep_mask": torch.ones(1, 5, dtype=torch.bool, device="cuda"),
+            }
+            losses, gradients, updates, parameters = [], [], [], []
+            for model, optimizer in zip(models, optimizers):
+                optimizer.zero_grad()
+                before = {
+                    name: full(p)
+                    for name, p in model.named_parameters()
+                    if p.requires_grad
+                }
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    loss, _, _ = model(**batch)
+                loss.backward()
+                losses.append(float(loss.detach()))
+                gradients.append(
+                    {
+                        name: full(p.grad)
+                        for name, p in model.named_parameters()
+                        if p.requires_grad and p.grad is not None
+                    }
+                )
+                with HeterogeneousGradientNorms():
+                    clip_grad_norm_(model.parameters(), 1.0, foreach=True)
+                optimizer.step()
+                parameters.append(
+                    {
+                        name: full(p)
+                        for name, p in model.named_parameters()
+                        if p.requires_grad
+                    }
+                )
+                updates.append(
+                    {
+                        name: value - before[name]
+                        for name, value in parameters[-1].items()
+                    }
+                )
+            assert gradients[0].keys() == gradients[1].keys()
+            actual_gradient = torch.cat(list(gradients[1].values()))
+            expected_gradient = torch.cat(list(gradients[0].values()))
+            grad = comparison(
+                actual_gradient,
+                expected_gradient,
+            )
+            update = comparison(
+                torch.cat(list(updates[1].values())),
+                torch.cat(list(updates[0].values())),
+            )
+            parameter_error = comparison(
+                torch.cat(list(parameters[1].values())),
+                torch.cat(list(parameters[0].values())),
+            )
+            opposite_sign = actual_gradient * expected_gradient < 0
+            rms = expected_gradient.square().mean().sqrt()
+            small_gradient = expected_gradient.abs() < 0.01 * rms
+            sign_stats = {
+                "opposite_sign_fraction": float(opposite_sign.float().mean()),
+                "opposite_sign_reference_gradient_l2_fraction": float(
+                    expected_gradient[opposite_sign].norm() / expected_gradient.norm()
+                ),
+                "small_reference_gradient_cutoff": float(0.01 * rms),
+                "small_reference_gradient_fraction": float(
+                    small_gradient.float().mean()
+                ),
+                "opposite_sign_fraction_within_small_reference": float(
+                    opposite_sign[small_gradient].float().mean()
+                ),
+            }
+            loss_error = abs(losses[1] - losses[0]) / max(abs(losses[0]), 1e-12)
+            loss_error_tensor = torch.tensor(loss_error, device="cuda")
+            dist.all_reduce(loss_error_tensor, op=dist.ReduceOp.MAX)
+            loss_error = float(loss_error_tensor)
+            result = {
+                "algorithm": algorithm,
+                "step": step + 1,
+                "tp": args.tp,
+                "dp": world // args.tp,
+                "recipe": args.recipe,
+                "compile": args.compile,
+                "compiled_feature_projector": (
+                    getattr(models[1].draft_model.fc, "_compiled_call_impl", None)
+                    is not None
+                ),
+                "converted_fqns": converted,
+                "bf16_loss": losses[0],
+                "fp8_loss": losses[1],
+                "loss_relative_error": loss_error,
+                "all_gradients": grad,
+                "all_updates": update,
+                "all_trainable_parameters": parameter_error,
+                "gradient_signs": sign_stats,
+                "fused_head": os.environ["SPECFORGE_DFLASH_FUSED_HEAD"] == "1",
+                "fused_conv": os.environ["SPECFORGE_DFLASH2_FUSED_CONV"] == "1",
+                "numerical_gate_passed": (
+                    loss_error < 0.01
+                    and grad["relative_l2"] < 0.10
+                    and grad["cosine"] > 0.99
+                    and update["relative_l2"] < 0.25
+                    and update["cosine"] > 0.97
+                ),
+                "per_parameter_gradient": {
+                    name: comparison(gradients[1][name], expected)
+                    for name, expected in gradients[0].items()
+                },
+            }
+            results.append(result)
+            if dist.get_rank() == 0:
+                print(
+                    json.dumps(
+                        {
+                            key: value
+                            for key, value in result.items()
+                            if key != "per_parameter_gradient"
+                        }
+                    ),
+                    flush=True,
+                )
+        if args.checkpoint_dir:
+            state = {"model": ModelWrapper(models[1]), "optimizer": optimizers[1]}
+
+            def snapshot(value):
+                if isinstance(value, torch.Tensor):
+                    if isinstance(value, DTensor):
+                        value = value.full_tensor()
+                    return value.detach().cpu().clone()
+                if isinstance(value, dict):
+                    return {key: snapshot(item) for key, item in value.items()}
+                if isinstance(value, list):
+                    return [snapshot(item) for item in value]
+                if isinstance(value, tuple):
+                    return tuple(snapshot(item) for item in value)
+                return copy.deepcopy(value)
+
+            def assert_same(actual, expected):
+                if isinstance(expected, torch.Tensor):
+                    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+                elif isinstance(expected, dict):
+                    assert actual.keys() == expected.keys()
+                    for key in expected:
+                        assert_same(actual[key], expected[key])
+                elif isinstance(expected, (list, tuple)):
+                    assert type(actual) is type(expected) and len(actual) == len(
+                        expected
+                    )
+                    for a, e in zip(actual, expected):
+                        assert_same(a, e)
+                else:
+                    assert actual == expected
+
+            expected_state = {
+                name: snapshot(wrapper.state_dict()) for name, wrapper in state.items()
+            }
+            path = Path(args.checkpoint_dir) / algorithm
+            dcp.save(state, checkpoint_id=str(path))
+            with torch.no_grad():
+                for parameter in models[1].parameters():
+                    parameter.zero_()
+                for opt in optimizers[1]:
+                    for values in opt.state.values():
+                        for value in values.values():
+                            if isinstance(value, torch.Tensor):
+                                value.zero_()
+            dcp.load(state, checkpoint_id=str(path))
+            actual_state = {
+                name: snapshot(wrapper.state_dict()) for name, wrapper in state.items()
+            }
+            assert_same(actual_state, expected_state)
+            checkpoint_results.append({"algorithm": algorithm, "bitwise_equal": True})
+        del models, optimizers, model, optimizer
+        torch.cuda.empty_cache()
+    if dist.get_rank() == 0 and args.report:
+        Path(args.report).write_text(
+            json.dumps(
+                {
+                    "torch": torch.__version__,
+                    "torchao": torchao.__version__,
+                    "gpu": torch.cuda.get_device_name(),
+                    "source_sha256": source_sha256,
+                    "dcp_roundtrip": checkpoint_results,
+                    "results": results,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+    dist.destroy_process_group()
+    assert all(row["numerical_gate_passed"] for row in results), (
+        "FP8 numerical gate failed; inspect the emitted loss, all-gradient and "
+        "Adam-update comparisons. A completed optimizer step is not quality parity."
+    )
+
+
+if __name__ == "__main__":
+    main()

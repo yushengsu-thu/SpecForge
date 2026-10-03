@@ -1,0 +1,64 @@
+{
+  "dflash": {
+    "export_keys": 25,
+    "all_weights_bitwise_equal": true,
+    "max_weight_abs_difference": 0.0,
+    "relative_weight_l2_difference": 0.0,
+    "optimized_losses": [
+      11.108,
+      11.44127,
+      11.57041
+    ],
+    "unoptimized_losses": [
+      11.108,
+      11.44127,
+      11.57041
+    ]
+  },
+  "dflash2": {
+    "export_keys": 36,
+    "all_weights_bitwise_equal": true,
+    "max_weight_abs_difference": 0.0,
+    "relative_weight_l2_difference": 0.0,
+    "optimized_losses": [
+      11.10739,
+      11.49722,
+      11.61138
+    ],
+    "unoptimized_losses": [
+      11.10739,
+      11.49722,
+      11.61138
+    ]
+  },
+  "dspark": {
+    "export_keys": 29,
+    "all_weights_bitwise_equal": true,
+    "max_weight_abs_difference": 0.0,
+    "relative_weight_l2_difference": 0.0,
+    "optimized_losses": [
+      3.61456,
+      3.59788,
+      3.58062
+    ],
+    "unoptimized_losses": [
+      3.61456,
+      3.59788,
+      3.58062
+    ]
+  },
+  "full_vs_regional_dflash2": {
+    "max_weight_abs_difference": 0.00405782088637352,
+    "relative_weight_l2_difference": 0.0008983321604318917,
+    "full_losses": [
+      11.11073,
+      11.50198,
+      11.62487
+    ],
+    "regional_losses": [
+      11.10739,
+      11.49722,
+      11.61138
+    ]
+  }
+}

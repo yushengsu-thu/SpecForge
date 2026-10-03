@@ -1,0 +1,264 @@
+{
+  "files": {
+    ".gitignore": {
+      "bytes": 11,
+      "sha256": "6411c02c09402a3edce6e618b3712f0fbae102683af271a1e2fcc2834a2e60d2"
+    },
+    "README.md": {
+      "bytes": 7633,
+      "sha256": "b0e012b95a80ffc7c76a052b2696ccd1131a3d49f9aefc4b9076d6658265d54c"
+    },
+    "aggregate.json": {
+      "bytes": 28209,
+      "sha256": "74452279eb0d679ebb6602dbba5063439e02cfa5c5d588ddae6f30f3c111502a"
+    },
+    "aggregate.md": {
+      "bytes": 1368,
+      "sha256": "a99d203c69d0858495aca1fca95f4b196bc00b63c13ed5543d8804ee6ff99328"
+    },
+    "benchmark_training_backends.py.txt": {
+      "bytes": 26471,
+      "sha256": "59f9de2c12a104ec35dea61f63a024cf6c720a5c9a91552428cb167686702d9f"
+    },
+    "measured-runtime.patch": {
+      "bytes": 115974,
+      "sha256": "e0e1ecb4af9c3b08655efe80a0d968f06109ccec14d3062173cc014a24bc4b4c"
+    },
+    "raw/dflash-bf16-1.json": {
+      "bytes": 7267,
+      "sha256": "637a02860fad2460b306752e32b5743c9608c2002ca5886388e31ecad45606a5"
+    },
+    "raw/dflash-bf16-1.log": {
+      "bytes": 7647,
+      "sha256": "4ca74cbaf86ce3676af8b40405c5cd2b098d1ac96104f723fb9853a5445f37c1"
+    },
+    "raw/dflash-bf16-2.json": {
+      "bytes": 7264,
+      "sha256": "7d38eac7f92faaa82a27bc179249ff13e3bbb5cae40e2f8e9a75689ca8380138"
+    },
+    "raw/dflash-bf16-2.log": {
+      "bytes": 7647,
+      "sha256": "69e83e5a018df3fdc064cbb182a42d5d8d9956bcc3cebb9ecfed99fd5d999c12"
+    },
+    "raw/dflash-bf16-3.json": {
+      "bytes": 7265,
+      "sha256": "30d00bd4adb38b50327a96963f2bac42b67d623f757fc20b6e75f74eaba576a2"
+    },
+    "raw/dflash-bf16-3.log": {
+      "bytes": 7647,
+      "sha256": "620ac098075387690910b9e9c59bc447d36366f7fc8473b08dea4f849806fa6d"
+    },
+    "raw/dflash-cuda-1.json": {
+      "bytes": 7268,
+      "sha256": "f1b03513d803e8b8f727aa918e2efcb0b645cab600914045189234c7c8974768"
+    },
+    "raw/dflash-cuda-1.log": {
+      "bytes": 7784,
+      "sha256": "3ce4f85032886426e55b03ea66ad3c5a5608308f30a10fb63cee37b8da97da69"
+    },
+    "raw/dflash-cuda-2.json": {
+      "bytes": 7268,
+      "sha256": "22eef48ff2f504f68a60d5e864ef10f8f754dd7d742e84fe4fafbe75240b65fe"
+    },
+    "raw/dflash-cuda-2.log": {
+      "bytes": 7784,
+      "sha256": "25960bda100bbfb99d3dbda77226bc392c6d4598fd03b638b27b1673ea53c689"
+    },
+    "raw/dflash-cuda-3.json": {
+      "bytes": 7264,
+      "sha256": "27d4cd787210c8f0fafbd8a8b7e106defad93782947128c3046b717d23871aa9"
+    },
+    "raw/dflash-cuda-3.log": {
+      "bytes": 7782,
+      "sha256": "bbd2530658c211a20557b84b505abe9baef396a3e78a4d874fa9e42430c31a51"
+    },
+    "raw/dflash-graph-full-1.json": {
+      "bytes": 7262,
+      "sha256": "87fe91ebca125e596074f44a38006e91a8eac29962b0173fb4a68d697752a095"
+    },
+    "raw/dflash-graph-full-1.log": {
+      "bytes": 29323,
+      "sha256": "98c085e8da31a904b971f30bf92af095426ccab0ad49dd1352833cf12b041f31"
+    },
+    "raw/dflash-graph-full-2.json": {
+      "bytes": 7264,
+      "sha256": "f8e3e2a2cdcdf263215ca3e2291efc96b8d1087bc1a947658e4e5c3b2da45d83"
+    },
+    "raw/dflash-graph-full-2.log": {
+      "bytes": 29321,
+      "sha256": "637325da2082147c19051daccc687502658b57ce9825f5598bfa2ec1a12289b0"
+    },
+    "raw/dflash-graph-full-3.json": {
+      "bytes": 7266,
+      "sha256": "bffe2ee192ca8f81493c92a70dba4f11cb564ac07719633241dda8ac6d3bdad1"
+    },
+    "raw/dflash-graph-full-3.log": {
+      "bytes": 29321,
+      "sha256": "437f7a41080c508df325e04ec282551cfac38c5c9706cb5db7e3685071b7c396"
+    },
+    "raw/dflash2-bf16-1.json": {
+      "bytes": 7382,
+      "sha256": "af2d278a407769c01b3349f8e8395aadab34d3eaf0578ff0f929fc0c3e0ced42"
+    },
+    "raw/dflash2-bf16-1.log": {
+      "bytes": 7653,
+      "sha256": "7aa723e74846b359bcd56e6a368cb3ce3d7417e4657f9c746f348c72371bc5e1"
+    },
+    "raw/dflash2-bf16-2.json": {
+      "bytes": 7379,
+      "sha256": "9b4170307d545101d74ab5b9b3d2dc2ac9d35acec59101444ab67ffb94048a1b"
+    },
+    "raw/dflash2-bf16-2.log": {
+      "bytes": 7652,
+      "sha256": "180640ba206ff1dd2ca2b877a5ea8d4e7b4f3b2d647ad5afd145bc4e7e93f9a2"
+    },
+    "raw/dflash2-bf16-3.json": {
+      "bytes": 7384,
+      "sha256": "60e496bb7160d4e25309dd27cfb60faeb863fca5394ab906de37d2940f3ad5c0"
+    },
+    "raw/dflash2-bf16-3.log": {
+      "bytes": 7653,
+      "sha256": "ced8fd6f54aa825fcf63c70e13796652405464bae2fd5f5c0890d41ea9b47d78"
+    },
+    "raw/dflash2-cuda-1.json": {
+      "bytes": 7373,
+      "sha256": "881d677b45f93ca5be67c63d3761b2723a4d0fb93d0e56b9fef439d2dae50a0e"
+    },
+    "raw/dflash2-cuda-1.log": {
+      "bytes": 7788,
+      "sha256": "1e2e53c3616022c61b80f405dfe0bfee52c658a087f78557fd43f47297f23de2"
+    },
+    "raw/dflash2-cuda-2.json": {
+      "bytes": 7379,
+      "sha256": "aa8a205bd53cac139db471a6a54c43fe1f668d454d8b30ac665bf94015c779aa"
+    },
+    "raw/dflash2-cuda-2.log": {
+      "bytes": 7789,
+      "sha256": "d7c4ac93f33b5aae22de2f2f0d763f4fafba77c0b6db439c1d8659e0439a183c"
+    },
+    "raw/dflash2-cuda-3.json": {
+      "bytes": 7384,
+      "sha256": "29291c3b2002e058b48f12bbab439c6563495fbd186107ecdb8433d228f9fd77"
+    },
+    "raw/dflash2-cuda-3.log": {
+      "bytes": 7790,
+      "sha256": "3f2ce26b35447db6208292724e2b9f4c29d9daf0ce149a255d8145ee73075511"
+    },
+    "raw/dflash2-graph-full-1.json": {
+      "bytes": 7372,
+      "sha256": "14b679910ddb01599d4b3d57208de089f956dedfeea9694144e505ea16c4cd2d"
+    },
+    "raw/dflash2-graph-full-1.log": {
+      "bytes": 35675,
+      "sha256": "9ec4e8f276adfee7ee226e232cf5363236cd05013fb207731452e6a70a61d81c"
+    },
+    "raw/dflash2-graph-full-2.json": {
+      "bytes": 7372,
+      "sha256": "31b8df9b74e4653b154ee98c8175b7eb710cb0e461101090cbe3ef14fcddb26b"
+    },
+    "raw/dflash2-graph-full-2.log": {
+      "bytes": 35674,
+      "sha256": "68125f597ae053d210dc1af9d39b03ba1d29ea9714ed7080a6039880362606fb"
+    },
+    "raw/dflash2-graph-full-3.json": {
+      "bytes": 7380,
+      "sha256": "40c39ba978693493be620cd990f8987f7ca183c78e458709105e09bbe0c613de"
+    },
+    "raw/dflash2-graph-full-3.log": {
+      "bytes": 35676,
+      "sha256": "6ce57391a34dc8cfc2f385ef90e55a13f1385f4fa2f1c0a47138202548581d67"
+    },
+    "raw/dspark-bf16-1.json": {
+      "bytes": 7495,
+      "sha256": "168389c6eca4ee0bcb1bfa495a2cf8a7a33a0b678dbeecc619dc0ff9cd404549"
+    },
+    "raw/dspark-bf16-1.log": {
+      "bytes": 7646,
+      "sha256": "5733d852e431f2db352eaf3b7ab0ad3d99847207070bd1a879b5a50b0f8ec83c"
+    },
+    "raw/dspark-bf16-2.json": {
+      "bytes": 7499,
+      "sha256": "5c727ce120045a7f3a9cd1e2a1a0c5d62271ba28748e1ddac5d263cb49d3de2a"
+    },
+    "raw/dspark-bf16-2.log": {
+      "bytes": 7647,
+      "sha256": "0bac93c69507faaec3814592ff4899c3d1ef1b7dda42fcfcca9762650064ee54"
+    },
+    "raw/dspark-bf16-3.json": {
+      "bytes": 7499,
+      "sha256": "53aab161745769f8af889c8e317607ef7c9ff89dd23f74418729fd56c766b05d"
+    },
+    "raw/dspark-bf16-3.log": {
+      "bytes": 7647,
+      "sha256": "8896537aaa0aaebce95217b940c31d0dc22d1de2a80c7a0d432da536db57731e"
+    },
+    "raw/dspark-cuda-1.json": {
+      "bytes": 7495,
+      "sha256": "de48977d844bd021f9b58428abdd9990f1ad7bf0732c55d6cdc426c72014d759"
+    },
+    "raw/dspark-cuda-1.log": {
+      "bytes": 7784,
+      "sha256": "b82100fa25a1edfd4967ed178f1f5fd8a837ca8767077a80b50710bc6a9adec5"
+    },
+    "raw/dspark-cuda-2.json": {
+      "bytes": 7496,
+      "sha256": "ab407974024e3b63e06b3df4e0226effa625009eb0d9d1be30e21c200d413cbf"
+    },
+    "raw/dspark-cuda-2.log": {
+      "bytes": 7784,
+      "sha256": "578e5984de41fd45acda6764d215968b0b607333a2333463839f44276bcf765f"
+    },
+    "raw/dspark-cuda-3.json": {
+      "bytes": 7502,
+      "sha256": "95f31a733a75061d9730184d370ea6335638749ff9379c3b1733e080f819599f"
+    },
+    "raw/dspark-cuda-3.log": {
+      "bytes": 7783,
+      "sha256": "a57246327cf15d245cf0a2118a8acc63d52504f597b2fad60e842bfb355cc1a6"
+    },
+    "raw/dspark-graph-full-1.json": {
+      "bytes": 7494,
+      "sha256": "f2056dd2cf99b08a639ac06bc09c6930143bc66508c1b8f6e7196f0e5b5cf005"
+    },
+    "raw/dspark-graph-full-1.log": {
+      "bytes": 30847,
+      "sha256": "211c22d1f77503b26ca543eba00cbaa473c19d4d1fbb89362e9393a5efce4eb9"
+    },
+    "raw/dspark-graph-full-2.json": {
+      "bytes": 7490,
+      "sha256": "ddcb8b6eb75936e6f2e027eb03c3850af2ea2118bbb8a728b4d482669edc75ac"
+    },
+    "raw/dspark-graph-full-2.log": {
+      "bytes": 30846,
+      "sha256": "c0e2b64bb75cd35f322a61d66e09565b691e39a26a39b4bb50b7f60fea49728f"
+    },
+    "raw/dspark-graph-full-3.json": {
+      "bytes": 7488,
+      "sha256": "4e369b64480ddea1aaa0ed9bcf747e9e051aa2e0d760b75a8dfe3d2a2489ac35"
+    },
+    "raw/dspark-graph-full-3.log": {
+      "bytes": 30844,
+      "sha256": "0df10adb6245400b5c1c3f3d2b4fee9e808b97a517c9ea49155180ecb7d6dc34"
+    },
+    "raw/launch-manifest.json": {
+      "bytes": 27230,
+      "sha256": "5bf8aa01f165133557a8880cfb7cb5dda38e5fc1da830a66bdf83e7905e7e910"
+    },
+    "run_extension_benchmarks.py.txt": {
+      "bytes": 3454,
+      "sha256": "b04739aa489d3a03bba381f7b56fca9cce864e6f1c52648f7b9be37a986b8135"
+    },
+    "source-provenance.json": {
+      "bytes": 77004,
+      "sha256": "cf9f45d3389c9800848551764aaca856321834509b2ae5151c07df20ee8b0260"
+    },
+    "summarize_extension_benchmarks.py.txt": {
+      "bytes": 8528,
+      "sha256": "516647aa7d9668f49d8de9c9d4058a0699bdea018506c279d20ef7ed548bedea"
+    },
+    "training_benchmark_recipes.py.txt": {
+      "bytes": 10866,
+      "sha256": "ec507e956af026d6aeab0c1efb12f2bcdab46f5109aa26798df8e4f0d5c6ad7b"
+    }
+  }
+}

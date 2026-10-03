@@ -1,0 +1,11 @@
+{
+  "owned_producer_stopped": true,
+  "owned_master_stopped": true,
+  "owned_processes_running": false,
+  "gpu_indices": [
+    6,
+    7
+  ],
+  "gpu_compute_processes": [],
+  "cleanup": "Producer stopped via its scoped stop file; owned master process group received SIGTERM."
+}

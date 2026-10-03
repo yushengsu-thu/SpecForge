@@ -1,0 +1,99 @@
+{
+  "status": "DEFERRED_NUMERICAL_GATE_FAILED",
+  "production_feature": false,
+  "final_source_hashes_verified": true,
+  "runtime_completed_steps": 18,
+  "failed_gate_steps": [
+    {
+      "algorithm": "dflash",
+      "step": 1,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise"
+    },
+    {
+      "algorithm": "dflash2",
+      "step": 1,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise"
+    },
+    {
+      "algorithm": "dspark",
+      "step": 1,
+      "tp": 1,
+      "dp": 2,
+      "recipe": "rowwise"
+    },
+    {
+      "algorithm": "dflash",
+      "step": 1,
+      "tp": 2,
+      "dp": 1,
+      "recipe": "rowwise_with_gw_hp"
+    },
+    {
+      "algorithm": "dflash2",
+      "step": 1,
+      "tp": 2,
+      "dp": 1,
+      "recipe": "rowwise_with_gw_hp"
+    },
+    {
+      "algorithm": "dspark",
+      "step": 1,
+      "tp": 2,
+      "dp": 1,
+      "recipe": "rowwise_with_gw_hp"
+    }
+  ],
+  "gate": {
+    "loss_relative_error_max": 0.01,
+    "gradient_relative_l2_max": 0.1,
+    "gradient_cosine_min": 0.99,
+    "update_relative_l2_max": 0.25,
+    "update_cosine_min": 0.97,
+    "strict_inequalities": true
+  },
+  "max_loss_relative_error": 0.0009539532475173473,
+  "gradient_relative_l2_range": [
+    0.01182404329399511,
+    0.07961631259931501
+  ],
+  "first_update_relative_l2_range": [
+    0.2892888764842833,
+    0.36093305266933506
+  ],
+  "final_parameter_relative_l2_range": [
+    0.0008434528886414674,
+    0.001162752807740045
+  ],
+  "dcp_roundtrips": [
+    {
+      "algorithm": "dflash",
+      "bitwise_equal": true
+    },
+    {
+      "algorithm": "dflash2",
+      "bitwise_equal": true
+    },
+    {
+      "algorithm": "dspark",
+      "bitwise_equal": true
+    },
+    {
+      "algorithm": "dflash",
+      "bitwise_equal": true
+    },
+    {
+      "algorithm": "dflash2",
+      "bitwise_equal": true
+    },
+    {
+      "algorithm": "dspark",
+      "bitwise_equal": true
+    }
+  ],
+  "original_source_boundary": "Original matrix lacks embedded execution-time source hashes; post-original-source is the explicitly later preserved snapshot. Final DCP matrix embeds and verifies exact source hashes.",
+  "loss_reporting": "bf16_loss and fp8_loss are rank-zero local losses; loss_relative_error is MAX across ranks and can be nonzero when the two rank-zero scalars match."
+}

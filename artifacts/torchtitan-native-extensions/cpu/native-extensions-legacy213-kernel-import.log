@@ -1,0 +1,3 @@
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+2.13.0+cu130 fused kernel imports passed

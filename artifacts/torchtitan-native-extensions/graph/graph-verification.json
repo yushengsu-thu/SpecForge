@@ -1,0 +1,10 @@
+{
+  "checkpoint_bitwise_equal": true,
+  "differences": [],
+  "compared": {
+    "tensors": 152,
+    "values": 564
+  },
+  "export_keys": 36,
+  "resume_export_bitwise_equal": true
+}

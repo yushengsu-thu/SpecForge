@@ -1,0 +1,252 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+W1003 03:19:01.176000 2008074 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:19:01.225000 2008073 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:19:01.394000 2008074 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:19:01.411000 2008073 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+[titan] 2026-10-03 03:19:03,839 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 03:19:03,839 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 03:19:03,845 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 03:19:03,845 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 03:19:03,850 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 03:19:03,850 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 03:19:03,850 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 03:19:03,850 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 03:19:03,851 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 03:19:03,851 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 03:19:03,858 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 03:19:03,858 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 03:19:03,859 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 03:19:03,859 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 03:19:03,859 - root - INFO - [34mModel specforge dflash2 [31msize: 30,048 total parameters[39m
+[titan] 2026-10-03 03:19:03,859 - root - INFO - [34mModel specforge dflash2 [31msize: 30,048 total parameters[39m
+[titan] 2026-10-03 03:19:03,882 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 03:19:03,882 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 03:19:03,882 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 03:19:03,882 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 03:19:05,010 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 03:19:05,010 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 03:19:05,010 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 03:19:05,010 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 03:19:05,011 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 03:19:05,011 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 03:19:05,011 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.002, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 03:19:05,011 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.002, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 03:19:05,012 - root - INFO - Checkpointing active. Checkpoints will be loaded from and saved to /scratch/specforge-torchtitan-20261003/graph-probes/graph-dp2/checkpoint
+[titan] 2026-10-03 03:19:05,012 - root - INFO - Checkpointing active. Checkpoints will be loaded from and saved to /scratch/specforge-torchtitan-20261003/graph-probes/graph-dp2/checkpoint
+[titan] 2026-10-03 03:19:05,012 - root - INFO - Trainer is initialized with local batch size 2, global batch size 8, gradient accumulation steps 2, sequence length 32, total steps 3 (warmup 0)
+[titan] 2026-10-03 03:19:05,012 - root - INFO - Trainer is initialized with local batch size 2, global batch size 8, gradient accumulation steps 2, sequence length 32, total steps 3 (warmup 0)
+[titan] 2026-10-03 03:19:05,013 - root - INFO - NUMA binding applied for GPU 0
+[titan] 2026-10-03 03:19:05,013 - root - INFO - NUMA binding applied for GPU 1
+[titan] 2026-10-03 03:19:05,013 - root - INFO - No checkpoint was provided, this is a fresh start.
+[titan] 2026-10-03 03:19:05,013 - root - INFO - No checkpoint was provided, this is a fresh start.
+[titan] 2026-10-03 03:19:05,013 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 03:19:05,013 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 03:19:06,518 - root - INFO - minimal_fx_tracer took 1.483s
+[titan] 2026-10-03 03:19:06,518 - root - INFO - Applying 11 graph passes:
+  1. eliminate_dead_code_pass
+  2. canonicalize_graph_pass
+  3. deduplicate_fsdp_unshard_chains_pass
+  4. tag_with_memory_policy_pass
+  5. apply_cpu_offload_pass
+  6. selective_activation_remat_pass
+  7. joint_transformer_block_bucketing_reordering_pass
+  8. annotate_flex_attention_for_regional_inductor_pass
+  9. regional_inductor_pass
+  10. insert_kernel_annotations_pass
+  11. cudagraph_pass
+[titan] 2026-10-03 03:19:06,520 - root - INFO - minimal_fx_tracer took 1.485s
+[titan] 2026-10-03 03:19:06,521 - root - INFO - Applying 11 graph passes:
+  1. eliminate_dead_code_pass
+  2. canonicalize_graph_pass
+  3. deduplicate_fsdp_unshard_chains_pass
+  4. tag_with_memory_policy_pass
+  5. apply_cpu_offload_pass
+  6. selective_activation_remat_pass
+  7. joint_transformer_block_bucketing_reordering_pass
+  8. annotate_flex_attention_for_regional_inductor_pass
+  9. regional_inductor_pass
+  10. insert_kernel_annotations_pass
+  11. cudagraph_pass
+[titan] 2026-10-03 03:19:06,612 - root - INFO - Eliminated dead code from the graph
+[titan] 2026-10-03 03:19:06,614 - root - INFO - Eliminated dead code from the graph
+[titan] 2026-10-03 03:19:06,646 - root - INFO - Removed 83 identity view/reshape node(s) from the graph
+[titan] 2026-10-03 03:19:06,648 - root - INFO - Removed 83 identity view/reshape node(s) from the graph
+[titan] 2026-10-03 03:19:06,678 - root - INFO - Removed 66 back-to-back transpose node(s) from the graph
+[titan] 2026-10-03 03:19:06,679 - root - INFO - Removed 4 identity slice node(s)
+[titan] 2026-10-03 03:19:06,681 - root - INFO - Removed 66 back-to-back transpose node(s) from the graph
+[titan] 2026-10-03 03:19:06,681 - root - INFO - Removed 4 identity slice node(s)
+[titan] 2026-10-03 03:19:06,742 - root - INFO - Normalized 213 view op(s) to reshape
+[titan] 2026-10-03 03:19:06,745 - root - INFO - Normalized 213 view op(s) to reshape
+[titan] 2026-10-03 03:19:06,777 - root - INFO - Canonicalized 8 duplicate FSDP unshard chain(s)
+[titan] 2026-10-03 03:19:06,780 - root - INFO - Canonicalized 8 duplicate FSDP unshard chain(s)
+[titan] 2026-10-03 03:19:06,814 - root - INFO - Applied selective activation checkpointing (SAC) graph pass.
+[titan] 2026-10-03 03:19:06,814 - root - INFO -   Forced 4 nodes to MUST_SAVE at layer boundaries
+[titan] 2026-10-03 03:19:06,814 - root - INFO -   Layer non-layer: 6 MUST_SAVE, 48 RECOMPUTE
+[titan] 2026-10-03 03:19:06,815 - root - INFO -   Layer 0: 12 MUST_SAVE, 185 RECOMPUTE
+[titan] 2026-10-03 03:19:06,815 - root - INFO -   Layer 1: 11 MUST_SAVE, 186 RECOMPUTE
+[titan] 2026-10-03 03:19:06,817 - root - INFO - Applied selective activation checkpointing (SAC) graph pass.
+[titan] 2026-10-03 03:19:06,817 - root - INFO -   Forced 4 nodes to MUST_SAVE at layer boundaries
+[titan] 2026-10-03 03:19:06,817 - root - INFO -   Layer non-layer: 6 MUST_SAVE, 48 RECOMPUTE
+[titan] 2026-10-03 03:19:06,818 - root - INFO -   Layer 0: 12 MUST_SAVE, 185 RECOMPUTE
+[titan] 2026-10-03 03:19:06,818 - root - INFO -   Layer 1: 11 MUST_SAVE, 186 RECOMPUTE
+[titan] 2026-10-03 03:19:07,388 - root - INFO - FSDP reorder: 7 overlap deps across 7 target nodes
+[titan] 2026-10-03 03:19:07,402 - root - INFO - FSDP reorder: 7 overlap deps across 7 target nodes
+[titan] 2026-10-03 03:19:07,489 - root - INFO - Applied cudagraph pass.
+[titan] 2026-10-03 03:19:07,489 - root - INFO - All 11 graph passes took 0.968s
+[titan] 2026-10-03 03:19:07,501 - root - INFO - Applied cudagraph pass.
+[titan] 2026-10-03 03:19:07,501 - root - INFO - All 11 graph passes took 0.982s
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.404000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.404000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 03:19:08.405000 2008074 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 03:19:08.405000 2008073 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[titan] 2026-10-03 03:19:08,589 - specforge.training.torchtitan.frontend - ERROR - Native TorchTitan training failed
+Traceback (most recent call last):
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 724, in execute
+    trainer.train()
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 380, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torchtitan/trainer.py", line 1039, in train
+    self.train_step(data_iterator)
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/runtime.py", line 189, in train_step
+    return super().train_step(data_iterator)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torchtitan/experiments/graph_trainer/trainer.py", line 280, in train_step
+    super().train_step(data_iterator)
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torchtitan/trainer.py", line 995, in train_step
+    raise RuntimeError(
+RuntimeError: Loss is not finite (global_avg_loss=nan) at step 1. Stopping training.
+[titan] 2026-10-03 03:19:08,589 - specforge.training.torchtitan.frontend - ERROR - Native TorchTitan training failed
+Traceback (most recent call last):
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 724, in execute
+    trainer.train()
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 380, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torchtitan/trainer.py", line 1039, in train
+    self.train_step(data_iterator)
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/runtime.py", line 189, in train_step
+    return super().train_step(data_iterator)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torchtitan/experiments/graph_trainer/trainer.py", line 280, in train_step
+    super().train_step(data_iterator)
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torchtitan/trainer.py", line 995, in train_step
+    raise RuntimeError(
+RuntimeError: Loss is not finite (global_avg_loss=nan) at step 1. Stopping training.
+[rank1]:[E1003 03:21:08.347896268 ProcessGroupNCCL.cpp:1441] [PG ID 0 PG GUID 0(default_pg) Rank 1] Future for ProcessGroup abort timed out after 120000 ms
+[rank0]:[E1003 03:21:08.347928873 ProcessGroupNCCL.cpp:1441] [PG ID 0 PG GUID 0(default_pg) Rank 0] Future for ProcessGroup abort timed out after 120000 ms
+W1003 03:21:19.592000 2008004 torch/distributed/elastic/agent/server/api.py:753] Received 15 death signal, shutting down workers
+W1003 03:21:19.593000 2008004 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 2008073 closing signal SIGTERM
+W1003 03:21:19.593000 2008004 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 2008074 closing signal SIGTERM
+W1003 03:21:49.593000 2008004 torch/distributed/elastic/multiprocessing/api.py:1047] Unable to shutdown process 2008073 via 15, forcefully exiting via 9
+W1003 03:21:49.807000 2008004 torch/distributed/elastic/multiprocessing/api.py:1047] Unable to shutdown process 2008074 via 15, forcefully exiting via 9
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1142, in <module>
+    main()
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 380, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1138, in main
+    run(args)
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1129, in run
+    elastic_launch(
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 377, in launch_agent
+    result = agent.run()
+             ^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/elastic/metrics/api.py", line 134, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/elastic/agent/server/api.py", line 745, in run
+    result = self._invoke_run(role)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/elastic/agent/server/api.py", line 923, in _invoke_run
+    time.sleep(monitor_interval)
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/api.py", line 86, in _terminate_process_handler
+    raise SignalException(f"Process {os.getpid()} got signal: {sigval}", sigval=sigval)
+torch.distributed.elastic.multiprocessing.api.SignalException: Process 2008004 got signal: 15

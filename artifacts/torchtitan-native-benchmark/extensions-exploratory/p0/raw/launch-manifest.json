@@ -1,0 +1,104 @@
+[
+  {
+    "name": "dflash2-bf16-1",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-driver-p0/scripts/benchmark_training_backends.py",
+      "--specforge-root",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-source-p0",
+      "--backend",
+      "torchtitan",
+      "--algorithm",
+      "dflash2",
+      "--compile",
+      "--warmup-steps",
+      "5",
+      "--steps",
+      "10",
+      "--output",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-p0/dflash2-bf16-1.json"
+    ],
+    "started": 1790997859.7858622,
+    "seconds": 51.973576068878174,
+    "exit_code": 0,
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "4,5",
+      "OMP_NUM_THREADS": "1",
+      "SPECFORGE_DFLASH_FUSED_HEAD": "1",
+      "SPECFORGE_DFLASH2_FUSED_CONV": "1"
+    }
+  },
+  {
+    "name": "dflash2-fp8-1",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-driver-p0/scripts/benchmark_training_backends.py",
+      "--specforge-root",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-source-p0",
+      "--backend",
+      "torchtitan",
+      "--algorithm",
+      "dflash2",
+      "--compile",
+      "--warmup-steps",
+      "5",
+      "--steps",
+      "10",
+      "--output",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-p0/dflash2-fp8-1.json",
+      "--fp8",
+      "rowwise"
+    ],
+    "started": 1790997911.7597709,
+    "seconds": 83.86170506477356,
+    "exit_code": 0,
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "4,5",
+      "OMP_NUM_THREADS": "1",
+      "SPECFORGE_DFLASH_FUSED_HEAD": "1",
+      "SPECFORGE_DFLASH2_FUSED_CONV": "1"
+    }
+  },
+  {
+    "name": "dflash2-cuda-1",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-driver-p0/scripts/benchmark_training_backends.py",
+      "--specforge-root",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-source-p0",
+      "--backend",
+      "torchtitan",
+      "--algorithm",
+      "dflash2",
+      "--compile",
+      "--warmup-steps",
+      "5",
+      "--steps",
+      "10",
+      "--output",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-p0/dflash2-cuda-1.json",
+      "--cuda-graphs"
+    ],
+    "started": 1790997995.6218855,
+    "seconds": 53.22531819343567,
+    "exit_code": 0,
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "4,5",
+      "OMP_NUM_THREADS": "1",
+      "SPECFORGE_DFLASH_FUSED_HEAD": "1",
+      "SPECFORGE_DFLASH2_FUSED_CONV": "1"
+    }
+  }
+]

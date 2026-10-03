@@ -1,0 +1,350 @@
+{
+  "purpose": "Preserve preliminary or failed experiments separately from the final p2 matrix.",
+  "raw_json_integrity": "Copied byte-for-byte; historical absolute paths identify the old run, not production setup instructions.",
+  "source_installation": "All code is archival .txt or patch text, never an installed FP8 implementation.",
+  "files": {
+    "p0/raw/dflash2-bf16-1.json": {
+      "sha256": "c82902fded1131ca4b32d39d7bc0e6eaeb9c0fb1aade529bfacf3d5e25addea5",
+      "source": "extension-bench-history/p0/dflash2-bf16-1.json"
+    },
+    "p0/raw/dflash2-bf16-profile.json": {
+      "sha256": "9c3c2a8f9d54f527088beb22a60fbffe352579be891bf993ef12aace90c55a5e",
+      "source": "extension-bench-history/p0/dflash2-bf16-profile.json"
+    },
+    "p0/raw/dflash2-bf16-profile.profile-rank0.json": {
+      "sha256": "e1ddf7c9cc92cd9d35260b777dad1e3a9da675a314260acb5034098df5af4ec4",
+      "source": "extension-bench-history/p0/dflash2-bf16-profile.profile-rank0.json"
+    },
+    "p0/raw/dflash2-bf16-profile.profile-rank1.json": {
+      "sha256": "c338d8eabd5ca26de45c1956489c4957a96a298b33f21cba53444a767b5a79eb",
+      "source": "extension-bench-history/p0/dflash2-bf16-profile.profile-rank1.json"
+    },
+    "p0/raw/dflash2-cuda-1.json": {
+      "sha256": "252d60753c482f5e06b2dff1a29b0f154278667da3a031f6996f8b9b91553b9b",
+      "source": "extension-bench-history/p0/dflash2-cuda-1.json"
+    },
+    "p0/raw/dflash2-fp8-1.json": {
+      "sha256": "d7778428c1f62c30ae395d31459bde6a3254f3fecf700d76f33583723771395d",
+      "source": "extension-bench-history/p0/dflash2-fp8-1.json"
+    },
+    "p0/raw/dflash2-fp8-profile.json": {
+      "sha256": "66d124a07ca3f4c303d33d2ac1301fdd5435af6cb8991a2f05008e9055b95c0a",
+      "source": "extension-bench-history/p0/dflash2-fp8-profile.json"
+    },
+    "p0/raw/dflash2-fp8-profile.profile-rank0.json": {
+      "sha256": "608f4aa0548b0ee65ef50a99193918ed80b96dec7b4f7de220c69a0df94aada8",
+      "source": "extension-bench-history/p0/dflash2-fp8-profile.profile-rank0.json"
+    },
+    "p0/raw/dflash2-fp8-profile.profile-rank1.json": {
+      "sha256": "90bfb973f249d268d9482ba567690cf3dcebfbf010dcd8f39211b594c2bb878d",
+      "source": "extension-bench-history/p0/dflash2-fp8-profile.profile-rank1.json"
+    },
+    "p0/raw/launch-manifest.json": {
+      "sha256": "c209d626d27aec3916ca4689a7df09770c0a1936e570bfd2e07bd0170303d3b1",
+      "source": "extension-bench-history/p0/launch-manifest.json"
+    },
+    "p0/logs/dflash2-bf16-1.excerpt.log": {
+      "sha256": "76a774c506c1d5dd40dc862fd4e1f9c8b2fc1f460e2387bb4c3b79e19d3ffe84",
+      "source": "extension-bench-history/p0/dflash2-bf16-1.log"
+    },
+    "p0/logs/dflash2-bf16-profile.excerpt.log": {
+      "sha256": "237dd6a8f65d979e96d6d18359c03174a7a45a6413db6559ae9e5c216b60992a",
+      "source": "extension-bench-history/p0/dflash2-bf16-profile.log"
+    },
+    "p0/logs/dflash2-cuda-1.excerpt.log": {
+      "sha256": "59ae6528285a8262f09d61ea7c27041f31c997046bb08d66422b9d1f1d508e84",
+      "source": "extension-bench-history/p0/dflash2-cuda-1.log"
+    },
+    "p0/logs/dflash2-fp8-1.excerpt.log": {
+      "sha256": "e604df705a6cb2de73466c50c0bcb26a924ce88df0a88649794bb61e9e3f6452",
+      "source": "extension-bench-history/p0/dflash2-fp8-1.log"
+    },
+    "p0/logs/dflash2-fp8-profile.excerpt.log": {
+      "sha256": "36adf253d169702a99be570b1faeaaba37688613a053876a5941ce31937263c1",
+      "source": "extension-bench-history/p0/dflash2-fp8-profile.log"
+    },
+    "p0/source-snapshot/specforge/algorithms/common/dflash_family_model.py.txt": {
+      "sha256": "b777d95a873ebdb3e2370023fb58498c9eaad9ccccecda938a12aa3ddb396c71"
+    },
+    "p0/source-snapshot/specforge/config/schema.py.txt": {
+      "sha256": "139538241de797f1873fc5363e165168c799c42b329381ccab182da7e5766fb7"
+    },
+    "p0/source-snapshot/specforge/core/dflash_head_triton.py.txt": {
+      "sha256": "74f2e2e935fd6f8bb5bde7f197836a6c60d2ae84e3f816eac50aaaab5143747a"
+    },
+    "p0/source-snapshot/specforge/modeling/draft/dflash2_conv_triton.py.txt": {
+      "sha256": "54f09e23a7b4999303f0ac1981f871dd72d0113dc29b18ee63c557f25864037c"
+    },
+    "p0/source-snapshot/specforge/optimizer.py.txt": {
+      "sha256": "a136f17a4612eb31c842ddac79c35bfdcb1e62ab410046433bfd6008265ddc81"
+    },
+    "p0/source-snapshot/specforge/training/backend.py.txt": {
+      "sha256": "0b47b95e0aebbcd6f44aa94e17a62906ebcab36a44eb1fb4e7b7e4abbe5741f2"
+    },
+    "p0/source-snapshot/specforge/training/controller.py.txt": {
+      "sha256": "16322d15235ea7001f60b7b24e0de92bbb8a5f3b6b80da799b9bfbf17719d9f0"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/data.py.txt": {
+      "sha256": "dd88b86ec2006cd1d225720d2330837bfb543594233f01c636218c39869edab0"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/frontend.py.txt": {
+      "sha256": "873466aa7864d728d5f485da59a3647e7238812718b4d0e33ef9e8c8f3910703"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/graph.py.txt": {
+      "sha256": "4291c6a095983205ddd76bea8001b2662f7c7cac6aefecf933d208512843f83a"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/graph_parallelize.py.txt": {
+      "sha256": "4a971cb859cfa34411c5c3703db8fedc1175e603b6eabcd14b57e326394b8c3e"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/loss.py.txt": {
+      "sha256": "c8f2fff28da5b9abb15e530d20f292a4d702e34cd56eb1dcf73b11ee46afa926"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/metrics.py.txt": {
+      "sha256": "96c8a7729b26609553f48753523c03e57b00af8293ef47b3faad567203895747"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/model.py.txt": {
+      "sha256": "04bd2f6d031c225f2ac0b346addc834a13ea031727bbf9129170b757a70624e0"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/parallelize.py.txt": {
+      "sha256": "782b94514f2951ee26e4072cbae080744e93d347b5b9cd69ef9e1c038a721a58"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/quantization.py.txt": {
+      "sha256": "46473a0cacb9cbb661c2e2d468c0013d0a1e65ffa7422461a03d84f1710415ed"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/runtime.py.txt": {
+      "sha256": "05c820e082e60ab8f273c4d96d01d98bfb66bc911a4e3308119dd9177c228b9f"
+    },
+    "p0/source-snapshot/specforge/training/torchtitan/validation.py.txt": {
+      "sha256": "fbc35834eb3bb2d5a11ffc2b825bf3536f30e379ca8b8bddf1f49b16d9907679"
+    },
+    "p0/source-from-36eb793.patch": {
+      "sha256": "fb2e72e7eb83741b924d0fd89dba47d9d825370fa887bf1ae8101fb2cef130a3"
+    },
+    "p0/driver-snapshot/benchmark_training_backends.py.txt": {
+      "sha256": "ddf601f0c1ac47b8f532c18e04b0037f342117e26a73468eb421e98a3ea39ae6",
+      "source": "extension-bench-history/driver-p0/benchmark_training_backends.py"
+    },
+    "p0/driver-snapshot/training_benchmark_recipes.py.txt": {
+      "sha256": "ec507e956af026d6aeab0c1efb12f2bcdab46f5109aa26798df8e4f0d5c6ad7b",
+      "source": "extension-bench-history/driver-p0/training_benchmark_recipes.py"
+    },
+    "p0/driver-snapshot/qwen3-4b-dflash.json.txt": {
+      "sha256": "d5d47debc7ed684d828988cb4d392bcdb7895a29105ffdefc093b565e496738d",
+      "source": "extension-bench-history/driver-p0/qwen3-4b-dflash.json"
+    },
+    "p0/source-provenance.json": {
+      "sha256": "eb31ea6916492a20d7c09764217f10047a062e58b9220cb60f5e5693994ca762"
+    },
+    "p1/raw/dflash2-graph-1.json": {
+      "sha256": "4da956ee910e6622d898ce286183545ceac95d7076d7b0c32600393b82fb8bd3",
+      "source": "extension-bench-history/p1/dflash2-graph-1.json"
+    },
+    "p1/raw/dflash2-graph-full-1.json": {
+      "sha256": "450d776d93773a00e889be93d3a1c1614aa35189db1a59d86ef59a2ea49d1445",
+      "source": "extension-bench-history/p1/dflash2-graph-full-1.json"
+    },
+    "p1/raw/launch-manifest.json": {
+      "sha256": "1a78f9ab50a2ab14f05c9fbeedfbabcb235f677e33cae32c73377de616fb3d52",
+      "source": "extension-bench-history/p1/launch-manifest.json"
+    },
+    "p1/logs/dflash2-graph-1.excerpt.log": {
+      "sha256": "f9b19a2c128f83a5bddb25bece8e57a47dfbf115e4ce3db7639f7d027732b1e9",
+      "source": "extension-bench-history/p1/dflash2-graph-1.log"
+    },
+    "p1/logs/dflash2-graph-full-1.excerpt.log": {
+      "sha256": "ad4559a6b4fa0db0211eb044916491176143eaffb8ccf9c03509354c152afdcc",
+      "source": "extension-bench-history/p1/dflash2-graph-full-1.log"
+    },
+    "p1/source-snapshot/specforge/algorithms/common/dflash_family_model.py.txt": {
+      "sha256": "b777d95a873ebdb3e2370023fb58498c9eaad9ccccecda938a12aa3ddb396c71"
+    },
+    "p1/source-snapshot/specforge/config/schema.py.txt": {
+      "sha256": "ea1f25ed48a241bbeac9c6638ab580048e0fd2840691e8c2e38d9a87594e4f01"
+    },
+    "p1/source-snapshot/specforge/core/dflash_head_triton.py.txt": {
+      "sha256": "b2202b2cf1e8147b228a326ec0c30cf355cbb66a3a2bdc743915024790a7f282"
+    },
+    "p1/source-snapshot/specforge/launch.py.txt": {
+      "sha256": "783373f8d24ab1bb8e95f070c24c82a5b61c8bf7c863cf057faa4852ea9d64df"
+    },
+    "p1/source-snapshot/specforge/modeling/draft/dflash2_conv_triton.py.txt": {
+      "sha256": "6522d94ac6eab93c9b651ddd4c636a979f601ae62fcc5a2fc836496620bc0291"
+    },
+    "p1/source-snapshot/specforge/optimizer.py.txt": {
+      "sha256": "a136f17a4612eb31c842ddac79c35bfdcb1e62ab410046433bfd6008265ddc81"
+    },
+    "p1/source-snapshot/specforge/training/assembly.py.txt": {
+      "sha256": "01c559a5b876e1080b5a0a7bdc19a5140e6fa6c2fcfcf81d7b37e3180d08de7d"
+    },
+    "p1/source-snapshot/specforge/training/backend.py.txt": {
+      "sha256": "0b47b95e0aebbcd6f44aa94e17a62906ebcab36a44eb1fb4e7b7e4abbe5741f2"
+    },
+    "p1/source-snapshot/specforge/training/controller.py.txt": {
+      "sha256": "16322d15235ea7001f60b7b24e0de92bbb8a5f3b6b80da799b9bfbf17719d9f0"
+    },
+    "p1/source-snapshot/specforge/training/disaggregated.py.txt": {
+      "sha256": "7f0c5ff79c7443aec4bf0ca5ed680f6d49e268709cb2d774b40471da222f0a3b"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/data.py.txt": {
+      "sha256": "dd88b86ec2006cd1d225720d2330837bfb543594233f01c636218c39869edab0"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/frontend.py.txt": {
+      "sha256": "9ec00786339cce0eac6f367736e601aa84a54eb2f591299225b8eedd47bbcd23"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/graph.py.txt": {
+      "sha256": "099f7d613e0ac21cec45c362383b4369ec40b2486171fd51bc49eb4efc61b02f"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/graph_parallelize.py.txt": {
+      "sha256": "54b5c5ed5e74ba126de422dd0e7b006106353790e79a31e5266f082488c1ad3b"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/loss.py.txt": {
+      "sha256": "c8f2fff28da5b9abb15e530d20f292a4d702e34cd56eb1dcf73b11ee46afa926"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/metrics.py.txt": {
+      "sha256": "96c8a7729b26609553f48753523c03e57b00af8293ef47b3faad567203895747"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/model.py.txt": {
+      "sha256": "4e7d4baf555c6770062aa82dafbb5c8f066c71d8c13b0f53a1d1c7a462a5b894"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/online.py.txt": {
+      "sha256": "91b4b4cc559db4870d22721b780bdccb17c03279838ea4483f5df78666616079"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/parallelize.py.txt": {
+      "sha256": "da6541600b209d2ff8bbadb6c513d8efb4e585105c6f53713b5b2932d6fb0764"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/runtime.py.txt": {
+      "sha256": "05c820e082e60ab8f273c4d96d01d98bfb66bc911a4e3308119dd9177c228b9f"
+    },
+    "p1/source-snapshot/specforge/training/torchtitan/validation.py.txt": {
+      "sha256": "4820c59bb463bdf452926d0112093a5c4bb19246c322af9b2bf92eed172e798b"
+    },
+    "p1/source-from-36eb793.patch": {
+      "sha256": "a6977cad54fc62082f76231d1db42175005ad40c442ac0c42717a6f9fa504dc5"
+    },
+    "p1/driver-snapshot/benchmark_training_backends.py.txt": {
+      "sha256": "923941e2c04839e0456323202b76e6fef991497cdb293a7489a5968567ac932a",
+      "source": "extension-bench-history/driver-p1/benchmark_training_backends.py"
+    },
+    "p1/driver-snapshot/training_benchmark_recipes.py.txt": {
+      "sha256": "ec507e956af026d6aeab0c1efb12f2bcdab46f5109aa26798df8e4f0d5c6ad7b",
+      "source": "extension-bench-history/driver-p1/training_benchmark_recipes.py"
+    },
+    "p1/driver-snapshot/qwen3-4b-dflash.json.txt": {
+      "sha256": "d5d47debc7ed684d828988cb4d392bcdb7895a29105ffdefc093b565e496738d",
+      "source": "extension-bench-history/driver-p1/qwen3-4b-dflash.json"
+    },
+    "p1/source-provenance.json": {
+      "sha256": "8aaa9d6ebb9c71e1d985e5d11d73d32da58176af9a0908bda3c7e43325cca021"
+    },
+    "fp8-deferred/original-matrix/manifest.json": {
+      "sha256": "1b4617af77684c3f78b68317ce449096c44e584d41bb68e001df2ae4f6c370de",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/manifest.json"
+    },
+    "fp8-deferred/original-matrix/tp1-rowwise.json": {
+      "sha256": "f9856670441f44036f4480b2841fe3896107eadcde2d8310154578e048e156e2",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/tp1-rowwise.json"
+    },
+    "fp8-deferred/original-matrix/tp1-rowwise_with_gw_hp.json": {
+      "sha256": "32e7d56679148b44896d2a95428b820461f5049cffad2684c8023aa623e088d0",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/tp1-rowwise_with_gw_hp.json"
+    },
+    "fp8-deferred/original-matrix/tp2-rowwise.json": {
+      "sha256": "d1fb7480af5eb55707dc02d5cca30984086be0061f26bb62929e9cf2a03388db",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/tp2-rowwise.json"
+    },
+    "fp8-deferred/original-matrix/tp2-rowwise_with_gw_hp.json": {
+      "sha256": "6e4b3130db9ebee1d992ab1ec8b570171e5c1733859ba563b82f0f7857cc88b9",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/tp2-rowwise_with_gw_hp.json"
+    },
+    "fp8-deferred/original-matrix/tp1-rowwise.excerpt.log": {
+      "sha256": "91ea46bf76637fb6371bb9a2bdd6c4b1d74c410a08673b47e873c6f2eb037259",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/tp1-rowwise.log"
+    },
+    "fp8-deferred/original-matrix/tp1-rowwise_with_gw_hp.excerpt.log": {
+      "sha256": "f4b4896e90927f83d45b23ae46cd051488c4aeb466466b7ad5aaa251f6d7735c",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/tp1-rowwise_with_gw_hp.log"
+    },
+    "fp8-deferred/original-matrix/tp2-rowwise.excerpt.log": {
+      "sha256": "c567584fb729860d5439ce1d8a0964029cc3f50841b342a29f13b6d4d38c9107",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/tp2-rowwise.log"
+    },
+    "fp8-deferred/original-matrix/tp2-rowwise_with_gw_hp.excerpt.log": {
+      "sha256": "ca9d0e01a1d81f70a5e89524bdaa0416bd20566ff1750d6132e4eabe4f62f360",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/tp2-rowwise_with_gw_hp.log"
+    },
+    "fp8-deferred/final-dcp-matrix/manifest.json": {
+      "sha256": "f84aa1ea90e712eda36a69021db8113a8eeaa31dde59b54fb763e832bd6de530",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence-final/manifest.json"
+    },
+    "fp8-deferred/final-dcp-matrix/tp1-rowwise.json": {
+      "sha256": "33eb6a146aa164fc38045ef3f1ba9e6705978e7a4a2279bc51a394a20f2faadb",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence-final/tp1-rowwise.json"
+    },
+    "fp8-deferred/final-dcp-matrix/tp2-rowwise_with_gw_hp.json": {
+      "sha256": "bce75b9d092d98389936825fbc7a51f422951f4c6eb9764bffa244fde0493a44",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence-final/tp2-rowwise_with_gw_hp.json"
+    },
+    "fp8-deferred/final-dcp-matrix/tp1-rowwise.excerpt.log": {
+      "sha256": "9c832226f5745d7087063cb9a36fe2af5093ab4beabffb9f1f468e04f809301f",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence-final/tp1-rowwise.log"
+    },
+    "fp8-deferred/final-dcp-matrix/tp2-rowwise_with_gw_hp.excerpt.log": {
+      "sha256": "a5392bf27c490c6f1a9060351ac1f03e560e68550525814efaa718b688f1b0e5",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence-final/tp2-rowwise_with_gw_hp.log"
+    },
+    "fp8-deferred/final-source/specforge/training/torchtitan/quantization.py.txt": {
+      "sha256": "0b0fce2f1e1a84be36fee90c7e77541288c0f84fd89006d4cfbe061d8912cd8f",
+      "source": "fp8-deferred-experiment/source/specforge/training/torchtitan/quantization.py"
+    },
+    "fp8-deferred/final-source/tests/test_training/test_torchtitan_fp8_parallel.py.txt": {
+      "sha256": "a6670e15c6391209de01ab7ba3648b030c8a2fc4cc5d1c9ec2a20c34f7ba650f",
+      "source": "fp8-deferred-experiment/source/tests/test_training/test_torchtitan_fp8_parallel.py"
+    },
+    "fp8-deferred/final-source/tests/test_training/test_torchtitan_quantization.py.txt": {
+      "sha256": "1132f26daa599868f030d4be0b13ef7c1acaf383036149e44803aaf014bdd3aa",
+      "source": "fp8-deferred-experiment/source/tests/test_training/test_torchtitan_quantization.py"
+    },
+    "fp8-deferred/final-source/specforge/training/torchtitan/model.py.txt": {
+      "sha256": "04bd2f6d031c225f2ac0b346addc834a13ea031727bbf9129170b757a70624e0",
+      "source": "fp8-deferred-experiment/integration/model.py"
+    },
+    "fp8-deferred/final-source/specforge/training/torchtitan/parallelize.py.txt": {
+      "sha256": "782b94514f2951ee26e4072cbae080744e93d347b5b9cd69ef9e1c038a721a58",
+      "source": "fp8-deferred-experiment/integration/parallelize.py"
+    },
+    "fp8-deferred/post-original-source/sha256.json": {
+      "sha256": "06fdda8459b5d74950db7598e888d2009bc81745ca94a54609634d460bd11db1",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/sources-after-original-matrix/sha256.json"
+    },
+    "fp8-deferred/post-original-source/specforge/training/torchtitan/model.py.txt": {
+      "sha256": "04bd2f6d031c225f2ac0b346addc834a13ea031727bbf9129170b757a70624e0",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/sources-after-original-matrix/specforge/training/torchtitan/model.py"
+    },
+    "fp8-deferred/post-original-source/specforge/training/torchtitan/parallelize.py.txt": {
+      "sha256": "782b94514f2951ee26e4072cbae080744e93d347b5b9cd69ef9e1c038a721a58",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/sources-after-original-matrix/specforge/training/torchtitan/parallelize.py"
+    },
+    "fp8-deferred/post-original-source/specforge/training/torchtitan/quantization.py.txt": {
+      "sha256": "c17dee82fb1ef125bb34d61699cbc007b9187b54af1e98cb155d72c95b006b61",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/sources-after-original-matrix/specforge/training/torchtitan/quantization.py"
+    },
+    "fp8-deferred/post-original-source/tests/test_training/test_torchtitan_fp8_parallel.py.txt": {
+      "sha256": "bdc010aba765e150e2463f58d8416d1f601838bd44adacd1476f089f9579f0f5",
+      "source": "fp8-deferred-experiment/reports/fp8-extension-evidence/sources-after-original-matrix/tests/test_training/test_torchtitan_fp8_parallel.py"
+    },
+    "fp8-deferred/summary.json": {
+      "sha256": "b50a5393e8cc4104214d80d4a62160ea54e741aaca2181aae1f1cc60c5f68c8f"
+    },
+    "p0/profile_extension_benchmark.py.txt": {
+      "sha256": "8bd464c1d92c6325c7ea3cad1c42374bcddde10292b4702b2988ac5c629eeab6",
+      "source": "profile_extension_benchmark.py"
+    },
+    "archive_extension_exploratory.py.txt": {
+      "sha256": "9f3db85a1cef60c8776bab1b45f79f9838d9d48d1d546777199abbba0fbdf72f",
+      "source": "archive_extension_exploratory.py"
+    },
+    "README.md": {
+      "sha256": "ea4dec6e2b66285f8ef05f5872049bebdbc904cab8a5c5547a2a165c05f700ec"
+    }
+  }
+}

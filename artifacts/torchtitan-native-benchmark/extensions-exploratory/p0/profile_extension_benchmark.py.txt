@@ -1,0 +1,43 @@
+"""Profile three steady windows; its timings are excluded from performance claims."""
+import json
+import os
+import sys
+from pathlib import Path
+
+import torch
+
+driver = Path('/scratch/specforge-torchtitan-20261003/extension-bench-driver-p0/scripts')
+sys.path.insert(0, str(driver))
+import benchmark_training_backends as benchmark
+
+original_start = benchmark.Measurement.start
+original_finish = benchmark.Measurement.finish
+
+def start(self, step):
+    self.profile_step = step
+    if step == self.args.warmup_steps:
+        self.profile = torch.profiler.profile(
+            activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA],
+            record_shapes=True,
+        )
+        self.profile.start()
+    return original_start(self, step)
+
+def finish(self, *args, **kwargs):
+    result = original_finish(self, *args, **kwargs)
+    if self.profile_step == self.args.warmup_steps + 2:
+        self.profile.stop()
+        events = sorted(self.profile.key_averages(), key=lambda event: event.self_device_time_total, reverse=True)
+        records = [{
+            'name': event.key, 'count': event.count,
+            'self_cuda_ms': event.self_device_time_total / 1000,
+            'total_cuda_ms': event.device_time_total / 1000,
+            'self_cpu_ms': event.self_cpu_time_total / 1000,
+        } for event in events]
+        destination = self.args.output.with_suffix(f'.profile-rank{os.environ["RANK"]}.json')
+        destination.write_text(json.dumps(records, indent=2) + '\n')
+    return result
+
+benchmark.Measurement.start = start
+benchmark.Measurement.finish = finish
+benchmark.main()

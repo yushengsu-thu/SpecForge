@@ -1,0 +1,91 @@
+"""Selective TorchAO FP8 compute for SpecForge's existing draft modules.
+
+TorchTitan's config-tree converters cannot see the Hugging Face modules built
+inside this adapter. Convert their actual Linear modules before TP, compile,
+and FSDP instead. Parameters and state-dict names remain unchanged; teacher
+heads, embeddings and algorithm-specific auxiliary modules retain BF16 compute.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import replace
+
+import torch
+from torch import nn
+
+_DECODER_LINEAR = re.compile(
+    r"layers\.\d+\.(?:self_attn\.(?:q|k|v|o)_proj|" r"mlp\.(?:gate|up|down)_proj)\Z"
+)
+_RECIPES = {"rowwise", "rowwise_with_gw_hp"}
+
+
+def float8_candidate_names(
+    draft: nn.Module, *, min_dimension: int = 128
+) -> tuple[str, ...]:
+    """Select the trainable dense projections supported by this adapter.
+
+    The size threshold only excludes obviously small GEMMs; it is not a
+    performance guarantee. Attention, convolution, selector and Markov kernels
+    are deliberately outside this conversion policy.
+    """
+    if min_dimension < 16:
+        raise ValueError("FP8 min_dimension must be at least 16")
+    return tuple(
+        name
+        for name, module in draft.named_modules()
+        if type(module) is nn.Linear
+        and module.weight.requires_grad
+        and (name == "fc" or _DECODER_LINEAR.fullmatch(name))
+        and min(module.in_features, module.out_features) >= min_dimension
+        and module.in_features % 16 == 0
+        and module.out_features % 16 == 0
+    )
+
+
+def convert_draft_float8(
+    draft: nn.Module,
+    *,
+    recipe_name: str = "rowwise",
+    min_dimension: int = 128,
+) -> tuple[str, ...]:
+    """Replace eligible Linear modules and return their exact draft FQNs.
+
+    Call after model construction and before distributed wrapping. This uses
+    ordinary Hopper-compatible FP8, not Blackwell-only MXFP8. Dynamic scaling
+    runs on each GEMM; FSDP communication and optimizer states keep their normal
+    precision. Compile should be enabled to fuse the scaling/casting overhead.
+    """
+    if recipe_name not in _RECIPES:
+        raise ValueError(f"Unsupported FP8 recipe: {recipe_name!r}")
+    names = float8_candidate_names(draft, min_dimension=min_dimension)
+    if not names:
+        raise ValueError("FP8 requested, but no eligible draft Linear modules exist")
+    if not torch.cuda.is_available() or torch.cuda.get_device_capability() < (8, 9):
+        raise RuntimeError("SpecForge FP8 training requires NVIDIA SM89 or newer")
+    try:
+        from torchao.float8 import Float8LinearConfig
+        from torchao.float8.float8_linear import Float8Linear
+    except ImportError as exc:
+        raise RuntimeError(
+            "FP8 training requires torchao==0.18.0 in the TorchTitan environment"
+        ) from exc
+
+    config = Float8LinearConfig.from_recipe_name(recipe_name)
+    # Anchor counts need not be multiples of 16. The grad-weight GEMM reduces
+    # over these token rows, so pad its inner dimension inside TorchAO.
+    config = replace(config, pad_inner_dim=True)
+    for name in names:
+        parent_name, _, child_name = name.rpartition(".")
+        parent = draft.get_submodule(parent_name) if parent_name else draft
+        original = parent.get_submodule(child_name)
+        converted = Float8Linear.from_float(original, config=config)
+        converted.train(original.training)
+        setattr(parent, child_name, converted)
+    # As in TorchTitan's rowwise converter, preserve the intended casts during
+    # Inductor optimization (pytorch/pytorch#150859).
+    if recipe_name == "rowwise":
+        from torch._inductor import config as inductor_config
+
+        inductor_config.emulate_precision_casts = True
+    return names

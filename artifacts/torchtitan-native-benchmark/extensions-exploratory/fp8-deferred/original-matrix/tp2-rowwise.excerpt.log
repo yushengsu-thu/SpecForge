@@ -1,0 +1,7 @@
+Selected completion/failure lines only; full metrics are in the raw JSON.
+Original full-log SHA256: 609e85b2b257c84f84f60f91bbd5de32829e48ae5e1335dca7b1f7ae011cecd5
+Absolute work paths, IP addresses and host names are redacted when present.
+
+[rank1]: AssertionError: FP8 numerical gate failed; inspect the emitted loss, all-gradient and Adam-update comparisons. A completed optimizer step is not quality parity.
+[rank0]: AssertionError: FP8 numerical gate failed; inspect the emitted loss, all-gradient and Adam-update comparisons. A completed optimizer step is not quality parity.
+tests.test_training.test_torchtitan_fp8_parallel FAILED

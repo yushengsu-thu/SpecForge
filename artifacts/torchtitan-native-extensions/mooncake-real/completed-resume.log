@@ -1,0 +1,345 @@
+W1003 04:23:57.672000 2042335 torch/distributed/run.py:982] 
+W1003 04:23:57.672000 2042335 torch/distributed/run.py:982] *****************************************
+W1003 04:23:57.672000 2042335 torch/distributed/run.py:982] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W1003 04:23:57.672000 2042335 torch/distributed/run.py:982] *****************************************
+W1003 04:24:02.517000 2042404 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 04:24:02.544000 2042404 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 04:24:02.549000 2042405 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 04:24:02.576000 2042405 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+[titan] 2026-10-03 04:24:04,743 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 04:24:04,743 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 04:24:04,749 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 04:24:04,749 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 04:24:04,754 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 04:24:04,754 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 04:24:04,754 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 04:24:04,754 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 04:24:04,755 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 04:24:04,756 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 04:24:04,763 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 04:24:04,763 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 04:24:04,763 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 04:24:04,763 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 04:24:04,764 - root - INFO - Model specforge dflash2 size: 30,048 total parameters
+[titan] 2026-10-03 04:24:04,764 - root - INFO - Model specforge dflash2 size: 30,048 total parameters
+[titan] 2026-10-03 04:24:04,788 - root - INFO - Applied FSDP to the model
+[titan] 2026-10-03 04:24:04,789 - root - INFO - Applied FSDP to the model
+[titan] 2026-10-03 04:24:05,750 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 04:24:05,750 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 04:24:05,750 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 04:24:05,750 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 04:24:05,750 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 04:24:05,750 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.002, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 04:24:05,751 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 04:24:05,751 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.002, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 04:24:05,751 - root - INFO - Checkpointing active. Checkpoints will be loaded from and saved to /scratch/specforge-torchtitan-20261003/mooncake-native-real/stream/output/native-online/checkpoint
+[titan] 2026-10-03 04:24:05,752 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 32, total steps 3 (warmup 0)
+[titan] 2026-10-03 04:24:05,752 - root - INFO - Loading the checkpoint from /scratch/specforge-torchtitan-20261003/mooncake-native-real/stream/output/native-online/checkpoint/step-3.
+[titan] 2026-10-03 04:24:05,752 - root - INFO - Checkpointing active. Checkpoints will be loaded from and saved to /scratch/specforge-torchtitan-20261003/mooncake-native-real/stream/output/native-online/checkpoint
+[titan] 2026-10-03 04:24:05,752 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 32, total steps 3 (warmup 0)
+[titan] 2026-10-03 04:24:05,752 - root - INFO - Loading the checkpoint from /scratch/specforge-torchtitan-20261003/mooncake-native-real/stream/output/native-online/checkpoint/step-3.
+[titan] 2026-10-03 04:24:06,258 - root - INFO - [GC] GC collection for checkpoint loading. took 0.00 seconds
+[titan] 2026-10-03 04:24:06,258 - root - INFO - [GC] GC collection for checkpoint loading. took 0.00 seconds
+[titan] 2026-10-03 04:24:06,258 - root - INFO - Finished loading the checkpoint in 0.51 seconds.
+[titan] 2026-10-03 04:24:06,258 - root - INFO - Finished loading the checkpoint in 0.51 seconds.
+[titan] 2026-10-03 04:24:06,258 - root - INFO - Training starts at step 4
+[titan] 2026-10-03 04:24:06,258 - root - INFO - Training starts at step 4
+[titan] 2026-10-03 04:24:06,258 - root - INFO - Training completed
+[titan] 2026-10-03 04:24:06,258 - root - INFO - Sleeping 2 seconds for other ranks to complete
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20261003 04:24:06.285374 2042405 client_metric.cpp:114] Client metrics enabled (default enabled)
+I20261003 04:24:06.285409 2042405 client_metric.cpp:115] Client bandwidth summary enabled via MC_STORE_CLIENT_METRIC_BANDWIDTH
+I20261003 04:24:06.286593 2042405 client_service.cpp:287] client_id=12199183812623495141-15064446057332298643
+I20261003 04:24:06.286607 2042405 client_service.cpp:298] Client metrics enabled but reporting disabled (interval=0)
+I20261003 04:24:06.287444 2042405 client_service.cpp:929] Storage root directory is not set. persisting data is disabled.
+I20261003 04:24:06.287508 2042405 transfer_engine_impl.cpp:971] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
+I20261003 04:24:06.287523 2042405 transfer_engine_impl.cpp:115] Transfer Engine parseHostNameWithPort. server_name: 127.0.0.1 port: 12845
+I20261003 04:24:06.288228 2042405 transfer_metadata_plugin.cpp:1293] Found active interface bond0 with IP 10.220.51.9
+I20261003 04:24:06.288241 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface docker0 (not UP or not RUNNING)
+I20261003 04:24:06.288245 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288249 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288254 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288257 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288260 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288264 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288268 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288272 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288276 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288280 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288283 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288287 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288291 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288295 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288298 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288302 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288306 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288309 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288313 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288317 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288321 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288324 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288328 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288331 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288335 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288339 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288342 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288347 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288350 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288353 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288357 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288365 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288369 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288373 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288376 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288380 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288383 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288388 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288391 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288394 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288398 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288403 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288405 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288409 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288414 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288417 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288421 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288424 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288429 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288432 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288436 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288439 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288443 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288447 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288451 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288455 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288458 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288462 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288466 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288470 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288473 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288477 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288481 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288484 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288491 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288494 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288498 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288501 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288506 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288509 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288513 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288516 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288520 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288524 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288527 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288532 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288535 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288538 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288542 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288545 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288549 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288553 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288558 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288560 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288564 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288568 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288573 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288575 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288579 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288583 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288587 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288590 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288594 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288597 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288601 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288605 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288609 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288615 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288619 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288622 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288626 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288630 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288633 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288637 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288641 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288645 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288648 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288652 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288656 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288659 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288663 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288666 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288671 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288674 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288678 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288682 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288686 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288689 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288692 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288697 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288700 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288704 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288707 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288712 2042405 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:06.288727 2042405 transfer_engine_impl.cpp:182] Transfer Engine RPC using new RPC mapping, listening on 10.220.51.9:16343
+I20261003 04:24:06.289213 2042405 client_service.cpp:747] Transfer engine auto discovery is disabled for protocol: tcp
+E20261003 04:24:06.289412 2042405 transfer_metadata_plugin.cpp:292] GET http://127.0.0.1:35499/metadata?key=mooncake%2Fram%2F127.0.0.1%3A12845 http=404 body: metadata not found
+W20261003 04:24:06.289423 2042405 transfer_metadata.cpp:1008] Failed to retrieve segment descriptor, name 127.0.0.1:12845
+I20261003 04:24:06.289889 2042405 tcp_transport.cpp:917] TcpTransport: listen on port 16355
+I20261003 04:24:06.290781 2042405 real_client.cpp:693] Successfully created client on port 12845 after 1 attempt(s)
+I20261003 04:24:06.295426 2042405 real_client.cpp:726] Registering local memory: 8388608 bytes
+I20261003 04:24:06.295727 2042405 real_client.cpp:804] Mounting segment: 67108864 bytes, 67108864 of 67108864
+[titan] 2026-10-03 04:24:08,259 - root - INFO - Training completed
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20261003 04:24:08.284618 2042404 client_metric.cpp:114] Client metrics enabled (default enabled)
+I20261003 04:24:08.284651 2042404 client_metric.cpp:115] Client bandwidth summary enabled via MC_STORE_CLIENT_METRIC_BANDWIDTH
+I20261003 04:24:08.285853 2042404 client_service.cpp:287] client_id=16376597716729837530-13068973802161676696
+I20261003 04:24:08.285866 2042404 client_service.cpp:298] Client metrics enabled but reporting disabled (interval=0)
+I20261003 04:24:08.286685 2042404 client_service.cpp:929] Storage root directory is not set. persisting data is disabled.
+I20261003 04:24:08.286753 2042404 transfer_engine_impl.cpp:971] Metrics reporting is disabled (set MC_TE_METRIC=1 to enable)
+I20261003 04:24:08.286772 2042404 transfer_engine_impl.cpp:115] Transfer Engine parseHostNameWithPort. server_name: 127.0.0.1 port: 13330
+I20261003 04:24:08.287477 2042404 transfer_metadata_plugin.cpp:1293] Found active interface bond0 with IP 10.220.51.9
+I20261003 04:24:08.287490 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface docker0 (not UP or not RUNNING)
+I20261003 04:24:08.287494 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287498 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287503 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287506 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287510 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287514 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287518 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287521 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287525 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287529 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287533 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287536 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287540 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287544 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287547 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287551 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287554 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287559 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287562 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287565 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287569 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287573 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287582 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287586 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287590 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287595 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287597 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287601 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287606 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287608 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287612 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287616 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287619 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287623 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287626 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287631 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287634 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287637 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287642 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287644 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287648 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287652 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287655 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287659 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287663 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287667 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287670 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287674 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287678 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287683 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287686 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287689 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287693 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287698 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287700 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287704 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287710 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287714 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287717 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287721 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287725 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287729 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287732 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287735 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287739 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287743 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287747 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287751 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287755 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287758 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287761 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287765 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287770 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287772 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287776 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287781 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287784 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287787 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287791 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287794 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287798 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287801 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287806 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287809 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287813 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287817 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287820 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287823 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287827 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287834 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287838 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287842 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287845 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287848 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287853 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287856 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287859 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287863 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287868 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287870 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287874 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287878 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287881 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287885 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287889 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287892 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287896 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287900 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287906 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287910 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287914 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287918 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287921 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287925 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287928 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287932 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287935 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287940 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287947 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287950 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287954 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287962 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287968 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287972 2042404 transfer_metadata_plugin.cpp:1282] Skipping interface kube-ipvs0 (not UP or not RUNNING)
+I20261003 04:24:08.287988 2042404 transfer_engine_impl.cpp:182] Transfer Engine RPC using new RPC mapping, listening on 10.220.51.9:15065
+I20261003 04:24:08.288419 2042404 client_service.cpp:747] Transfer engine auto discovery is disabled for protocol: tcp
+E20261003 04:24:08.288583 2042404 transfer_metadata_plugin.cpp:292] GET http://127.0.0.1:35499/metadata?key=mooncake%2Fram%2F127.0.0.1%3A13330 http=404 body: metadata not found
+W20261003 04:24:08.288595 2042404 transfer_metadata.cpp:1008] Failed to retrieve segment descriptor, name 127.0.0.1:13330
+I20261003 04:24:08.288817 2042404 tcp_transport.cpp:917] TcpTransport: listen on port 15834
+I20261003 04:24:08.289592 2042404 real_client.cpp:693] Successfully created client on port 13330 after 1 attempt(s)
+I20261003 04:24:08.293790 2042404 real_client.cpp:726] Registering local memory: 8388608 bytes
+I20261003 04:24:08.294021 2042404 real_client.cpp:804] Mounting segment: 67108864 bytes, 67108864 of 67108864
+[titan] 2026-10-03 04:24:08,342 - specforge.runtime.data_plane.ref_distributor - INFO - ref-distributor: finished {'dispatched': 0, 'skipped': 12, 'duplicates': 0, 'dropped': 0}
+ONLINE_BOUNDARY_OK step=3 acknowledged=12

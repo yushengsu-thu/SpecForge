@@ -1,0 +1,196 @@
+"""Validate and summarize one immutable BF16 extension benchmark matrix.
+
+This is an offline report tool: it reads JSON and never launches training.
+"""
+
+import argparse
+import json
+import math
+import statistics
+from pathlib import Path
+
+
+ALGORITHMS = ("dflash", "dflash2", "dspark")
+CASES = ("bf16", "cuda", "graph-full")
+GIB = 1024**3
+
+
+def distribution(values):
+    return {
+        "median": statistics.median(values),
+        "min": min(values),
+        "max": max(values),
+        "values": values,
+    }
+
+
+def summarize(directory, repeats, allow_incomplete=False):
+    runs = {}
+    missing = []
+    provenance = None
+    contracts = {}
+    shared_runtime = None
+    manifest_path = directory / "launch-manifest.json"
+    launches = (
+        {entry["name"]: entry for entry in json.loads(manifest_path.read_text())}
+        if manifest_path.exists()
+        else {}
+    )
+    for algorithm in ALGORITHMS:
+        for case in CASES:
+            for repeat in range(1, repeats + 1):
+                name = f"{algorithm}-{case}-{repeat}"
+                path = directory / f"{name}.json"
+                if not path.exists():
+                    missing.append(name)
+                    continue
+                run = json.loads(path.read_text())
+                contract = run["comparison_contract"]
+                previous = contracts.setdefault(algorithm, contract)
+                assert contract == previous, f"{name}: mismatched inputs/recipe"
+                assert contract["world_size"] == contract["data_degree"] == 2
+                assert contract["warmup_steps"] == 10 and contract["steps"] == 20
+                runtime = run["runtime"]
+                expected = {
+                    "compile": True,
+                    "tp_size": 1,
+                    "cuda_graphs": case != "bf16",
+                    "titan_engine": "graph" if case == "graph-full" else "trainer",
+                    "graph_inductor": "full" if case == "graph-full" else None,
+                }
+                assert all(runtime.get(k) == v for k, v in expected.items()), name
+                assert runtime.get("fp8_recipe", "none") == "none", name
+                fixed = {k: v for k, v in runtime.items() if k not in expected}
+                if shared_runtime is None:
+                    shared_runtime = fixed
+                assert fixed == shared_runtime, f"{name}: precision/kernel drift"
+                current_provenance = {
+                    key: run[key]
+                    for key in (
+                        "benchmark_sha256", "recipe_helpers_sha256", "source_sha256",
+                        "versions", "cuda", "device",
+                    )
+                }
+                if provenance is None:
+                    provenance = current_provenance
+                assert current_provenance == provenance, f"{name}: source/runtime drift"
+                assert len(run["step_seconds_max_rank"]) == 20, name
+                assert len(run["warmup_step_seconds_max_rank"]) == 10, name
+                assert len(run["losses_including_warmup"]) == 30, name
+                assert all(
+                    math.isfinite(value)
+                    for key in (
+                        "step_seconds_max_rank", "warmup_step_seconds_max_rank",
+                        "losses_including_warmup",
+                    )
+                    for value in run[key]
+                ), name
+                assert all(value > 0 for value in run["step_seconds_max_rank"]), name
+                assert math.isclose(
+                    statistics.median(run["step_seconds_max_rank"]),
+                    run["optimizer_step_seconds_median"],
+                    rel_tol=1e-12,
+                ), name
+                if name in launches:
+                    assert launches[name]["exit_code"] == 0, name
+                runs[name] = run
+    if missing and not allow_incomplete:
+        raise ValueError(f"Incomplete matrix; missing {missing}")
+    groups = []
+    for algorithm in ALGORITHMS:
+        for case in CASES:
+            names = [
+                f"{algorithm}-{case}-{repeat}"
+                for repeat in range(1, repeats + 1)
+                if f"{algorithm}-{case}-{repeat}" in runs
+            ]
+            if not names:
+                continue
+            records = [runs[name] for name in names]
+            row = {"algorithm": algorithm, "case": case, "trials": len(records)}
+            fields = {
+                "steady_ms": lambda r: 1000 * r["optimizer_step_seconds_median"],
+                "peak_allocated_gib": lambda r: r["peak_allocated_bytes_max_rank"] / GIB,
+                "peak_reserved_gib": lambda r: r["peak_reserved_bytes_max_rank"] / GIB,
+                "build_seconds": lambda r: r[
+                    "trainer_build_seconds_max_rank_including_cpu_init_and_hashes"
+                ],
+                "first_window_seconds": lambda r: r["first_step_seconds_max_rank"],
+                "total_warmup_seconds": lambda r: sum(r["warmup_step_seconds_max_rank"]),
+            }
+            row.update({key: distribution([fn(r) for r in records]) for key, fn in fields.items()})
+            row["raw_files"] = [f"{name}.json" for name in names]
+            row["max_abs_loss_trajectory_difference_vs_bf16"] = []
+            for name, run in zip(names, records):
+                reference = runs.get(f"{algorithm}-bf16-{name.rsplit('-', 1)[1]}")
+                if reference is not None:
+                    row["max_abs_loss_trajectory_difference_vs_bf16"].append(max(
+                        abs(a - b)
+                        for a, b in zip(
+                            run["losses_including_warmup"],
+                            reference["losses_including_warmup"],
+                        )
+                    ))
+            groups.append(row)
+    by_group = {(r["algorithm"], r["case"]): r for r in groups}
+    for row in groups:
+        baseline = by_group.get((row["algorithm"], "bf16"))
+        if baseline is not None:
+            row["latency_change_percent_vs_compiled_native"] = 100 * (
+                row["steady_ms"]["median"] / baseline["steady_ms"]["median"] - 1
+            )
+    return {
+        "complete": not missing,
+        "expected_trials": len(ALGORITHMS) * len(CASES) * repeats,
+        "completed_trials": len(runs),
+        "missing": missing,
+        "input_directory": str(directory),
+        "provenance": provenance,
+        "comparison_contract_by_algorithm": contracts,
+        "shared_runtime": shared_runtime,
+        "groups": groups,
+        "method": "Median of per-process medians; ranges span independent process medians.",
+        "quality_claim": False,
+    }
+
+
+def markdown(summary):
+    lines = [
+        "| Algorithm | Configuration | Steady ms/window (range) | Change vs compiled native |",
+        "| --- | --- | ---: | ---: |",
+    ]
+    for row in summary["groups"]:
+        times = row["steady_ms"]
+        change = row.get("latency_change_percent_vs_compiled_native", float("nan"))
+        lines.append(
+            f'| {row["algorithm"]} | {row["case"]} | {times["median"]:.2f} '
+            f'({times["min"]:.2f}–{times["max"]:.2f}) | {change:+.2f}% |'
+        )
+    lines += [
+        "", "| Algorithm | Configuration | Allocated GiB | Reserved GiB | Build s | First window s (range) |",
+        "| --- | --- | ---: | ---: | ---: | ---: |",
+    ]
+    for row in summary["groups"]:
+        first = row["first_window_seconds"]
+        lines.append(
+            f'| {row["algorithm"]} | {row["case"]} | '
+            f'{row["peak_allocated_gib"]["median"]:.3f} | '
+            f'{row["peak_reserved_gib"]["median"]:.3f} | '
+            f'{row["build_seconds"]["median"]:.2f} | '
+            f'{first["median"]:.2f} ({first["min"]:.2f}–{first["max"]:.2f}) |'
+        )
+    return "\n".join(lines) + "\n"
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("directory", type=Path)
+    parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--allow-incomplete", action="store_true")
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args()
+    result = summarize(args.directory, args.repeats, args.allow_incomplete)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(result, indent=2) + "\n")
+    args.output.with_suffix(".md").write_text(markdown(result))
+    print(json.dumps({key: result[key] for key in ("complete", "completed_trials", "expected_trials")}))

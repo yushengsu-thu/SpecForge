@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "comparison": "bitwise",
+  "step": 2,
+  "baseline": "/scratch/specforge-torchtitan-20261003/eval-native-dp2/eval-native-dp2",
+  "resumed": "/scratch/specforge-torchtitan-20261003/eval-native-resumed/eval-native-resumed",
+  "dcp": {
+    "tensors": 152,
+    "non_tensor_leaves": 563
+  },
+  "hf_export_tensors": 36,
+  "total": {
+    "tensors": 188,
+    "non_tensor_leaves": 563
+  },
+  "excluded_fixture_identity_paths": [],
+  "scope": "model, optimizer, scheduler, rank RNG, data progress, other DCP state and exported draft"
+}

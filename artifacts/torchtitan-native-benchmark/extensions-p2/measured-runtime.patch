@@ -1,0 +1,2873 @@
+diff --git a/docs/sections/basic_usage/torchtitan.md b/docs/sections/basic_usage/torchtitan.md
+--- a/docs/sections/basic_usage/torchtitan.md
++++ b/docs/sections/basic_usage/torchtitan.md
+@@ -26,10 +26,10 @@
+ uv pip install --python .venv-titan/bin/python --no-deps -e .
+ ```
+ 
+-SGLang feature capture runs separately. This runtime currently reads existing
+-offline feature files through the same algorithm reader, normalizer and
+-collator as SpecForge's FSDP runtime. Live queue acknowledgements and online
+-consumer recovery need their own stateful data adapter.
++SGLang feature capture runs separately. Offline features use the same algorithm
++reader, normalizer and collator as SpecForge's FSDP runtime. Online consumers
++reuse SpecForge's retained Mooncake feature stream and durable ACK ledger; the
++capture producer continues using its existing runtime and environment.
+ 
+ ## Recipe
+ 
+@@ -86,10 +86,70 @@
+ the full logical batch and cannot be recomputed independently per microbatch.
+ 
+ Activation checkpointing and per-block `torch.compile` use TorchTitan's
+-implementations. CUDA graphs remain disabled because the custom objective has
+-dynamic work and host synchronization. Enabling the flag fails explicitly.
+-The separate upstream GraphTrainer, expert parallelism, FP8, async TP, USP and
+-non-GQA tensor-parallel plans are outside this adapter's supported contract.
++implementations. The feature projector is compiled as well. Expert parallelism,
++FP8, async TP, USP and non-GQA tensor-parallel plans are unsupported.
++
++## CUDA Graph and GraphTrainer
++
++For offline features, the ordinary native Trainer can capture its forward and
++backward with `training.torchtitan.disable_cuda_graphs=false`. Pair it with
++`compile=true` to retain per-block compilation. DP, TP and block CP are
++supported; PP with capture is rejected. Sequence length and anchor capacity
++are padded to fixed shapes. This can waste work on short examples, so measure
++with the actual length distribution. Detailed training diagnostics stay outside
++this graph path; native weighted loss, gradient norm and throughput remain.
++
++The separate experimental upstream GraphTrainer is selected explicitly:
++
++```yaml
++training:
++  backend: torchtitan
++  tp_size: 1
++  torchtitan:
++    engine: graph
++    compile: true
++    graph_inductor: regional
++    disable_cuda_graphs: false
++    activation_checkpoint: none
++```
++
++This executes TorchTitan's joint forward/loss/backward tracing, graph passes,
++SimpleFSDP communication, and CUDA Graph pass. It currently supports DP only.
++`graph_inductor=full` compiles the full traced graph; `regional` compiles decoder
++regions. GraphTrainer owns activation-memory planning, so the ordinary
++activation-checkpoint setting must remain `none`. Compilation and capture costs
++are separate from steady training speed.
++
++The adapter functionalizes traced Triton buffer writes before graph elimination
++and retains the DFlash2 fused convolution/head. It also gives accumulated
++gradients independent storage so CUDA replay cannot overwrite the previous
++microbatch's gradient. The usual native Trainer and legacy FSDP paths continue
++using their existing eager kernels.
++
++## Evaluation and online features
++
++Set `data.eval_hidden_states_path` and `training.eval_interval` together to run
++periodic offline evaluation from the native training loop. Evaluation visits
++each example once; tail batches are padded with zero-weight rows so every rank
++executes the same number of forwards. It reduces objective numerators and
++denominators over DP/CP, without counting TP replicas or normalizing the weighted
++objective again by token count. It preserves training RNG, data cursor, gradients
++and model mode. PP evaluation is rejected; the sequence-walk acceptance metric
++is omitted under CP because separate local walks cannot be summed correctly.
++
++Online training uses the existing disaggregated Mooncake recipe and the same
++producer/consumer commands, with `training.backend=torchtitan`. This first
++adapter supports the native Trainer with DP only, synchronous ACKs and native
++DCP checkpoints. TP, CP, PP and either graph-capture path are rejected for online
++features. It currently receives features on the host before native H2D transfer.
++
++The online loader opens only after native DCP restore. It never seeks a live
++queue. Each successful optimizer window commits its sample IDs to the existing
++ledger and inbox before checkpoint/evaluation; a failed or partial window is
++not ACKed. Resume requires the retained producer/feature store and a ledger
++boundary matching the selected checkpoint. An ACK ledger ahead of an older
++checkpoint is rejected, matching the existing recovery contract. Enabling
++online features or evaluation is a workflow capability, not a promised speedup.
+ 
+ ## Checkpoints and precision
+ 
+@@ -112,9 +172,10 @@
+ MFU is an analytical dense-work estimate; use measured step time and peak GPU
+ memory when comparing these custom sparse objectives.
+ 
+-Current frontend constraints: offline colocated text features, BF16 compute,
+-tracking `none` or `tensorboard`, and no periodic validation, SpecForge profiler
+-configuration or optimizer CPU offload. The runtime emits native weighted loss,
++Current frontend constraints include text features, BF16 compute, tracking
++`none` or `tensorboard`, and no SpecForge profiler configuration or optimizer
++CPU offload. Offline disaggregated ingestion is not connected to this adapter.
++The runtime emits native weighted loss,
+ gradient norm, learning-rate and throughput metrics; selector, teacher and
+ acceptance diagnostics are not connected to its logger yet. Titan's
+ token-normalized maximum-local-loss diagnostic is omitted because it does not
+diff --git a/specforge/algorithms/common/dflash_family_model.py b/specforge/algorithms/common/dflash_family_model.py
+--- a/specforge/algorithms/common/dflash_family_model.py
++++ b/specforge/algorithms/common/dflash_family_model.py
+@@ -940,11 +940,16 @@
+         if not isinstance(head, nn.Linear) or head.bias is not None:
+             return False
+         weight = head.weight
++        from torch._subclasses.fake_tensor import FakeTensor
++
+         if (
+             weight.requires_grad
+             or weight.dtype != torch.bfloat16
+             or not weight.is_cuda
+-            or type(weight.data) is not torch.Tensor
++            # make_fx represents the same replicated teacher weight with a
++            # FakeTensor. Wrapped Triton launches retain the fused path while
++            # tracing; actual distributed tensor wrappers remain unsupported.
++            or type(weight.data) not in (torch.Tensor, FakeTensor)
+         ):
+             return False
+         if hidden.dtype != torch.bfloat16 or not hidden.is_cuda:
+@@ -1544,7 +1549,7 @@
+         loss_mask: torch.Tensor,
+         target_last_hidden_states: Optional[torch.Tensor] = None,
+         max_valid_anchors: Optional[int] = None,
+-        selector_loss_alpha: Optional[float] = None,
++        selector_loss_alpha: Optional[float | torch.Tensor] = None,
+         collect_detailed_metrics: bool = True,
+         anchor_positions: Optional[torch.Tensor] = None,
+         block_keep_mask: Optional[torch.Tensor] = None,
+@@ -1686,13 +1691,25 @@
+             accuracy_denom,
+         )
+         loss_num = token_loss_num
+-        effective_selector_alpha = (
+-            self.selector_loss_alpha
+-            if selector_loss_alpha is None
+-            else float(selector_loss_alpha)
+-        )
+-        if effective_selector_alpha < 0:
+-            raise ValueError("selector_loss_alpha must be >= 0")
++        if isinstance(selector_loss_alpha, torch.Tensor):
++            if selector_loss_alpha.ndim != 0:
++                raise ValueError("selector_loss_alpha tensor must be scalar")
++            # Keep scheduled weights as graph inputs. Converting to a Python
++            # float would synchronize the device and freeze the captured value.
++            effective_selector_alpha = selector_loss_alpha.to(
++                device=loss_num.device, dtype=torch.float32
++            )
++            torch._assert_async(
++                effective_selector_alpha >= 0, "selector_loss_alpha must be >= 0"
++            )
++        else:
++            effective_selector_alpha = (
++                self.selector_loss_alpha
++                if selector_loss_alpha is None
++                else float(selector_loss_alpha)
++            )
++            if effective_selector_alpha < 0:
++                raise ValueError("selector_loss_alpha must be >= 0")
+         selector_loss_num = loss_num.new_zeros(())
+         has_selector_objective = self._selector_objective_enabled
+         if has_selector_objective:
+diff --git a/specforge/cli.py b/specforge/cli.py
+--- a/specforge/cli.py
++++ b/specforge/cli.py
+@@ -117,7 +117,7 @@
+     from accelerate.utils import set_seed
+ 
+     cfg = resolved.config
+-    if cfg.training.backend == "torchtitan":
++    if cfg.training.backend == "torchtitan" and cfg.training.role != "producer":
+         # The Titan Trainer owns distributed initialization and its mesh. Do
+         # not construct the legacy FSDP/USP groups before entering that runtime.
+         from specforge.application import build_application_run
+diff --git a/specforge/config/schema.py b/specforge/config/schema.py
+--- a/specforge/config/schema.py
++++ b/specforge/config/schema.py
+@@ -907,12 +907,22 @@
+     )
+     activation_checkpoint: Literal["none", "full", "selective"] = "none"
+     compile: bool = False
++    engine: Literal["trainer", "graph"] = "trainer"
++    graph_inductor: Literal["regional", "full"] = "regional"
+     disable_cuda_graphs: bool = True
+ 
+     @model_validator(mode="after")
+     def _validate_degrees(self):
+         if self.dp_shard == 0:
+             raise ValueError("training.torchtitan.dp_shard must be -1 or positive")
++        if self.engine == "graph" and not self.compile:
++            raise ValueError("TorchTitan GraphTrainer requires compile=true")
++        if self.engine == "graph" and self.activation_checkpoint != "none":
++            raise ValueError(
++                "GraphTrainer manages activation memory through graph passes"
++            )
++        if self.engine != "graph" and self.graph_inductor != "regional":
++            raise ValueError("graph_inductor requires TorchTitan engine=graph")
+         return self
+ 
+ 
+@@ -1038,6 +1048,12 @@
+                 raise ValueError(
+                     "TorchTitan v0.3 does not support pipeline parallelism with CUDA graphs"
+                 )
++            if self.torchtitan.engine == "graph" and (
++                self.tp_size != 1
++                or self.torchtitan.cp_size != 1
++                or self.torchtitan.pp_size != 1
++            ):
++                raise ValueError("SpecForge GraphTrainer currently supports DP only")
+         if not 0.0 <= self.dpace_alpha <= 1.0:
+             raise ValueError("training.dpace_alpha must be in [0, 1]")
+         if not 0.0 < self.down_sample_ratio <= 1.0:
+@@ -1209,7 +1225,11 @@
+                 "an eval data source and training.eval_interval must be "
+                 "configured together"
+             )
+-        if self.data.eval_hidden_states_path and mode != "offline":
++        if (
++            self.data.eval_hidden_states_path
++            and mode != "offline"
++            and self.training.backend != "torchtitan"
++        ):
+             raise ValueError(
+                 "data.eval_hidden_states_path requires an offline training data source"
+             )
+diff --git a/specforge/core/dflash_head_triton.py b/specforge/core/dflash_head_triton.py
+--- a/specforge/core/dflash_head_triton.py
++++ b/specforge/core/dflash_head_triton.py
+@@ -24,6 +24,15 @@
+ import torch.nn.functional as F
+ import triton
+ import triton.language as tl
++from torch._subclasses.fake_tensor import FakeTensor
++from torch.library import wrap_triton
++
++
++def _traceable_kernel(kernel, tensor):
++    # Raw launches preserve eager performance; make_fx needs dispatcher-visible
++    # kernel writes so GraphTrainer can functionalize their dependencies.
++    return wrap_triton(kernel) if isinstance(tensor, FakeTensor) else kernel
++
+ 
+ __all__ = ["MAX_FUSED_TOP_K", "dflash_unary_head_fused"]
+ 
+@@ -116,7 +125,9 @@
+         grad_logits = logits
+         if num_rows > 0:
+             vocab_block, num_warps = _grad_settings(vocab_size)
+-            _unary_head_grad_kernel[(num_rows, triton.cdiv(vocab_size, vocab_block))](
++            _traceable_kernel(_unary_head_grad_kernel, logits)[
++                (num_rows, triton.cdiv(vocab_size, vocab_block))
++            ](
+                 grad_logits,
+                 grad_logits.stride(0),
+                 targets,
+@@ -130,7 +141,7 @@
+             if grad_topk_values is not None and top_k > 0:
+                 # Top-k ids are distinct within a row, so every candidate
+                 # rewrites one gradient entry with its complete FP32 value.
+-                _unary_head_topk_grad_kernel[(num_rows,)](
++                _traceable_kernel(_unary_head_topk_grad_kernel, logits)[(num_rows,)](
+                     grad_logits,
+                     grad_logits.stride(0),
+                     targets,
+@@ -224,7 +235,7 @@
+     partial_topk_ids = torch.empty(
+         num_rows, num_splits, top_k, device=logits.device, dtype=torch.int32
+     )
+-    _unary_head_partial_stats_kernel[(num_rows, num_splits)](
++    _traceable_kernel(_unary_head_partial_stats_kernel, logits)[(num_rows, num_splits)](
+         logits,
+         logits.stride(0),
+         partial_max,
+@@ -240,7 +251,7 @@
+         BLOCK_K=triton.next_power_of_2(max(top_k, 1)),
+         num_warps=num_warps,
+     )
+-    _unary_head_combine_stats_kernel[(num_rows,)](
++    _traceable_kernel(_unary_head_combine_stats_kernel, logits)[(num_rows,)](
+         logits,
+         logits.stride(0),
+         targets,
+diff --git a/specforge/launch.py b/specforge/launch.py
+--- a/specforge/launch.py
++++ b/specforge/launch.py
+@@ -12,6 +12,7 @@
+ 
+ import logging
+ import os
++from dataclasses import dataclass
+ from typing import Any, Callable, List, Mapping, Optional, Tuple
+ 
+ from specforge.algorithms.registry import AlgorithmRegistration
+@@ -1517,32 +1518,33 @@
+     return workers, drive_producer
+ 
+ 
+-def build_disagg_online_consumer(
++@dataclass
++class OnlineConsumerResources:
++    """Shared inbox, durable ledger and lifecycle for an online consumer."""
++
++    queue: Any
++    controller: Any
++    distributor: Any
++    async_ack: bool
++    on_success: Callable[[int], None]
++    on_failure: Callable[[BaseException], None]
++    close: Callable[[], None]
++
++    def start(self) -> None:
++        if self.distributor is not None:
++            self.distributor.start()
++
++
++def build_online_consumer_resources(
+     *,
+-    algorithm: AlgorithmRegistration,
+-    modality: str = "text",
++    run_id: str,
+     feature_store: FeatureStore,
+     channel,
+-    draft_model,
+-    optimizer_factory,
+-    run_id: str,
+-    output_dir: str,
+-    target_head=None,
+     batch_size: int = 1,
+     accumulation_steps: int = 1,
+-    max_steps: Optional[int] = None,
+-    total_steps: Optional[int] = None,
+-    save_interval: int = 0,
+-    eval_interval: int = 0,
+-    eval_data_factory=None,
+-    collate_fn=None,
+     idle_timeout_s: Optional[float] = None,
+     metadata_store: Optional[MetadataStore] = None,
+     metadata_db_path: Optional[str] = None,
+-    logger=None,
+-    log_interval: int = 50,
+-    strategy_kwargs: Optional[Mapping[str, Any]] = None,
+-    max_checkpoints: int = 0,
+     tp_size: int = 1,
+     sp_ulysses_size: int = 1,
+     sp_ring_size: int = 1,
+@@ -1550,28 +1552,14 @@
+     dp_size: Optional[int] = None,
+     inbox_dir: Optional[str] = None,
+     resume_from: Optional[str] = None,
+-    dataloader_num_workers: int = 0,
+-    profiling_options=None,
++    resume_step: Optional[int] = None,
+     async_ack: Optional[bool] = None,
+-):
+-    """Consumer (trainer) side of an ONLINE disaggregated run.
+-
+-    Rank 0 always runs the :class:`RefDistributor`, including for ``dp_size=1``.
+-    It is the only reader of ``channel`` and the only writer to the
+-    ``metadata_store``/``metadata_db_path`` ledger, then dispatches refs into one
+-    inbox per rank. Every rank consumes the same inbox-based path and durable
+-    acknowledgements gather to rank 0 through :class:`DPAckController`.
+-
+-    ``resume_from`` is consumer-only. Rank 0 reconciles the retained SQLite
+-    ledger, skips optimizer-durable refs, requeues the unacked tail, and requires
+-    the durable marker to match the checkpoint step. The producer and original
+-    data plane must still be available; this does not restart a producer.
+-
+-    ``async_ack`` (default: ``DISAGG_ASYNC_ACK``, on unless ``0``) runs each
+-    optimizer boundary's durable ack on a background thread over a dedicated
+-    Gloo group while the next step computes; see :class:`TrainerController`.
+-    It is on only when every rank enables it; otherwise acks stay synchronous
+-    on the default process group and no Gloo group is created.
++) -> OnlineConsumerResources:
++    """Prepare the existing consumer control plane without building a trainer.
++
++    Native engines pass their restored optimizer step explicitly. Legacy callers
++    retain the existing checkpoint reader when ``resume_step`` is omitted.
++    The caller owns start, success/failure signaling, and final close.
+     """
+     import torch.distributed as dist
+ 
+@@ -1585,7 +1573,6 @@
+     )
+     from specforge.runtime.data_plane.streaming_ref_channel import StreamingRefQueue
+ 
+-    algorithm.providers.server_streaming_for(modality)
+     distributed = dist.is_available() and dist.is_initialized()
+     world = dist.get_world_size() if distributed else 1
+     actual_rank = dist.get_rank() if distributed else 0
+@@ -1694,7 +1681,11 @@
+                 # every rank, rather than carrying a hidden leak into training.
+                 drain_feature_store_removals(feature_store)
+                 marker_step = reconciled["global_step"]
+-                checkpoint_step = _checkpoint_global_step(resume_from)
++                checkpoint_step = (
++                    _checkpoint_global_step(resume_from)
++                    if resume_step is None
++                    else resume_step
++                )
+                 if marker_step is not None and not reconciled["optimizer_durable"]:
+                     raise RuntimeError(
+                         f"durable marker at global_step={marker_step} is not marked "
+@@ -1859,13 +1850,115 @@
+                     )
+                 logging.getLogger(__name__).error("%s", combined)
+ 
++    resources_closed = False
++
++    def close_resources() -> None:
++        nonlocal resources_closed
++        if resources_closed:
++            return
++        resources_closed = True
++        try:
++            stop_distributor_and_drain()
++        finally:
++            # Close only the ledger this factory opened, never caller-owned state.
++            if metadata_store is None and store is not None:
++                close = getattr(store, "close", None)
++                if close is not None:
++                    close()
++
++    return OnlineConsumerResources(
++        queue=queue,
++        controller=controller,
++        distributor=distributor,
++        async_ack=async_ack,
++        on_success=mark_consumer_done,
++        on_failure=mark_consumer_failed,
++        close=close_resources,
++    )
++
++
++def build_disagg_online_consumer(
++    *,
++    algorithm: AlgorithmRegistration,
++    modality: str = "text",
++    feature_store: FeatureStore,
++    channel,
++    draft_model,
++    optimizer_factory,
++    run_id: str,
++    output_dir: str,
++    target_head=None,
++    batch_size: int = 1,
++    accumulation_steps: int = 1,
++    max_steps: Optional[int] = None,
++    total_steps: Optional[int] = None,
++    save_interval: int = 0,
++    eval_interval: int = 0,
++    eval_data_factory=None,
++    collate_fn=None,
++    idle_timeout_s: Optional[float] = None,
++    metadata_store: Optional[MetadataStore] = None,
++    metadata_db_path: Optional[str] = None,
++    logger=None,
++    log_interval: int = 50,
++    strategy_kwargs: Optional[Mapping[str, Any]] = None,
++    max_checkpoints: int = 0,
++    tp_size: int = 1,
++    sp_ulysses_size: int = 1,
++    sp_ring_size: int = 1,
++    dp_rank: Optional[int] = None,
++    dp_size: Optional[int] = None,
++    inbox_dir: Optional[str] = None,
++    resume_from: Optional[str] = None,
++    dataloader_num_workers: int = 0,
++    profiling_options=None,
++    async_ack: Optional[bool] = None,
++):
++    """Consumer (trainer) side of an ONLINE disaggregated run.
++
++    Rank 0 always runs the :class:`RefDistributor`, including for ``dp_size=1``.
++    It is the only reader of ``channel`` and the only writer to the
++    ``metadata_store``/``metadata_db_path`` ledger, then dispatches refs into one
++    inbox per rank. Every rank consumes the same inbox-based path and durable
++    acknowledgements gather to rank 0 through :class:`DPAckController`.
++
++    ``resume_from`` is consumer-only. Rank 0 reconciles the retained SQLite
++    ledger, skips optimizer-durable refs, requeues the unacked tail, and requires
++    the durable marker to match the checkpoint step. The producer and original
++    data plane must still be available; this does not restart a producer.
++
++    ``async_ack`` (default: ``DISAGG_ASYNC_ACK``, on unless ``0``) runs each
++    optimizer boundary's durable ack on a background thread over a dedicated
++    Gloo group while the next step computes; see :class:`TrainerController`.
++    It is on only when every rank enables it; otherwise acks stay synchronous
++    on the default process group and no Gloo group is created.
++    """
++    algorithm.providers.server_streaming_for(modality)
++    resources = build_online_consumer_resources(
++        run_id=run_id,
++        feature_store=feature_store,
++        channel=channel,
++        batch_size=batch_size,
++        accumulation_steps=accumulation_steps,
++        idle_timeout_s=idle_timeout_s,
++        metadata_store=metadata_store,
++        metadata_db_path=metadata_db_path,
++        tp_size=tp_size,
++        sp_ulysses_size=sp_ulysses_size,
++        sp_ring_size=sp_ring_size,
++        dp_rank=dp_rank,
++        dp_size=dp_size,
++        inbox_dir=inbox_dir,
++        resume_from=resume_from,
++        async_ack=async_ack,
++    )
+     try:
+         trainer = _assemble_trainer(
+             algorithm=algorithm,
+-            controller=controller,
++            controller=resources.controller,
+             store=feature_store,
+             ref_source={
+-                "queue": queue,
++                "queue": resources.queue,
+                 "prepositioned": resume_from is not None,
+                 "defer_ack_until_durable": True,
+             },
+@@ -1898,22 +1991,21 @@
+             resume_from=resume_from,
+             dataloader_num_workers=dataloader_num_workers,
+             profiling_options=profiling_options,
+-            async_ack=async_ack,
+-            on_fit_success=mark_consumer_done,
+-            on_fit_failure=mark_consumer_failed,
+-            on_fit_finally=stop_distributor_and_drain,
++            async_ack=resources.async_ack,
++            on_fit_success=resources.on_success,
++            on_fit_failure=resources.on_failure,
++            on_fit_finally=resources.close,
+         )
+         #: Rank 0's lifecycle-owned RefDistributor handle (None elsewhere), exposed
+         #: for runtime observability. ``Trainer.fit()`` always stops it.
+-        trainer.ref_distributor = distributor
+-        if distributor is not None:
+-            distributor.start()
++        trainer.ref_distributor = resources.distributor
++        resources.start()
+         return trainer
+     except BaseException as exc:
+         # The canonical builder also owns failures before ``Trainer.fit`` can
+         # take over, so a direct Python caller cannot strand its producer.
+-        mark_consumer_failed(exc)
+-        stop_distributor_and_drain()
++        resources.on_failure(exc)
++        resources.close()
+         raise
+ 
+ 
+diff --git a/specforge/modeling/draft/dflash2_conv_triton.py b/specforge/modeling/draft/dflash2_conv_triton.py
+--- a/specforge/modeling/draft/dflash2_conv_triton.py
++++ b/specforge/modeling/draft/dflash2_conv_triton.py
+@@ -23,7 +23,16 @@
+ import torch
+ import triton
+ import triton.language as tl
++from torch._subclasses.fake_tensor import FakeTensor
+ from torch.autograd.function import once_differentiable
++from torch.library import wrap_triton
++
++
++def _traceable_kernel(kernel, tensor):
++    # Raw launches preserve eager performance; make_fx needs dispatcher-visible
++    # kernel writes so GraphTrainer can functionalize their dependencies.
++    return wrap_triton(kernel) if isinstance(tensor, FakeTensor) else kernel
++
+ 
+ __all__ = ["dflash2_grouped_conv_fused", "supports_group_size"]
+ 
+@@ -95,7 +104,7 @@
+             group_size, _FORWARD_BLOCK_H
+         )
+         grid = (triton.cdiv(num_rows, block_m), triton.cdiv(hidden_size, block_h))
+-        _dflash2_grouped_conv_forward_kernel[grid](
++        _traceable_kernel(_dflash2_grouped_conv_forward_kernel, rows)[grid](
+             rows,
+             dynamic,
+             base,
+@@ -150,7 +159,7 @@
+         )
+ 
+         grid = (num_row_tiles, triton.cdiv(hidden_size, block_h))
+-        _dflash2_grouped_conv_backward_kernel[grid](
++        _traceable_kernel(_dflash2_grouped_conv_backward_kernel, rows)[grid](
+             rows,
+             dynamic,
+             base,
+diff --git a/specforge/training/assembly.py b/specforge/training/assembly.py
+--- a/specforge/training/assembly.py
++++ b/specforge/training/assembly.py
+@@ -591,10 +591,19 @@
+             f"{algorithm.name!r} != {cfg.training.strategy!r}"
+         )
+ 
+-    if cfg.training.backend == "torchtitan":
++    if cfg.training.backend == "torchtitan" and cfg.training.role != "producer":
+         from specforge.training.torchtitan.frontend import build_torchtitan_training_run
+ 
+-        return build_torchtitan_training_run(cfg, algorithm=algorithm)
++        try:
++            return build_torchtitan_training_run(cfg, algorithm=algorithm)
++        except BaseException as exc:
++            if cfg.mode == "online":
++                from specforge.training.disaggregated import (
++                    _publish_role_assembly_failure,
++                )
++
++                _publish_role_assembly_failure(cfg, exc)
++            raise
+ 
+     t = cfg.training
+     if t.role != "producer":
+diff --git a/specforge/training/disaggregated.py b/specforge/training/disaggregated.py
+--- a/specforge/training/disaggregated.py
++++ b/specforge/training/disaggregated.py
+@@ -659,7 +659,9 @@
+             raise ValueError(
+                 f"no prompts satisfy {algorithm.name} training eligibility"
+             )
+-        if cfg.training.total_steps is None and cfg.training.max_steps is None:
++        if cfg.training.backend == "torchtitan" or (
++            cfg.training.total_steps is None and cfg.training.max_steps is None
++        ):
+             schedule = _online_schedule_payload(cfg, num_prompts=len(prompts))
+             _write_control(
+                 channel_path + _ONLINE_SCHEDULE_SUFFIX,
+diff --git a/specforge/training/torchtitan/frontend.py b/specforge/training/torchtitan/frontend.py
+--- a/specforge/training/torchtitan/frontend.py
++++ b/specforge/training/torchtitan/frontend.py
+@@ -337,6 +337,101 @@
+             raise RuntimeError("Offline feature training does not decode token IDs")
+ 
+     return FeatureTokenizer.Config(vocab_size=vocab_size)
++
++
++@dataclass
++class _OnlineSourceFactory:
++    """Open the existing retained feature stream after native DCP restore."""
++
++    cfg: Any
++    algorithm: Any
++    natural_steps: int
++    store: Any = None
++
++    def __call__(
++        self, *, dp_rank, dp_world_size, local_batch_size, seq_len, resume_step
++    ):
++        del seq_len
++        from specforge.launch import build_online_consumer_resources
++        from specforge.runtime.data_plane import FeatureDataLoader
++        from specforge.runtime.data_plane.streaming_ref_channel import (
++            StreamingRefChannel,
++        )
++        from specforge.training.assembly import _dataloader_num_workers
++        from specforge.training.disaggregated import (
++            _consumer_database_path,
++            _env,
++            _mooncake_store,
++        )
++
++        channel = StreamingRefChannel(_env("DISAGG_REF_CHANNEL"))
++        resources = None
++        try:
++            self.store = _mooncake_store(self.cfg, retain_on_release=True)
++            resources = build_online_consumer_resources(
++                run_id=self.cfg.run_id,
++                feature_store=self.store,
++                channel=channel,
++                batch_size=local_batch_size,
++                accumulation_steps=self.cfg.training.accumulation_steps,
++                idle_timeout_s=float(os.environ.get("DISAGG_IDLE_TIMEOUT", "0"))
++                or None,
++                metadata_db_path=_consumer_database_path(self.cfg),
++                dp_rank=dp_rank,
++                dp_size=dp_world_size,
++                inbox_dir=os.environ.get("DISAGG_INBOX_DIR") or None,
++                resume_from=self.cfg.training.resume_from,
++                resume_step=resume_step,
++                async_ack=False,
++            )
++            source = FeatureDataLoader(
++                self.store,
++                queue=resources.queue,
++                ack=False,
++                device="cpu",
++                batch_size=local_batch_size,
++                collate_fn=self.algorithm.providers.server_streaming_for(
++                    self.cfg.model.input_modality
++                ).build_collator(),
++                strategy=self.algorithm.name,
++                num_workers=_dataloader_num_workers(self.cfg, self.algorithm),
++                pin_memory=True,
++            )
++            return source, resources
++        except BaseException as exc:
++            cleanups = (
++                (lambda: resources.on_failure(exc), resources.close)
++                if resources is not None
++                else (
++                    lambda: channel.mark_consumer_failed(
++                        f"{type(exc).__name__}: {exc}"
++                    ),
++                )
++            )
++            for cleanup in cleanups:
++                try:
++                    cleanup()
++                except BaseException:
++                    logging.getLogger(__name__).exception(
++                        "Online source setup cleanup failed"
++                    )
++            raise
++
++    def close(self):
++        store, self.store = self.store, None
++        if store is not None:
++            store.close()
++
++
++def _online_training_horizon(cfg, natural_steps):
++    """Keep the producer's finite stream length separate from the LR horizon."""
++    if natural_steps < 1:
++        raise ValueError("The online producer must supply a complete optimizer window")
++    training = cfg.training
++    return (
++        min(natural_steps, training.max_steps or natural_steps),
++        training.total_steps or training.max_steps or natural_steps,
++    )
+ 
+ 
+ def _scheduler_config(cfg, total_steps: int):
+@@ -522,11 +617,21 @@
+ 
+ 
+ def _native_config(
+-    cfg, algorithm, refs, model_sources, layout, data_degree, stop_steps, schedule_steps
++    cfg,
++    algorithm,
++    refs,
++    model_sources,
++    layout,
++    data_degree,
++    stop_steps,
++    schedule_steps,
++    *,
++    online_source=None,
+ ):
+     from torchtitan.components.checkpoint import CheckpointManager
+     from torchtitan.components.metrics import MetricsProcessor
+     from torchtitan.components.optimizer.optimizer import default_adamw
++    from torchtitan.components.validate import Validator
+     from torchtitan.config import (
+         CompileConfig,
+         DebugConfig,
+@@ -574,16 +679,93 @@
+         seed=training.seed,
+         parallelism=layout,
+     )
++    # Preserve the original BF16 Trainer contract for existing checkpoints;
++    # opting into a different engine must still reject a resume
++    # from incompatible optimizer/model state.
++    if titan.engine != "trainer":
++        contract.update(engine=titan.engine)
++    if online_source is not None:
++        from specforge.training.disaggregated import _consumer_database_path, _env
++
++        contract.update(
++            feature_source="online",
++            stream_run_id=cfg.run_id,
++            stream_natural_steps=online_source.natural_steps,
++            stream_path=str(Path(_env("DISAGG_REF_CHANNEL")).resolve()),
++            ledger_path=str(Path(_consumer_database_path(cfg)).resolve()),
++        )
+     activation_checkpoint = {
+         "none": None,
+         "full": FullAC.Config(),
+         "selective": SelectiveAC.Config(),
+     }[titan.activation_checkpoint]
+-    native = SpecForgeTitanTrainer.Config(
++    validator_options = Validator.Config(enable=False)
++    if cfg.data.eval_hidden_states_path:
++        from .validation import OfflineEvalSourceFactory, SpecForgeValidator
++
++        eval_refs = (
++            algorithm.providers.offline_for(cfg.model.input_modality)
++            .build_reader(
++                cfg.data.eval_hidden_states_path,
++                run_id=f"{cfg.run_id}-eval",
++                ttt_length=training.ttt_length,
++                max_len=cfg.data.max_length,
++            )
++            .read()
++        )
++        if not eval_refs:
++            raise ValueError("The offline evaluation dataset is empty")
++        validator_options = SpecForgeValidator.Config(
++            enable=True,
++            freq=training.eval_interval,
++            source_factory=OfflineEvalSourceFactory(cfg, algorithm, eval_refs),
++            num_batches=math.ceil(len(eval_refs) / (data_degree * training.batch_size)),
++            algorithm=variant,
++            seed=training.seed,
++            schedule_total_steps=schedule_steps,
++        )
++    trainer_config = SpecForgeTitanTrainer.Config
++    model_config = SpecForgeTitanModel.Config
++    parallelize_fn = parallelize_dflash
++    compile_options = CompileConfig(enable=titan.compile, components=["model"])
++    dataloader_options = FeatureDataLoader.Config(
++        source_factory=_OfflineSourceFactory(cfg, algorithm, refs),
++        epochs=training.num_epochs,
++        pad_to_seq_len=(
++            titan.pp_size > 1
++            or not titan.disable_cuda_graphs
++            or titan.engine == "graph"
++        ),
++    )
++    if online_source is not None:
++        from .online import OnlineFeatureDataLoader, SpecForgeOnlineTrainer
++
++        trainer_config = SpecForgeOnlineTrainer.Config
++        dataloader_options = OnlineFeatureDataLoader.Config(
++            source_factory=online_source
++        )
++    if titan.engine == "graph":
++        from torchtitan.experiments.graph_trainer.configs import (
++            GraphTrainerCompileConfig,
++        )
++
++        from .graph import SpecForgeGraphModel, SpecForgeGraphTrainer
++        from .graph_parallelize import parallelize_graph_dflash
++
++        trainer_config = SpecForgeGraphTrainer.Config
++        model_config = SpecForgeGraphModel.Config
++        parallelize_fn = parallelize_graph_dflash
++        compile_options = GraphTrainerCompileConfig(
++            enable=True,
++            components=["model"],
++            inductor_compilation=titan.graph_inductor,
++            disable_passes=["cudagraph_pass"] if titan.disable_cuda_graphs else [],
++        )
++    native = trainer_config(
+         model_spec=ModelSpec(
+             name="specforge",
+             flavor=variant,
+-            model=SpecForgeTitanModel.Config(
++            model=model_config(
+                 draft_config=draft_config.to_dict(),
+                 algorithm=variant,
+                 objective=objective,
+@@ -591,18 +773,14 @@
+                 draft_state_path=draft_path,
+                 init_seed=training.seed,
+             ),
+-            parallelize_fn=parallelize_dflash,
++            parallelize_fn=parallelize_fn,
+             pipelining_fn=pipeline_dflash,
+             post_optimizer_build_fn=group_optimizer_parameters_by_mesh,
+             state_dict_adapter=None,
+         ),
+         dump_folder=str(dump_folder),
+         tokenizer=_tokenizer_config(int(draft_config.vocab_size)),
+-        dataloader=FeatureDataLoader.Config(
+-            source_factory=_OfflineSourceFactory(cfg, algorithm, refs),
+-            epochs=training.num_epochs,
+-            pad_to_seq_len=titan.pp_size > 1,
+-        ),
++        dataloader=dataloader_options,
+         loss=SpecForgeObjectiveLoss.Config(algorithm=variant),
+         optimizer=default_adamw(
+             lr=training.learning_rate, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.0
+@@ -619,11 +797,13 @@
+             dtype="float32",
+             mixed_precision_param="bfloat16",
+             mixed_precision_reduce="float32",
+-            disable_cuda_graphs=titan.disable_cuda_graphs,
++            disable_cuda_graphs=(
++                True if titan.engine == "graph" else titan.disable_cuda_graphs
++            ),
+         ),
+         parallelism=ParallelismConfig(**layout),
+         activation_checkpoint=activation_checkpoint,
+-        compile=CompileConfig(enable=titan.compile, components=["model"]),
++        compile=compile_options,
+         checkpoint=CheckpointManager.Config(
+             enable=True,
+             folder="checkpoint",
+@@ -642,6 +822,7 @@
+         debug=DebugConfig(seed=training.seed),
+         resume_contract=contract,
+         schedule_total_steps=schedule_steps,
++        validator=validator_options,
+     )
+     native.comm.init_timeout_seconds = training.dist_timeout * 60
+     native.comm.train_timeout_seconds = training.dist_timeout * 60
+@@ -653,8 +834,23 @@
+     from specforge.training.assembly import TrainingRun
+ 
+     _validate_runtime_versions()
+-    if cfg.mode != "offline" or cfg.deployment.mode != "local_colocated":
+-        raise ValueError("TorchTitan currently requires offline colocated features")
++    online = cfg.mode == "online"
++    if online:
++        if cfg.deployment.mode != "disaggregated" or cfg.training.role != "consumer":
++            raise ValueError(
++                "TorchTitan online training requires a disaggregated consumer"
++            )
++        titan = cfg.training.torchtitan
++        if cfg.training.tp_size != 1 or titan.cp_size != 1 or titan.pp_size != 1:
++            raise ValueError("TorchTitan online training currently supports DP only")
++        if titan.engine != "trainer" or not titan.disable_cuda_graphs:
++            raise ValueError(
++                "TorchTitan online features do not yet support graph capture"
++            )
++    elif cfg.deployment.mode != "local_colocated":
++        raise ValueError(
++            "TorchTitan offline training currently requires colocated features"
++        )
+     if algorithm.name != cfg.training.strategy or algorithm.name not in {
+         "dflash",
+         "dspark",
+@@ -670,8 +866,14 @@
+         raise ValueError(
+             "TorchTitan currently supports tracking.report_to none or tensorboard"
+         )
+-    if cfg.data.eval_hidden_states_path or cfg.training.eval_interval:
+-        raise ValueError("TorchTitan offline validation is not yet wired")
++    if bool(cfg.data.eval_hidden_states_path) != bool(cfg.training.eval_interval):
++        raise ValueError(
++            "TorchTitan evaluation requires both eval_hidden_states_path and eval_interval"
++        )
++    if cfg.training.eval_interval and cfg.training.torchtitan.pp_size > 1:
++        raise ValueError(
++            "TorchTitan evaluation does not yet support pipeline parallelism"
++        )
+     if cfg.profiling.enabled:
+         raise ValueError("SpecForge profiling options are not yet mapped to TorchTitan")
+     if cfg.training.max_checkpoints == 1:
+@@ -681,14 +883,23 @@
+     layout, data_degree = _parallelism_layout(
+         cfg, int(os.environ.get("WORLD_SIZE", "1"))
+     )
+-    provider = algorithm.providers.offline_for(cfg.model.input_modality)
+-    refs = provider.build_reader(
+-        cfg.data.hidden_states_path,
+-        run_id=cfg.run_id,
+-        ttt_length=cfg.training.ttt_length,
+-        max_len=cfg.data.max_length,
+-    ).read()
+-    stop_steps, schedule_steps = _training_horizon(cfg, len(refs), data_degree)
++    online_source = None
++    if online:
++        from specforge.training.disaggregated import _env, _read_online_total_steps
++
++        natural_steps = _read_online_total_steps(cfg, _env("DISAGG_REF_CHANNEL"))
++        stop_steps, schedule_steps = _online_training_horizon(cfg, natural_steps)
++        refs = []
++        online_source = _OnlineSourceFactory(cfg, algorithm, natural_steps)
++    else:
++        provider = algorithm.providers.offline_for(cfg.model.input_modality)
++        refs = provider.build_reader(
++            cfg.data.hidden_states_path,
++            run_id=cfg.run_id,
++            ttt_length=cfg.training.ttt_length,
++            max_len=cfg.data.max_length,
++        ).read()
++        stop_steps, schedule_steps = _training_horizon(cfg, len(refs), data_degree)
+ 
+     def execute():
+         import torch.distributed as dist
+@@ -719,6 +930,7 @@
+                     data_degree,
+                     stop_steps,
+                     schedule_steps,
++                    online_source=online_source,
+                 )
+                 trainer = native.build()
+                 trainer.train()
+@@ -727,12 +939,28 @@
+                         trainer, model_sources[0], Path(native.dump_folder) / "draft"
+                     )
+                 return int(trainer.step)
+-        except BaseException:
++        except BaseException as exc:
+             failed = True
+             logging.getLogger(__name__).exception("Native TorchTitan training failed")
++            if online:
++                from specforge.training.disaggregated import (
++                    _publish_role_assembly_failure,
++                )
++
++                _publish_role_assembly_failure(cfg, exc)
+             _abort_titan_process_groups()
+             raise
+         finally:
++            if online_source is not None:
++                try:
++                    online_source.close()
++                except BaseException:
++                    logging.getLogger(__name__).exception(
++                        "Online feature store cleanup failed"
++                    )
++                    if not failed:
++                        _abort_titan_process_groups()
++                        raise
+             if not failed:
+                 try:
+                     if trainer is not None:
+diff --git a/specforge/training/torchtitan/graph.py b/specforge/training/torchtitan/graph.py
+new file mode 100644
+--- /dev/null
++++ b/specforge/training/torchtitan/graph.py
+@@ -0,0 +1,105 @@
++"""Experimental SpecForge adapter for TorchTitan's actual GraphTrainer."""
++
++from contextlib import nullcontext
++from dataclasses import dataclass, field
++
++import torch
++from torch._guards import detect_fake_mode
++from torch.fx.experimental.proxy_tensor import make_fx
++from torch.fx.traceback import preserve_node_meta, set_current_meta
++from torchtitan.experiments.graph_trainer.configs import GraphTrainerCompileConfig
++from torchtitan.experiments.graph_trainer.passes import construct_default_graph_passes
++from torchtitan.experiments.graph_trainer.registry import register_pass_pipeline
++from torchtitan.experiments.graph_trainer.trainer import GraphTrainer
++
++from .model import SpecForgeTitanModel
++from .runtime import SpecForgeTitanTrainer
++
++
++class _MetadataInterpreter(torch.fx.Interpreter):
++    def run_node(self, node):
++        with set_current_meta(node, "specforge_functionalize"):
++            return super().run_node(node)
++
++
++def functionalize_fused_kernels(gm, example_inputs):
++    """Make Triton output writes explicit before graph DCE and rematerialization.
++
++    ``wrap_triton`` traces buffer writes as mutation-only nodes. The native
++    GraphTrainer pass pipeline assumes functional dependencies; otherwise DCE
++    drops kernels and leaves their output buffers uninitialized. Preserve block
++    and backward metadata while applying PyTorch's own alias-aware transform.
++    """
++    if not any(
++        "triton_kernel_wrapper_mutation" in str(n.target) for n in gm.graph.nodes
++    ):
++        return gm
++    fake_mode = detect_fake_mode(example_inputs)
++    with fake_mode if fake_mode is not None else nullcontext(), preserve_node_meta():
++        result = make_fx(torch.func.functionalize(_MetadataInterpreter(gm).run))(
++            *example_inputs
++        )
++    result.meta.update(gm.meta)
++    return result
++
++
++@register_pass_pipeline("specforge")
++def specforge_graph_passes(traced_result, config, *, parallel_dims=None):
++    return [functionalize_fused_kernels] + construct_default_graph_passes(
++        traced_result, config, parallel_dims=parallel_dims
++    )
++
++
++class SpecForgeGraphModel(SpecForgeTitanModel):
++    @dataclass(kw_only=True, slots=True)
++    class Config(SpecForgeTitanModel.Config):
++        @property
++        def layers(self):
++            # Native bucketing needs the decoder count and optional MoE config.
++            # All DFlash-family decoder blocks are dense.
++            return (None,) * self.draft_config["num_hidden_layers"]
++
++
++class SpecForgeGraphTrainer(SpecForgeTitanTrainer, GraphTrainer):
++    """Reuse SpecForge preparation and native joint forward/loss/backward tracing.
++
++    The cooperative MRO keeps the native GraphTrainer constructor, graph passes,
++    gradient accumulation and teardown, alongside SpecForge's data/RNG hooks.
++    """
++
++    @dataclass(kw_only=True, slots=True)
++    class Config(SpecForgeTitanTrainer.Config):
++        compile: GraphTrainerCompileConfig = field(
++            default_factory=GraphTrainerCompileConfig
++        )
++
++    def __init__(self, config):
++        if not config.training.disable_cuda_graphs:
++            raise ValueError(
++                "GraphTrainer requires the eager CUDA graph wrapper disabled; "
++                "control graph capture through compile.disable_passes instead"
++            )
++        config.compile.pass_pipeline = "specforge"
++        super().__init__(config)
++
++    def forward_backward_step(self, **kwargs):
++        # Native GraphTrainer assigns explicit graph gradient outputs directly
++        # to empty param.grad slots. CUDA replay owns those output buffers and
++        # overwrites them on the next microbatch. Give the accumulated gradient
++        # its own storage before that next replay, preserving native tracing,
++        # accumulation and optimizer logic. Later microbatches already own it.
++        unowned = (
++            [
++                parameter
++                for model in self.model_parts
++                for parameter in model.parameters()
++                if parameter.requires_grad and parameter.grad is None
++            ]
++            if self.gradient_accumulation_steps > 1
++            else ()
++        )
++        loss = super().forward_backward_step(**kwargs)
++        for parameter in unowned:
++            if parameter.grad is not None:
++                parameter.grad = parameter.grad.clone()
++        return loss
+diff --git a/specforge/training/torchtitan/graph_parallelize.py b/specforge/training/torchtitan/graph_parallelize.py
+new file mode 100644
+--- /dev/null
++++ b/specforge/training/torchtitan/graph_parallelize.py
+@@ -0,0 +1,52 @@
++"""SimpleFSDP model registration for the native TorchTitan GraphTrainer."""
++
++from torch.fx.traceback import annotate_fn
++from torchtitan.experiments.graph_trainer.common_utils import (
++    annotate_module_fqns,
++    apply_simple_fsdp,
++)
++from torchtitan.experiments.graph_trainer.compile import apply_compile
++
++
++def parallelize_graph_dflash(
++    model,
++    *,
++    parallel_dims,
++    training,
++    parallelism,
++    compile_config,
++    ac_config,
++    dump_folder,
++):
++    """Use graph-native parameter collectives without eager FSDP hooks."""
++    if parallel_dims.tp_enabled or parallel_dims.cp_enabled or parallel_dims.pp_enabled:
++        raise ValueError(
++            "SpecForge GraphTrainer currently supports data parallelism only"
++        )
++    if parallelism.spmd_backend != "partial_dtensor":
++        raise ValueError("SpecForge GraphTrainer requires partial_dtensor")
++    if ac_config is not None:
++        raise ValueError("GraphTrainer manages activation memory through graph passes")
++    # GraphTrainer's native block bucketing consumes ``layers.N`` annotations.
++    # Expose the draft's natural module names rather than adapter prefixes.
++    annotate_module_fqns(model.draft_model)
++    model.training_model.forward = annotate_fn({"module_fqn": "loss"})(
++        model.training_model.forward
++    )
++    # Frozen teacher weights remain replicated. SimpleFSDP's parameter wrapping
++    # constructs trainable Parameters, so apply it only to the trainable draft.
++    apply_simple_fsdp(model.draft_model, parallel_dims=parallel_dims, training=training)
++    model = apply_compile(
++        model,
++        compile_config=compile_config,
++        parallelism=parallelism,
++        parallel_dims=parallel_dims,
++        dump_folder=dump_folder,
++    )
++    model.training_model.objective_process_group = parallel_dims.get_optional_mesh(
++        "loss", include_singleton_axes=True
++    ).get_group()
++    model.training_model.objective_context_group = parallel_dims.get_optional_mesh(
++        "cp", include_singleton_axes=True
++    ).get_group()
++    return model
+diff --git a/specforge/training/torchtitan/online.py b/specforge/training/torchtitan/online.py
+new file mode 100644
+--- /dev/null
++++ b/specforge/training/torchtitan/online.py
+@@ -0,0 +1,227 @@
++"""DP-only online feature consumption at native optimizer boundaries."""
++
++import logging
++from dataclasses import dataclass
++from typing import Any, Callable
++
++from torchtitan.components.dataloader import BaseDataLoader, DataloaderExhaustedError
++from torchtitan.components.loss import IGNORE_INDEX
++
++from .runtime import SpecForgeTitanTrainer
++
++
++class OnlineFeatureDataLoader(BaseDataLoader):
++    """Resume the retained ledger, never seek or replay a live feature queue."""
++
++    @dataclass(kw_only=True, slots=True)
++    class Config(BaseDataLoader.Config):
++        # Called only after native DCP restore, once per consumer attempt.
++        source_factory: Callable[..., Any] | None = None
++
++    def __init__(
++        self,
++        config,
++        *,
++        dp_world_size,
++        dp_rank,
++        local_batch_size=1,
++        seq_len=0,
++        **kwargs,
++    ):
++        del kwargs
++        if config.source_factory is None:
++            raise ValueError("Online features require a source factory")
++        self.config = config
++        self.dp_world_size, self.dp_rank = dp_world_size, dp_rank
++        self.local_batch_size, self.seq_len = local_batch_size, seq_len
++        self.committed_step = 0
++        self.pending_ids = []
++        self.resources = self.source = self.iterator = None
++        self.started = False
++
++    def ensure_open(self):
++        """Reconcile even when a restored checkpoint already meets the stop step."""
++        if self.resources is not None:
++            return
++        self.source, self.resources = self.config.source_factory(
++            dp_rank=self.dp_rank,
++            dp_world_size=self.dp_world_size,
++            local_batch_size=self.local_batch_size,
++            seq_len=self.seq_len,
++            resume_step=self.committed_step,
++        )
++        if getattr(self.source, "ack", None) is not False:
++            raise ValueError(
++                "Online feature loading must defer ACK until optimizer commit"
++            )
++        self.resources.start()
++
++    def __iter__(self):
++        if self.started:
++            raise RuntimeError("An online feature stream can only be consumed once")
++        self.started = True
++        self.ensure_open()
++        self.iterator = iter(self.source)
++        for batch in self.iterator:
++            inputs = dict(batch.tensors)
++            required = {"input_ids", "hidden_states", "loss_mask"}
++            if not required.issubset(inputs):
++                raise ValueError(
++                    f"Online feature batch missing {required - inputs.keys()}"
++                )
++            input_ids = inputs.pop("input_ids")
++            if (
++                input_ids.device.type != "cpu"
++                or inputs["loss_mask"].device.type != "cpu"
++            ):
++                raise ValueError("Online input_ids and loss_mask must remain on CPU")
++            if input_ids.ndim != 2 or input_ids.shape[0] != self.local_batch_size:
++                raise ValueError("Online feature batch must match local_batch_size")
++            if len(batch.sample_ids) != self.local_batch_size:
++                raise ValueError("Online features require one sample ID per batch row")
++            labels = input_ids.clone()
++            labels.masked_fill_(inputs["loss_mask"] <= 0, IGNORE_INDEX)
++            self.pending_ids.extend(batch.sample_ids)
++            yield {"input": input_ids, **inputs}, labels
++
++    def commit(self, step):
++        if self.resources is None or not self.pending_ids:
++            raise RuntimeError(
++                "An online optimizer step did not consume any sample IDs"
++            )
++        if step != self.committed_step + 1:
++            raise ValueError(
++                "Online optimizer steps must follow the retained ACK boundary"
++            )
++        self.resources.controller.ack_train_refs(
++            f"torchtitan-dp-{self.dp_rank}",
++            self.pending_ids,
++            global_step=step,
++            optimizer_durable=True,
++        )
++        self.resources.queue.ack_ids(self.pending_ids)
++        self.pending_ids = []
++        self.committed_step = step
++
++    def close(self):
++        objects = (
++            self.iterator,
++            self.source if self.source is not self.iterator else None,
++        )
++        self.iterator = self.source = None
++        failure = None
++        for obj in objects:
++            close = getattr(obj, "close", None)
++            if close is not None:
++                try:
++                    close()
++                except BaseException as exc:
++                    if failure is None:
++                        failure = exc
++        if failure is not None:
++            raise failure
++
++    def state_dict(self):
++        if self.pending_ids:
++            raise RuntimeError("Cannot checkpoint online data before its optimizer ACK")
++        return {
++            f"dp_rank_{self.dp_rank}": {
++                "committed_step": self.committed_step,
++                "dp_world_size": self.dp_world_size,
++            }
++        }
++
++    def load_state_dict(self, state_dict):
++        if self.started:
++            raise RuntimeError("Cannot restore an already-open online stream")
++        state = state_dict[f"dp_rank_{self.dp_rank}"]
++        step = state["committed_step"]
++        if (
++            state["dp_world_size"] != self.dp_world_size
++            or not isinstance(step, int)
++            or step < 0
++        ):
++            raise ValueError(
++                "Online resume requires a valid step and unchanged DP degree"
++            )
++        self.committed_step = step
++
++
++class SpecForgeOnlineTrainer(SpecForgeTitanTrainer):
++    """Add synchronous durable ACKs while retaining the native training loop."""
++
++    @dataclass(kw_only=True, slots=True)
++    class Config(SpecForgeTitanTrainer.Config):
++        pass
++
++    def __init__(self, config):
++        parallelism = config.parallelism
++        if any(
++            getattr(parallelism, name) != 1
++            for name in (
++                "tensor_parallel_degree",
++                "context_parallel_degree",
++                "pipeline_parallel_degree",
++            )
++        ):
++            raise ValueError("TorchTitan online training currently supports DP only")
++        if (
++            not config.training.disable_cuda_graphs
++            or getattr(config.compile, "mode", None) == "aot_fx_trace"
++        ):
++            raise ValueError(
++                "TorchTitan online features do not yet support graph capture"
++            )
++        if config.checkpoint.async_mode != "disabled":
++            raise ValueError(
++                "Online ACK boundaries require synchronous native checkpoints"
++            )
++        super().__init__(config)
++        if not isinstance(self.dataloader, OnlineFeatureDataLoader):
++            raise TypeError("Online training requires OnlineFeatureDataLoader")
++
++    def train_step(self, data_iterator):
++        if self.dataloader.committed_step != self.step - 1:
++            raise ValueError("Restored online data and model steps do not match")
++        try:
++            result = super().train_step(data_iterator)
++        except DataloaderExhaustedError:
++            self.step -= 1  # Native loop increments before fetching its window.
++            raise
++        self.dataloader.commit(self.step)
++        return result
++
++    def train(self):
++        failure = None
++        try:
++            result = super().train()
++            if self.step != self.config.training.steps:
++                raise RuntimeError(
++                    "Online source ended before the configured optimizer boundary"
++                )
++            if self.dataloader.committed_step != self.step:
++                raise ValueError("Restored online data and model steps do not match")
++            self.dataloader.ensure_open()
++            self.dataloader.close()
++            self.dataloader.resources.on_success(self.step)
++            return result
++        except BaseException as exc:
++            failure = exc
++            if self.dataloader.resources is not None:
++                self.dataloader.resources.on_failure(exc)
++            raise
++        finally:
++            try:
++                try:
++                    self.dataloader.close()
++                finally:
++                    if self.dataloader.resources is not None:
++                        self.dataloader.resources.close()
++            except BaseException as cleanup_error:
++                if failure is None:
++                    if self.dataloader.resources is not None:
++                        self.dataloader.resources.on_failure(cleanup_error)
++                    raise
++                logging.getLogger(__name__).exception(
++                    "Online cleanup failed while preserving the primary training failure"
++                )
+diff --git a/specforge/training/torchtitan/parallelize.py b/specforge/training/torchtitan/parallelize.py
+--- a/specforge/training/torchtitan/parallelize.py
++++ b/specforge/training/torchtitan/parallelize.py
+@@ -171,6 +171,11 @@
+         ac_config.build(dump_folder=dump_folder).apply(draft)
+     if compile_config.enable and "model" in compile_config.components:
+         apply_compile(draft, compile_config=compile_config, parallel_dims=parallel_dims)
++        # Titan's decoder helper visits only layers. The teacher feature
++        # projection is another large GEMM whose surrounding casts benefit
++        # from fusion. Later PP stages have no feature projector.
++        if draft.fc is not None:
++            draft.fc.compile(backend=compile_config.backend, fullgraph=True)
+ 
+     dp_names = (
+         ["dp_replicate", "fsdp"] if parallel_dims.dp_replicate_enabled else ["fsdp"]
+diff --git a/specforge/training/torchtitan/runtime.py b/specforge/training/torchtitan/runtime.py
+--- a/specforge/training/torchtitan/runtime.py
++++ b/specforge/training/torchtitan/runtime.py
+@@ -16,15 +16,21 @@
+ 
+ 
+ class SpecForgeTitanTrainer(Trainer):
++    _fixed_graph_shapes = False
++
+     @dataclass(kw_only=True, slots=True)
+     class Config(Trainer.Config):
+         resume_contract: dict = field(default_factory=dict)
+         schedule_total_steps: int | None = None
+ 
+     def __init__(self, config: Config):
+-        if not config.training.disable_cuda_graphs:
++        self._fixed_graph_shapes = (
++            not config.training.disable_cuda_graphs
++            or getattr(getattr(config, "compile", None), "mode", None) == "aot_fx_trace"
++        )
++        if self._fixed_graph_shapes and config.parallelism.pipeline_parallel_degree > 1:
+             raise ValueError(
+-                "SpecForge dynamic feature preparation requires disable_cuda_graphs"
++                "SpecForge graph training currently requires pipeline_parallel_degree=1"
+             )
+         if (
+             config.parallelism.pipeline_parallel_degree > 1
+@@ -83,8 +89,10 @@
+                     generator=self._anchor_generator,
+                 )
+                 inputs = dict(inputs)
+-                inputs["collect_detailed_metrics"] = self.metrics_processor.should_log(
+-                    self.step
++                inputs["collect_detailed_metrics"] = (
++                    False
++                    if self._fixed_graph_shapes
++                    else self.metrics_processor.should_log(self.step)
+                 )
+                 local_den = model.prepared_objective_denominator(mask, anchors, keep)
+                 if algorithm == "dspark":
+@@ -95,7 +103,12 @@
+                     denominator[group_index] += local_den
+                 else:
+                     denominator += local_den
+-                    inputs["selector_loss_alpha"] = self._selector_alpha(model)
++                    alpha = self._selector_alpha(model)
++                    inputs["selector_loss_alpha"] = (
++                        torch.tensor(alpha, dtype=torch.float32)
++                        if self._fixed_graph_shapes
++                        else alpha
++                    )
+                     if model.loss_type != "dflash":
+                         _, weights = model._dflash_weight_mask(mask, anchors, keep)
+                         scale = model._sequence_anchor_scale(weights).squeeze(-1)
+@@ -107,6 +120,7 @@
+                             capacity=(
+                                 model.num_anchors
+                                 if self.parallel_dims.pp_enabled
++                                or self._fixed_graph_shapes
+                                 else None
+                             ),
+                         )
+@@ -119,7 +133,9 @@
+                     rank=context_mesh.get_local_rank(),
+                     degree=context_mesh.size(),
+                     capacity=(
+-                        model.num_anchors if self.parallel_dims.pp_enabled else None
++                        model.num_anchors
++                        if self.parallel_dims.pp_enabled or self._fixed_graph_shapes
++                        else None
+                     ),
+                 )
+                 inputs["anchor_positions"] = anchors
+diff --git a/specforge/training/torchtitan/validation.py b/specforge/training/torchtitan/validation.py
+new file mode 100644
+--- /dev/null
++++ b/specforge/training/torchtitan/validation.py
+@@ -0,0 +1,352 @@
++"""Periodic offline feature evaluation through TorchTitan's validator hook."""
++
++from __future__ import annotations
++
++import math
++import sys
++import time
++from collections.abc import Callable
++from dataclasses import dataclass, replace
++from typing import Any
++
++import torch
++import torch.distributed as dist
++from torchtitan.components.validate import BaseValidator
++from torchtitan.tools.logging import logger
++
++from .runtime import partition_anchor_blocks
++
++
++def _close_all(*objects):
++    """Attempt every cleanup without hiding an active evaluation failure."""
++    primary = sys.exc_info()[1]
++    failure = None
++    for obj in objects:
++        close = getattr(obj, "close", None)
++        if close is not None:
++            try:
++                close()
++            except BaseException as exc:
++                if failure is None:
++                    failure = exc
++    if failure is not None:
++        if primary is None:
++            raise failure
++        logger.error("Evaluation cleanup also failed: %s", failure)
++
++
++@dataclass
++class OfflineEvalSourceFactory:
++    """Visit every reference once, with zero-weight padding for equal DP work."""
++
++    cfg: Any
++    algorithm: Any
++    refs: list
++
++    def __call__(self, *, dp_rank, dp_world_size, local_batch_size, seq_len, epoch=0):
++        del epoch
++        from specforge.runtime.data_plane import FeatureDataLoader, LocalFeatureStore
++
++        if not self.refs:
++            raise ValueError("The offline evaluation dataset is empty")
++        provider = self.algorithm.providers.offline_for(self.cfg.model.input_modality)
++        count = math.ceil(len(self.refs) / (dp_world_size * local_batch_size))
++        indices = [
++            index * dp_world_size + dp_rank for index in range(count * local_batch_size)
++        ]
++        padded_refs = [
++            self.refs[index] if index < len(self.refs) else self.refs[0]
++            for index in indices
++        ]
++        workers = self.cfg.data.dataloader_num_workers
++        if workers is None:
++            workers = self.algorithm.providers.model.default_dataloader_num_workers
++        store = LocalFeatureStore(f"{self.cfg.run_id}-eval")
++        source = iterator = None
++        try:
++            source = FeatureDataLoader(
++                store,
++                refs=padded_refs,
++                device="cpu",
++                batch_size=local_batch_size,
++                collate_fn=provider.build_collator(),
++                per_sample_transform=provider.build_normalizer(
++                    seq_len,
++                    ttt_length=self.cfg.training.ttt_length,
++                    use_usp_preprocess=False,
++                ),
++                drop_last=True,
++                strategy=self.algorithm.name,
++                num_workers=workers,
++                pin_memory=workers > 0,
++            )
++            iterator = iter(source)
++            for batch_index, batch in enumerate(iterator):
++                valid = torch.tensor(
++                    [
++                        index < len(self.refs)
++                        for index in indices[
++                            batch_index
++                            * local_batch_size : (batch_index + 1)
++                            * local_batch_size
++                        ]
++                    ],
++                    dtype=torch.bool,
++                )
++                tensors = dict(batch.tensors)
++                tensors["loss_mask"] = tensors["loss_mask"].clone()
++                tensors["loss_mask"][~valid] = 0
++                yield replace(batch, tensors=tensors)
++        finally:
++            _close_all(iterator, source if source is not iterator else None, store)
++
++
++class _ObjectiveTotals:
++    def __init__(self):
++        self.ratios = {}
++        self.sums = {}
++
++    def add(self, metrics, *, context_degree):
++        ratios = {"avg_loss": metrics["loss_terms"], **metrics.get("ratio_metrics", {})}
++        for name, (numerator, denominator) in ratios.items():
++            # A walk crosses consecutive anchors within a sequence. Separate
++            # CP walks cannot be combined by adding their local ratios.
++            if context_degree > 1 and name.endswith("/walk_accepted_length"):
++                continue
++            pair = torch.stack(
++                (numerator.detach().double(), denominator.detach().double())
++            )
++            self.ratios[name] = self.ratios.get(name, 0) + pair
++        for name, value in metrics.get("sum_metrics", {}).items():
++            self.sums[name] = self.sums.get(name, 0) + value.detach().double()
++
++    def reduce(self, *, device, group, degree):
++        values = {f"ratio:{name}": tensor for name, tensor in self.ratios.items()}
++        values.update({f"sum:{name}": tensor for name, tensor in self.sums.items()})
++        shapes = {name: tuple(value.shape) for name, value in values.items()}
++        if degree > 1:
++            gathered = [None] * degree
++            dist.all_gather_object(gathered, shapes, group=group)
++            for rank_shapes in gathered:
++                for name, shape in rank_shapes.items():
++                    if name in shapes and shapes[name] != shape:
++                        raise ValueError(
++                            f"Evaluation metric shape differs across ranks: {name}"
++                        )
++                    shapes[name] = shape
++        names = sorted(shapes)
++        packed = torch.cat(
++            [
++                values.get(
++                    name, torch.zeros(shapes[name], device=device, dtype=torch.float64)
++                )
++                .flatten()
++                .to(device)
++                for name in names
++            ]
++        )
++        if degree > 1:
++            dist.all_reduce(packed, group=group)
++        if "ratio:avg_loss" not in shapes:
++            raise ValueError("Evaluation produced no objective terms")
++        output, cursor = {}, 0
++        for key in names:
++            width = math.prod(shapes[key])
++            value = packed[cursor : cursor + width].reshape(shapes[key])
++            cursor += width
++            kind, name = key.split(":", 1)
++            if kind == "ratio":
++                if name == "avg_loss" and not bool(value[1] > 0):
++                    raise ValueError("Evaluation produced no supervised targets")
++                value = value[0] / value[1].clamp_min(1e-30)
++            flat = value.flatten().cpu().tolist()
++            if len(flat) == 1:
++                output[f"eval/{name}"] = flat[0]
++            else:
++                output.update(
++                    {
++                        f"eval/{name}_{index}": scalar
++                        for index, scalar in enumerate(flat)
++                    }
++                )
++        output["eval/avg_acc"] = output.get("eval/acc", 0.0)
++        if not all(math.isfinite(value) for value in output.values()):
++            raise FloatingPointError("Offline evaluation produced a non-finite metric")
++        return output
++
++
++class SpecForgeValidator(BaseValidator):
++    """Evaluate weighted objectives without advancing the training data or RNG."""
++
++    @dataclass(kw_only=True, slots=True)
++    class Config(BaseValidator.Config):
++        enable: bool = False
++        source_factory: Callable[..., Any] | None = None
++        num_batches: int = 0
++        algorithm: str = "dflash"
++        seed: int = 42
++        schedule_total_steps: int = 1
++
++    def __init__(
++        self,
++        config,
++        *,
++        parallel_dims,
++        dp_world_size,
++        dp_rank,
++        validation_context,
++        metrics_processor,
++        seq_len,
++        local_batch_size,
++        **kwargs,
++    ):
++        del kwargs
++        super().__init__(config)
++        if parallel_dims.pp_enabled:
++            raise ValueError(
++                "TorchTitan offline evaluation does not yet support pipeline parallelism"
++            )
++        if config.source_factory is None or config.num_batches < 1 or config.freq < 1:
++            raise ValueError(
++                "Offline evaluation requires a source, positive batch count and interval"
++            )
++        if config.algorithm not in {"dflash", "dflash2", "dspark"}:
++            raise ValueError(f"Unsupported evaluation algorithm: {config.algorithm}")
++        self.parallel_dims = parallel_dims
++        self.dp_world_size, self.dp_rank = dp_world_size, dp_rank
++        self.validation_context = validation_context
++        self.metrics_processor = metrics_processor
++        self.seq_len, self.local_batch_size = seq_len, local_batch_size
++        self.last_metrics = {}
++
++    def should_validate(self, step: int) -> bool:
++        return self.config.enable and step > 0 and step % self.config.freq == 0
++
++    def _prepare(self, batch, objective, generator, context_mesh, step):
++        inputs = dict(batch.tensors if hasattr(batch, "tensors") else batch)
++        mask = inputs["loss_mask"]
++        if mask.device.type != "cpu" or mask.ndim != 2:
++            raise ValueError(
++                "Evaluation loss masks must be two-dimensional CPU tensors"
++            )
++        if mask.shape[0] != self.local_batch_size:
++            raise ValueError(
++                "Evaluation batches must include zero-weight padding to local_batch_size"
++            )
++        if bool(((mask[:, :-1] > 0.5) & (mask[:, 1:] > 0.5)).any()):
++            anchors, keep = objective._sample_anchor_positions(
++                mask.shape[1], mask, torch.device("cpu"), generator=generator
++            )
++        else:
++            # A padded DP rank must still join the same FSDP/TP/CP forwards.
++            anchors = torch.zeros((mask.shape[0], 1), dtype=torch.long)
++            keep = torch.zeros_like(anchors, dtype=torch.bool)
++        if self.config.algorithm != "dspark":
++            completed = step
++            warmup = int(
++                self.config.schedule_total_steps * objective.selector_warmup_ratio
++            )
++            ramp = int(self.config.schedule_total_steps * objective.selector_ramp_ratio)
++            alpha = (
++                0.0
++                if completed < warmup
++                else objective.selector_loss_alpha
++                * (1.0 if ramp <= 0 else min((completed - warmup + 1) / ramp, 1.0))
++            )
++            inputs["selector_loss_alpha"] = alpha
++            if objective.loss_type != "dflash":
++                _, weights = objective._dflash_weight_mask(mask, anchors, keep)
++                scale = objective._sequence_anchor_scale(weights).squeeze(-1)
++                scale, _ = partition_anchor_blocks(
++                    scale,
++                    keep,
++                    rank=context_mesh.get_local_rank(),
++                    degree=context_mesh.size(),
++                )
++                inputs["prepared_sequence_anchor_scale"] = scale.unsqueeze(-1)
++        anchors, keep = partition_anchor_blocks(
++            anchors,
++            keep,
++            rank=context_mesh.get_local_rank(),
++            degree=context_mesh.size(),
++        )
++        inputs.update(
++            anchor_positions=anchors,
++            block_keep_mask=keep,
++            collect_detailed_metrics=True,
++        )
++        return inputs
++
++    @torch.no_grad()
++    def validate(self, model_parts, step):
++        if len(model_parts) != 1:
++            raise ValueError("Offline evaluation requires one non-pipeline model part")
++        model = model_parts[0]
++        device = next(model.parameters()).device
++        context_mesh = self.parallel_dims.get_optional_mesh(
++            "cp", include_singleton_axes=True
++        )
++        loss_mesh = self.parallel_dims.get_optional_mesh(
++            "loss", include_singleton_axes=True
++        )
++        generator = torch.Generator(device="cpu").manual_seed(
++            self.config.seed + self.dp_rank
++        )
++        modes = [(module, module.training) for module in model.modules()]
++        source = iterator = None
++        started = time.perf_counter()
++        totals = _ObjectiveTotals()
++        devices = [device.index] if device.type == "cuda" else []
++        with torch.random.fork_rng(devices=devices):
++            try:
++                model.eval()
++                source = self.config.source_factory(
++                    dp_rank=self.dp_rank,
++                    dp_world_size=self.dp_world_size,
++                    local_batch_size=self.local_batch_size,
++                    seq_len=self.seq_len,
++                    epoch=0,
++                )
++                iterator = iter(source)
++                for _ in range(self.config.num_batches):
++                    try:
++                        batch = next(iterator)
++                    except StopIteration as exc:
++                        raise ValueError(
++                            "Evaluation source ended before its declared batch count"
++                        ) from exc
++                    inputs = self._prepare(
++                        batch, model.training_model, generator, context_mesh, step
++                    )
++                    inputs = {
++                        name: (
++                            value.to(device)
++                            if isinstance(value, torch.Tensor)
++                            else value
++                        )
++                        for name, value in inputs.items()
++                    }
++                    with self.validation_context():
++                        _loss, _accuracy, metrics = model(**inputs)
++                    totals.add(metrics, context_degree=context_mesh.size())
++                self.last_metrics = totals.reduce(
++                    device=device, group=loss_mesh.get_group(), degree=loss_mesh.size()
++                )
++                self.last_metrics["eval/time_s"] = time.perf_counter() - started
++                self.metrics_processor.logger.log(self.last_metrics, step)
++                logger.info(
++                    "validation step: %d loss: %.6f accuracy: %.6f",
++                    step,
++                    self.last_metrics["eval/avg_loss"],
++                    self.last_metrics["eval/avg_acc"],
++                )
++            finally:
++                for module, was_training in modes:
++                    module.training = was_training
++                _close_all(iterator, source if source is not iterator else None)
++                # Validation must not reset or consume the native training metrics
++                # window. Exclude its wall time from the next training throughput.
++                if hasattr(self.metrics_processor, "time_last_log"):
++                    self.metrics_processor.time_last_log += (
++                        time.perf_counter() - started
++                    )
+diff --git a/tests/test_config/test_torchtitan_frontend.py b/tests/test_config/test_torchtitan_frontend.py
+--- a/tests/test_config/test_torchtitan_frontend.py
++++ b/tests/test_config/test_torchtitan_frontend.py
+@@ -3,8 +3,11 @@
+ import tempfile
+ import unittest
+ from pathlib import Path
++from types import SimpleNamespace
++from unittest import mock
+ 
+ from specforge.training.torchtitan.frontend import (
++    _online_training_horizon,
+     _parallelism_layout,
+     _resume_location,
+     _training_horizon,
+@@ -13,6 +16,39 @@
+ 
+ 
+ class TorchTitanFrontendTest(unittest.TestCase):
++    def test_online_assembly_failure_notifies_waiting_producer(self):
++        from specforge.training.assembly import build_training_run
++
++        cfg = SimpleNamespace(
++            mode="online",
++            training=SimpleNamespace(
++                backend="torchtitan", role="consumer", strategy="dflash"
++            ),
++        )
++        with tempfile.TemporaryDirectory() as directory:
++            channel = str(Path(directory) / "refs")
++            with (
++                mock.patch.dict("os.environ", {"DISAGG_REF_CHANNEL": channel}),
++                mock.patch(
++                    "specforge.training.torchtitan.frontend.build_torchtitan_training_run",
++                    side_effect=RuntimeError("engine unavailable"),
++                ),
++            ):
++                with self.assertRaisesRegex(RuntimeError, "engine unavailable"):
++                    build_training_run(cfg, algorithm=SimpleNamespace(name="dflash"))
++            self.assertIn(
++                "engine unavailable", Path(channel + ".consumer_failed").read_text()
++            )
++
++    def test_online_schedule_does_not_stop_the_finite_stream(self):
++        for schedule in (10, 1000):
++            cfg = recipe(backend="torchtitan", total_steps=schedule)
++            self.assertEqual(_online_training_horizon(cfg, 100), (100, schedule))
++        cfg = recipe(backend="torchtitan", total_steps=1000, max_steps=20)
++        self.assertEqual(_online_training_horizon(cfg, 100), (20, 1000))
++        cfg = recipe(backend="torchtitan", max_steps=200)
++        self.assertEqual(_online_training_horizon(cfg, 100), (100, 200))
++
+     def test_tp_cp_pp_axes_leave_only_data_ranks_for_sampling(self):
+         cfg = recipe(
+             backend="torchtitan", tp_size=2, torchtitan={"cp_size": 2, "pp_size": 2}
+diff --git a/tests/test_config/test_torchtitan_runtime.py b/tests/test_config/test_torchtitan_runtime.py
+--- a/tests/test_config/test_torchtitan_runtime.py
++++ b/tests/test_config/test_torchtitan_runtime.py
+@@ -68,6 +68,23 @@
+         self.assertEqual(cfg.training.tp_size, 2)
+         self.assertTrue(cfg.training.torchtitan.disable_cuda_graphs)
+ 
++    def test_graph_engine_rejects_incompatible_parallelism(self):
++        options = {"engine": "graph", "compile": True}
++        recipe(backend="torchtitan", torchtitan=options)
++        for training in (
++            {"tp_size": 2, "torchtitan": options},
++            {"torchtitan": {**options, "cp_size": 2}},
++            {"torchtitan": {**options, "pp_size": 2}},
++        ):
++            with self.subTest(training=training):
++                with self.assertRaisesRegex(ValueError, "supports DP only"):
++                    recipe(backend="torchtitan", **training)
++        with self.assertRaisesRegex(ValueError, "activation memory"):
++            recipe(
++                backend="torchtitan",
++                torchtitan={**options, "activation_checkpoint": "full"},
++            )
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/tests/test_training/test_torchtitan_graph.py b/tests/test_training/test_torchtitan_graph.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_training/test_torchtitan_graph.py
+@@ -0,0 +1,179 @@
++"""Fixed graph preparation and native GraphTrainer inheritance contracts."""
++
++from types import SimpleNamespace
++
++import pytest
++import torch
++
++pytest.importorskip("torchtitan")
++
++from specforge.algorithms.common.dflash_family_model import OnlineDFlashModel
++from specforge.training.torchtitan.runtime import SpecForgeTitanTrainer
++
++
++def _prepared_graph_window(loss_type):
++    model = OnlineDFlashModel.__new__(OnlineDFlashModel)
++    torch.nn.Module.__init__(model)
++    model.block_size = 4
++    model.num_anchors = 5
++    model.loss_type = loss_type
++    model.loss_decay_gamma = 2.0
++    model.selector_loss_alpha = 0.75
++    model.selector_warmup_ratio = 0.0
++    model.selector_ramp_ratio = 0.5
++    trainer = SpecForgeTitanTrainer.__new__(SpecForgeTitanTrainer)
++    trainer._fixed_graph_shapes = True
++    trainer.model_parts = [SimpleNamespace(training_model=model)]
++    trainer.config = SimpleNamespace(
++        model_spec=SimpleNamespace(model=SimpleNamespace(algorithm="dflash2")),
++        schedule_total_steps=100,
++        training=SimpleNamespace(steps=2),
++    )
++    mesh = SimpleNamespace(size=lambda: 1, get_local_rank=lambda: 0)
++    trainer.parallel_dims = SimpleNamespace(
++        get_optional_mesh=lambda *args, **kwargs: mesh, pp_enabled=False
++    )
++    trainer.metrics_processor = SimpleNamespace(
++        should_log=lambda step: True,
++        ntokens_since_last_log=0,
++        data_loading_times=[],
++    )
++    trainer.gradient_accumulation_steps = 2
++    trainer.num_pipeline_parallel_microbatches = 1
++    trainer._anchor_generator = torch.Generator().manual_seed(1)
++    trainer.device = torch.device("cpu")
++    trainer.step = 1
++    batches = []
++    for length in (8, 5):
++        mask = torch.zeros(1, 8, dtype=torch.long)
++        mask[:, :length] = 1
++        batches.append(({"input": mask, "loss_mask": mask}, mask))
++    return trainer, model, trainer.batch_generator(batches)
++
++
++@pytest.mark.parametrize("loss_type", ["dflash", "dpace"])
++def test_graph_padding_preserves_objective_and_disables_cpu_diagnostics(loss_type):
++    _trainer, model, batches = _prepared_graph_window(loss_type)
++    prepared = [next(batches)[0], next(batches)[0]]
++    expected = 0
++    for inputs in prepared:
++        assert inputs["anchor_positions"].shape == (1, 5)
++        assert inputs["block_keep_mask"].shape == (1, 5)
++        assert inputs["collect_detailed_metrics"] is False
++        assert inputs["selector_loss_alpha"].shape == ()
++        torch.testing.assert_close(inputs["selector_loss_alpha"], torch.tensor(0.015))
++        if loss_type == "dpace":
++            assert inputs["prepared_sequence_anchor_scale"].shape == (1, 5, 1)
++        expected += model.prepared_objective_denominator(
++            inputs["loss_mask"], inputs["anchor_positions"], inputs["block_keep_mask"]
++        )
++    torch.testing.assert_close(prepared[0]["objective_normalizer"], expected)
++    assert prepared[0]["objective_normalizer"] is prepared[1]["objective_normalizer"]
++
++
++def test_graph_trainer_reuses_native_forward_backward_and_specforge_preparation():
++    from torchtitan.experiments.graph_trainer.trainer import GraphTrainer
++
++    from specforge.training.torchtitan.graph import SpecForgeGraphTrainer
++
++    assert issubclass(SpecForgeGraphTrainer, GraphTrainer)
++    assert issubclass(SpecForgeGraphTrainer, SpecForgeTitanTrainer)
++    assert (
++        SpecForgeGraphTrainer.batch_generator is SpecForgeTitanTrainer.batch_generator
++    )
++    assert SpecForgeGraphTrainer.Config().compile.mode == "aot_fx_trace"
++
++
++def test_graph_replay_cannot_overwrite_accumulated_gradients(monkeypatch):
++    from torchtitan.experiments.graph_trainer.common_utils import (
++        accumulate_param_grads_,
++    )
++    from torchtitan.experiments.graph_trainer.trainer import GraphTrainer
++
++    from specforge.training.torchtitan.graph import SpecForgeGraphTrainer
++
++    model = torch.nn.Linear(1, 1, bias=False)
++    parameter = model.weight
++    graph_owned_gradient = torch.zeros_like(parameter)
++
++    def replay(self, *, value):
++        graph_owned_gradient.fill_(value)
++        accumulate_param_grads_([parameter], [graph_owned_gradient])
++        return torch.tensor(value)
++
++    monkeypatch.setattr(GraphTrainer, "forward_backward_step", replay)
++    trainer = SpecForgeGraphTrainer.__new__(SpecForgeGraphTrainer)
++    trainer.model_parts = [model]
++    trainer.gradient_accumulation_steps = 3
++    for value in (2.0, 3.0, 7.0):
++        trainer.forward_backward_step(value=value)
++    torch.testing.assert_close(parameter.grad, torch.full_like(parameter, 12.0))
++
++
++@pytest.mark.skipif(not torch.cuda.is_available(), reason="Requires NVIDIA CUDA")
++@pytest.mark.parametrize("kernel", ["conv", "head"])
++def test_fused_kernel_joint_trace_survives_dead_code_elimination(kernel):
++    from torch.fx.experimental.proxy_tensor import make_fx
++    from torch.fx.traceback import annotate_fn, preserve_node_meta
++
++    from specforge.training.torchtitan.graph import functionalize_fused_kernels
++
++    torch.manual_seed(27)
++    if kernel == "conv":
++        from specforge.modeling.draft.dflash2_conv_triton import (
++            dflash2_grouped_conv_fused,
++        )
++
++        values = [
++            torch.randn(
++                2, 16, 32, device="cuda", dtype=torch.bfloat16, requires_grad=True
++            ),
++            torch.randn(
++                2, 16, 2, 4, device="cuda", dtype=torch.bfloat16, requires_grad=True
++            ),
++            torch.randn(2, 32, device="cuda", dtype=torch.bfloat16, requires_grad=True),
++        ]
++
++        def joint(*inputs):
++            output = dflash2_grouped_conv_fused(*inputs, 4, 8)
++            return output, *torch.autograd.grad(output.float().square().sum(), inputs)
++
++    else:
++        from specforge.core.dflash_head_triton import dflash_unary_head_fused
++
++        values = [
++            torch.randn(
++                16, 32, device="cuda", dtype=torch.bfloat16, requires_grad=True
++            ),
++            torch.randn(128, 32, device="cuda", dtype=torch.bfloat16),
++            torch.randint(128, (16,), device="cuda"),
++        ]
++
++        def joint(hidden, weight, targets):
++            nll, top_values, top_ids, argmax_ids = dflash_unary_head_fused(
++                hidden, weight, targets, 4
++            )
++            (gradient,) = torch.autograd.grad(
++                nll.sum() + 0.3 * top_values.sum(), (hidden,)
++            )
++            return nll, top_values, top_ids, argmax_ids, gradient
++
++    expected = joint(*values)
++    with preserve_node_meta():
++        traced = make_fx(
++            annotate_fn({"module_fqn": "layers.0"})(joint), tracing_mode="fake"
++        )(*values)
++    assert any(
++        "triton_kernel_wrapper_mutation" in str(n.target) for n in traced.graph.nodes
++    )
++    transformed = functionalize_fused_kernels(traced, values)
++    assert all(
++        node.meta.get("custom", {}).get("module_fqn") == "layers.0"
++        for node in transformed.graph.nodes
++        if "triton_kernel_wrapper_functional" in str(node.target)
++    )
++    transformed.graph.eliminate_dead_code()
++    transformed.recompile()
++    actual = transformed(*values)
++    for found, wanted in zip(actual, expected):
++        torch.testing.assert_close(found, wanted, rtol=0, atol=0)
+diff --git a/tests/test_training/test_torchtitan_online.py b/tests/test_training/test_torchtitan_online.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_training/test_torchtitan_online.py
+@@ -0,0 +1,259 @@
++"""Online IDs become durable only after a completed native optimizer step."""
++
++from types import SimpleNamespace
++
++import pytest
++import torch
++
++pytest.importorskip("torchtitan")
++
++from torchtitan.components.dataloader import DataloaderExhaustedError
++
++from specforge.runtime.contracts import TrainBatch
++from specforge.training.torchtitan.online import (
++    OnlineFeatureDataLoader,
++    SpecForgeOnlineTrainer,
++)
++from specforge.training.torchtitan.runtime import SpecForgeTitanTrainer
++
++
++def online_loader():
++    events = []
++
++    class Source:
++        ack = False
++
++        def __iter__(self):
++            try:
++                for index in range(4):
++                    yield TrainBatch(
++                        sample_ids=[f"sample-{index}"],
++                        strategy="dflash",
++                        tensors={
++                            "input_ids": torch.ones(1, 8, dtype=torch.long),
++                            "hidden_states": torch.ones(1, 8, 32),
++                            "loss_mask": torch.ones(1, 8),
++                        },
++                    )
++            finally:
++                events.append("iterator-close")
++
++        def close(self):
++            events.append("source-close")
++
++    def acknowledge(trainer_id, sample_ids, **kwargs):
++        assert kwargs["optimizer_durable"]
++        events.append(("durable", list(sample_ids), kwargs["global_step"]))
++
++    resources = SimpleNamespace(
++        controller=SimpleNamespace(ack_train_refs=acknowledge),
++        queue=SimpleNamespace(ack_ids=lambda ids: events.append(("inbox", list(ids)))),
++        start=lambda: events.append("start"),
++        on_success=lambda step: events.append(("success", step)),
++        on_failure=lambda exc: events.append(("failure", type(exc))),
++        close=lambda: events.append("resources-close"),
++    )
++
++    def factory(**kwargs):
++        events.append(("open", kwargs["resume_step"]))
++        return Source(), resources
++
++    loader = OnlineFeatureDataLoader.Config(source_factory=factory).build(
++        dp_rank=0, dp_world_size=1, seq_len=8, local_batch_size=1
++    )
++    return loader, events
++
++
++def test_restore_precedes_queue_open_and_ack_follows_complete_optimizer_window(
++    monkeypatch,
++):
++    loader, events = online_loader()
++    state = {"dp_rank_0": {"committed_step": 7, "dp_world_size": 1}}
++    loader.load_state_dict(state)
++    assert events == []
++    trainer = SpecForgeOnlineTrainer.__new__(SpecForgeOnlineTrainer)
++    trainer.dataloader = loader
++    trainer.step = 8
++    iterator = iter(loader)
++
++    def native_step(self, data_iterator):
++        next(data_iterator)
++        next(data_iterator)
++        assert not any(
++            isinstance(event, tuple) and event[0] == "durable" for event in events
++        )
++        with pytest.raises(RuntimeError, match="before its optimizer ACK"):
++            loader.state_dict()
++        events.append("optimizer")
++        return "native-result"
++
++    monkeypatch.setattr(SpecForgeTitanTrainer, "train_step", native_step)
++    assert trainer.train_step(iterator) == "native-result"
++    assert events == [
++        ("open", 7),
++        "start",
++        "optimizer",
++        ("durable", ["sample-0", "sample-1"], 8),
++        ("inbox", ["sample-0", "sample-1"]),
++    ]
++    assert loader.state_dict()["dp_rank_0"]["committed_step"] == 8
++    loader.close()
++    assert events[-2:] == ["iterator-close", "source-close"]
++
++
++@pytest.mark.parametrize(
++    "error", [RuntimeError("backward failed"), DataloaderExhaustedError()]
++)
++def test_failed_or_incomplete_window_never_acks(monkeypatch, error):
++    loader, events = online_loader()
++    trainer = SpecForgeOnlineTrainer.__new__(SpecForgeOnlineTrainer)
++    trainer.dataloader, trainer.step = loader, 1
++
++    def native_step(self, iterator):
++        next(iterator)
++        raise error
++
++    monkeypatch.setattr(SpecForgeTitanTrainer, "train_step", native_step)
++    with pytest.raises(type(error)):
++        trainer.train_step(iter(loader))
++    assert not any(
++        isinstance(event, tuple) and event[0] == "durable" for event in events
++    )
++    assert loader.pending_ids == ["sample-0"]
++    assert loader.committed_step == 0
++    assert trainer.step == (0 if isinstance(error, DataloaderExhaustedError) else 1)
++    loader.close()
++
++
++def test_failed_durable_commit_does_not_advance_inbox_or_checkpoint():
++    loader, events = online_loader()
++    next(iter(loader))
++
++    def failure(*args, **kwargs):
++        raise RuntimeError("ledger unavailable")
++
++    loader.resources.controller.ack_train_refs = failure
++    with pytest.raises(RuntimeError, match="ledger unavailable"):
++        loader.commit(1)
++    assert loader.committed_step == 0
++    assert loader.pending_ids == ["sample-0"]
++    assert not any(isinstance(event, tuple) and event[0] == "inbox" for event in events)
++    loader.close()
++
++
++def test_native_train_lifecycle_marks_failure_before_final_cleanup(monkeypatch):
++    loader, events = online_loader()
++    trainer = SpecForgeOnlineTrainer.__new__(SpecForgeOnlineTrainer)
++    trainer.dataloader = loader
++    trainer.config = SimpleNamespace(training=SimpleNamespace(steps=2))
++    trainer.step = 0
++
++    def native_train(self):
++        next(iter(loader))
++        raise ValueError("failure")
++
++    monkeypatch.setattr(SpecForgeTitanTrainer, "train", native_train)
++    with pytest.raises(ValueError, match="failure"):
++        trainer.train()
++    assert events.index(("failure", ValueError)) < events.index("source-close")
++    assert events[-1] == "resources-close"
++    assert not any(
++        isinstance(event, tuple) and event[0] == "success" for event in events
++    )
++
++
++def test_native_resume_step_validates_retained_ledger_without_legacy_checkpoint(
++    tmp_path, monkeypatch
++):
++    from specforge.launch import build_online_consumer_resources
++    from specforge.runtime.control_plane.metadata_store import SQLiteMetadataStore
++    from specforge.runtime.data_plane.streaming_ref_channel import StreamingRefChannel
++    from tests.test_runtime.test_disagg_online_shared_plane import (
++        _FakeDistributor,
++        _RetainingFeatureStore,
++        _ref,
++    )
++    from specforge.runtime.control_plane.controller import DataFlowController
++
++    database = str(tmp_path / "ledger.sqlite")
++    ledger = SQLiteMetadataStore(database)
++    controller = DataFlowController("run0", metadata_store=ledger)
++    controller.commit_samples("producer", [_ref("s0"), _ref("s1")])
++    ledger.record_train_ack(["s0"], global_step=7, optimizer_durable=True)
++    ledger.close()
++    monkeypatch.setattr("torch.distributed.is_initialized", lambda: False)
++    monkeypatch.setattr(
++        "specforge.runtime.data_plane.ref_distributor.RefDistributor", _FakeDistributor
++    )
++    monkeypatch.setattr(
++        "specforge.launch._checkpoint_global_step",
++        lambda _: pytest.fail("Native resume must not parse a legacy checkpoint"),
++    )
++    channel = StreamingRefChannel(str(tmp_path / "refs.jsonl"))
++    resources = build_online_consumer_resources(
++        run_id="run0",
++        feature_store=_RetainingFeatureStore(),
++        channel=channel,
++        metadata_db_path=database,
++        resume_from="native-dcp/step-7",
++        resume_step=7,
++        async_ack=False,
++    )
++    assert resources.distributor.kwargs["skip_ids"] == {"s0"}
++    assert resources.distributor.kwargs["requeued_ids"] == {"s1"}
++    resources.close()
++    with pytest.raises(RuntimeError, match="behind"):
++        build_online_consumer_resources(
++            run_id="run0",
++            feature_store=_RetainingFeatureStore(),
++            channel=channel,
++            metadata_db_path=database,
++            resume_from="native-dcp/step-8",
++            resume_step=8,
++            async_ack=False,
++        )
++
++
++@pytest.mark.parametrize(
++    "max_steps,total_steps,expected",
++    [
++        (None, 100, (3, 100)),
++        (1, 100, (1, 100)),
++        (10, None, (3, 10)),
++        (None, None, (3, 3)),
++    ],
++)
++def test_online_stop_uses_finite_producer_length_independently_of_lr_horizon(
++    max_steps, total_steps, expected
++):
++    from specforge.training.torchtitan.frontend import _online_training_horizon
++
++    cfg = SimpleNamespace(
++        training=SimpleNamespace(max_steps=max_steps, total_steps=total_steps)
++    )
++    assert _online_training_horizon(cfg, 3) == expected
++
++
++def test_completed_checkpoint_resume_still_reconciles_ledger_and_signals_success(
++    monkeypatch,
++):
++    loader, events = online_loader()
++    trainer = SpecForgeOnlineTrainer.__new__(SpecForgeOnlineTrainer)
++    trainer.dataloader = loader
++    trainer.config = SimpleNamespace(training=SimpleNamespace(steps=7))
++
++    def native_train(self):
++        self.step = 7
++        loader.load_state_dict({"dp_rank_0": {"committed_step": 7, "dp_world_size": 1}})
++        # Native loop correctly executes no optimizer steps after loading step 7.
++
++    monkeypatch.setattr(SpecForgeTitanTrainer, "train", native_train)
++    trainer.train()
++    assert events == [
++        ("open", 7),
++        "start",
++        "source-close",
++        ("success", 7),
++        "resources-close",
++    ]
++    assert not loader.started
+diff --git a/tests/test_training/test_torchtitan_online_parallel.py b/tests/test_training/test_torchtitan_online_parallel.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_training/test_torchtitan_online_parallel.py
+@@ -0,0 +1,142 @@
++"""Opt-in native online integration fixture starting at the SampleRef boundary.
++
++Run once with --prepare, then launch this file using torchrun. The public
++frontend and actual retaining shared-directory store, inbox distributor, SQLite
++ledger, ACKs and native DCP all run. Only the configured Mooncake store constructor
++is replaced, so this does not test Mooncake transport or SGLang feature capture.
++"""
++
++import argparse
++import json
++import os
++from pathlib import Path
++
++import torch
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--root", required=True)
++    parser.add_argument("--fixture", required=True)
++    parser.add_argument(
++        "--algorithm", choices=("dflash", "dflash2", "dspark"), default="dflash2"
++    )
++    parser.add_argument("--steps", type=int)
++    parser.add_argument("--resume")
++    parser.add_argument("--prepare", action="store_true")
++    args = parser.parse_args()
++    root, fixture = Path(args.root), Path(args.fixture)
++    root.mkdir(parents=True, exist_ok=True)
++    os.environ["DISAGG_REF_CHANNEL"] = str(root / "refs.jsonl")
++    os.environ["DISAGG_DB"] = str(root / "consumer.sqlite")
++    os.environ["DISAGG_IDLE_TIMEOUT"] = "60"
++    from specforge.runtime.data_plane.disaggregated import SharedDirFeatureStore
++    from specforge.runtime.data_plane.streaming_ref_channel import StreamingRefChannel
++
++    class FixtureStore(SharedDirFeatureStore):
++        def close(self):
++            pass
++
++    def store_factory(cfg=None, *, retain_on_release=False):
++        return FixtureStore(
++            str(root / "features"),
++            store_id="native-online",
++            retain_on_release=retain_on_release,
++        )
++
++    if args.prepare:
++        store = store_factory()
++        channel = StreamingRefChannel(str(root / "refs.jsonl"))
++        generator = torch.Generator().manual_seed(35)
++        for index in range(12):  # DP2 * accumulation2 * batch1 * 3 steps
++            length = 8 + index % 3
++            tensors = {
++                "input_ids": torch.randint(0, 63, (1, length), generator=generator),
++                "hidden_states": torch.randn(
++                    1, length, 64, generator=generator, dtype=torch.bfloat16
++                ),
++                "target_last_hidden_states": torch.randn(
++                    1, length, 32, generator=generator, dtype=torch.bfloat16
++                ),
++                "loss_mask": torch.ones(1, length, dtype=torch.long),
++            }
++            tensors["loss_mask"][:, : index % 2] = 0
++            ref = store.put(
++                tensors,
++                sample_id=f"native-{index}",
++                metadata={
++                    "run_id": "native-online",
++                    "strategy": "dspark" if args.algorithm == "dspark" else "dflash",
++                    "num_tokens": length,
++                    "target_repr": "hidden_state",
++                },
++            )
++            channel.publish(ref)
++        channel.close()
++        from specforge.config import load_config
++        from specforge.training.disaggregated import (
++            _online_schedule_payload,
++            _ONLINE_SCHEDULE_SUFFIX,
++        )
++
++        producer_config = load_config(str(fixture / "train.yaml"))
++        (root / ("refs.jsonl" + _ONLINE_SCHEDULE_SUFFIX)).write_text(
++            json.dumps(_online_schedule_payload(producer_config, num_prompts=12))
++        )
++        draft = json.loads((fixture / "draft.json").read_text())
++        draft["architectures"] = [
++            {
++                "dflash": "DFlashDraftModel",
++                "dflash2": "DFlash2DraftModel",
++                "dspark": "DSparkDraftModel",
++            }[args.algorithm]
++        ]
++        (root / "draft.json").write_text(json.dumps(draft))
++        return
++
++    from specforge.algorithms.builtin import builtin_algorithm_registry
++    from specforge.config import load_config
++    from specforge.training.torchtitan.frontend import build_torchtitan_training_run
++    import specforge.training.disaggregated as disaggregated
++
++    disaggregated._mooncake_store = store_factory
++    cfg = load_config(str(fixture / "train.yaml"))
++    cfg = cfg.model_copy(
++        update={
++            "data": cfg.data.model_copy(update={"hidden_states_path": None}),
++            "run_id": "native-online",
++            "output_dir": str(root / "output"),
++            "deployment": cfg.deployment.model_copy(update={"mode": "disaggregated"}),
++            "model": cfg.model.model_copy(
++                update={"draft_model_config": str(root / "draft.json")}
++            ),
++            "training": cfg.training.model_copy(
++                update={
++                    "role": "consumer",
++                    "strategy": "dspark" if args.algorithm == "dspark" else "dflash",
++                    "max_steps": args.steps,
++                    "resume_from": args.resume,
++                }
++            ),
++        }
++    )
++    algorithm = builtin_algorithm_registry().resolve(cfg.training.strategy)
++    completed = build_torchtitan_training_run(cfg, algorithm=algorithm).run()
++    expected_steps = min(args.steps or 3, 3)
++    assert completed == expected_steps
++    if int(os.environ.get("RANK", "0")) == 0:
++        from specforge.runtime.control_plane.metadata_store import SQLiteMetadataStore
++
++        ledger = SQLiteMetadataStore(str(root / "consumer.sqlite"))
++        marker = ledger.durable_marker()
++        assert marker["global_step"] == expected_steps and marker["optimizer_durable"]
++        assert len(marker["acked"]) == 4 * expected_steps
++        ledger.close()
++        print(
++            f"ONLINE_BOUNDARY_OK step={completed} acknowledged={4 * expected_steps}",
++            flush=True,
++        )
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/tests/test_training/test_torchtitan_validation.py b/tests/test_training/test_torchtitan_validation.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_training/test_torchtitan_validation.py
+@@ -0,0 +1,328 @@
++"""Offline evaluation must preserve the objective and the training trajectory."""
++
++from contextlib import nullcontext
++from types import SimpleNamespace
++
++import pytest
++import torch
++
++pytest.importorskip("torchtitan")
++
++from specforge.runtime.contracts import TrainBatch
++from specforge.training.torchtitan.model import SpecForgeTitanModel
++from specforge.training.torchtitan.validation import (
++    OfflineEvalSourceFactory,
++    SpecForgeValidator,
++    _ObjectiveTotals,
++)
++
++
++class SingletonMesh:
++    def size(self):
++        return 1
++
++    def get_local_rank(self):
++        return 0
++
++    def get_group(self):
++        return None
++
++
++class SingleRank:
++    pp_enabled = False
++
++    def get_optional_mesh(self, *args, **kwargs):
++        return SingletonMesh()
++
++
++class FreshSource:
++    def __init__(self, batches):
++        self.batches = batches
++        self.closed = False
++        self.iterator_closed = False
++
++    def __iter__(self):
++        try:
++            for batch in self.batches:
++                torch.rand(1)  # Loader side effects must not change training RNG.
++                yield batch
++        finally:
++            self.iterator_closed = True
++
++    def close(self):
++        torch.rand(1)  # Cleanup is part of the independent evaluation RNG scope.
++        self.closed = True
++
++
++def make_validator(batches, algorithm="dflash", **overrides):
++    sources, logs = [], []
++
++    def factory(**kwargs):
++        source = FreshSource(batches)
++        sources.append(source)
++        return source
++
++    config = SpecForgeValidator.Config(
++        enable=True,
++        freq=2,
++        num_batches=len(batches),
++        source_factory=factory,
++        algorithm=algorithm,
++        seed=123,
++        **overrides,
++    )
++    processor = SimpleNamespace(
++        logger=SimpleNamespace(log=lambda metrics, step: logs.append((metrics, step))),
++        time_last_log=0.0,
++        ntokens_since_last_log=317,
++        data_loading_times=[0.13, 0.17],
++    )
++    validator = config.build(
++        parallel_dims=SingleRank(),
++        dp_world_size=1,
++        dp_rank=0,
++        validation_context=nullcontext,
++        metrics_processor=processor,
++        seq_len=8,
++        local_batch_size=1,
++    )
++    return validator, sources, logs
++
++
++def tiny_model(algorithm):
++    return (
++        SpecForgeTitanModel.Config(
++            algorithm=algorithm,
++            draft_config={
++                "hidden_size": 16,
++                "intermediate_size": 32,
++                "num_attention_heads": 2,
++                "num_key_value_heads": 1,
++                "num_hidden_layers": 2,
++                "num_target_layers": 4,
++                "head_dim": 8,
++                "vocab_size": 32,
++                "max_position_embeddings": 32,
++                "dflash_config": {
++                    "block_size": 4,
++                    "mask_token_id": 31,
++                    "target_layer_ids": [1, 2],
++                    "conv_group_size": 4,
++                    "conv_kernel_size": 2,
++                    "selector_rank": 4,
++                    "selector_top_k": 4,
++                    "markov_rank": 4,
++                    "enable_confidence_head": True,
++                },
++            },
++            objective={
++                "attention_backend": "eager",
++                "num_anchors": 3,
++                "objective_chunk_blocks": 0,
++                "loss_decay_gamma": 2.0,
++            },
++        )
++        .build()
++        .bfloat16()
++    )
++
++
++def feature_batches():
++    return [
++        {
++            "input_ids": torch.randint(0, 31, (1, 8)),
++            "hidden_states": torch.randn(1, 8, 32).bfloat16(),
++            "target_last_hidden_states": torch.randn(1, 8, 16).bfloat16(),
++            "loss_mask": torch.tensor([mask]),
++        }
++        for mask in ([0, 1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 1])
++    ]
++
++
++@pytest.mark.parametrize("algorithm", ["dflash", "dflash2", "dspark"])
++def test_validation_matches_weighted_objective_and_preserves_training(algorithm):
++    torch.manual_seed(19)
++    model = tiny_model(algorithm)
++    batches = feature_batches()
++    validator, sources, logs = make_validator(batches, algorithm)
++    model.train()
++    model.training_model.lm_head.eval()
++    modes = [module.training for module in model.modules()]
++    parameter = next(
++        parameter for parameter in model.parameters() if parameter.requires_grad
++    )
++    parameter.grad = torch.ones_like(parameter)
++    expected_grad = parameter.grad.clone()
++    generator = torch.Generator().manual_seed(123)
++    numerator, denominator = 0.0, 0.0
++    with torch.no_grad():
++        for batch in batches:
++            inputs = validator._prepare(
++                batch, model.training_model, generator, SingletonMesh(), 2
++            )
++            _, _, metrics = model(**inputs)
++            numerator += metrics["loss_terms"][0].item()
++            denominator += metrics["loss_terms"][1].item()
++    rng = torch.random.get_rng_state().clone()
++    validator.validate([model], 2)
++    assert validator.last_metrics["eval/avg_loss"] == pytest.approx(
++        numerator / denominator
++    )
++    assert [module.training for module in model.modules()] == modes
++    torch.testing.assert_close(torch.random.get_rng_state(), rng)
++    torch.testing.assert_close(parameter.grad, expected_grad)
++    assert validator.metrics_processor.ntokens_since_last_log == 317
++    assert validator.metrics_processor.data_loading_times == [0.13, 0.17]
++    assert validator.metrics_processor.time_last_log > 0
++    first = {
++        key: value
++        for key, value in validator.last_metrics.items()
++        if key != "eval/time_s"
++    }
++    validator.validate([model], 2)
++    assert {
++        key: value
++        for key, value in validator.last_metrics.items()
++        if key != "eval/time_s"
++    } == first
++    assert len(sources) == 2 and all(
++        source.closed and source.iterator_closed for source in sources
++    )
++    assert [step for _, step in logs] == [2, 2]
++    assert not validator.should_validate(0)
++    assert not validator.should_validate(1)
++    assert validator.should_validate(2)
++
++
++def test_metric_ratios_pool_their_denominators_and_omit_partitioned_walks():
++    totals = _ObjectiveTotals()
++    for numerator, denominator in ((2.0, 1.0), (90.0, 30.0)):
++        totals.add(
++            {
++                "loss_terms": (torch.tensor(numerator), torch.tensor(denominator)),
++                "ratio_metrics": {
++                    "acc": (torch.tensor(denominator), torch.tensor(denominator)),
++                    "dflash/hard_label/walk_accepted_length": (
++                        torch.tensor(3.0),
++                        torch.tensor(1.0),
++                    ),
++                },
++                "sum_metrics": {"count": torch.tensor(1.0)},
++            },
++            context_degree=2,
++        )
++    metrics = totals.reduce(device="cpu", group=None, degree=1)
++    assert metrics["eval/avg_loss"] == pytest.approx(92 / 31)
++    assert metrics["eval/avg_loss"] != 2.5
++    assert metrics["eval/avg_acc"] == 1.0
++    assert metrics["eval/count"] == 2.0
++    assert not any("walk_accepted_length" in key for key in metrics)
++
++
++def test_early_eof_restores_modes_rng_and_closes_sources():
++    model = tiny_model("dflash")
++    validator, sources, _ = make_validator(feature_batches())
++    validator.config.num_batches = 3
++    model.eval()
++    rng = torch.random.get_rng_state().clone()
++    with pytest.raises(ValueError, match="ended before"):
++        validator.validate([model], 2)
++    assert not model.training
++    torch.testing.assert_close(torch.random.get_rng_state(), rng)
++    assert sources[0].closed and sources[0].iterator_closed
++
++
++def test_pipeline_evaluation_rejected():
++    with pytest.raises(ValueError, match="pipeline parallelism"):
++        SpecForgeValidator.Config().build(
++            parallel_dims=SimpleNamespace(pp_enabled=True),
++            dp_world_size=1,
++            dp_rank=0,
++            validation_context=nullcontext,
++            metrics_processor=None,
++            seq_len=8,
++            local_batch_size=1,
++        )
++
++
++def test_factory_visits_uneven_dataset_once_and_zero_weights_padding(monkeypatch):
++    import specforge.runtime.data_plane as data_plane
++
++    sources, stores = [], []
++
++    class Store:
++        def __init__(self, run_id):
++            self.closed = False
++            stores.append(self)
++
++        def close(self):
++            self.closed = True
++
++    class Loader(FreshSource):
++        def __init__(self, store, *, refs, batch_size, **kwargs):
++            super().__init__(
++                [
++                    TrainBatch(
++                        sample_ids=[
++                            str(value) for value in refs[offset : offset + batch_size]
++                        ],
++                        strategy="dflash",
++                        tensors={"loss_mask": torch.ones(batch_size, 8)},
++                    )
++                    for offset in range(0, len(refs), batch_size)
++                ]
++            )
++            sources.append(self)
++
++    monkeypatch.setattr(data_plane, "FeatureDataLoader", Loader)
++    monkeypatch.setattr(data_plane, "LocalFeatureStore", Store)
++    provider = SimpleNamespace(
++        build_collator=lambda: None,
++        build_normalizer=lambda *args, **kwargs: None,
++    )
++    algorithm = SimpleNamespace(
++        name="dflash",
++        providers=SimpleNamespace(offline_for=lambda _: provider),
++    )
++    cfg = SimpleNamespace(
++        model=SimpleNamespace(input_modality="text"),
++        data=SimpleNamespace(dataloader_num_workers=0),
++        training=SimpleNamespace(ttt_length=1),
++        run_id="test",
++    )
++    factory = OfflineEvalSourceFactory(cfg, algorithm, list(range(5)))
++    seen, lengths = [], []
++    for rank in range(2):
++        batches = list(
++            factory(dp_rank=rank, dp_world_size=2, local_batch_size=2, seq_len=8)
++        )
++        lengths.append(len(batches))
++        for batch in batches:
++            for sample_id, mask in zip(batch.sample_ids, batch.tensors["loss_mask"]):
++                if mask.any():
++                    seen.append(int(sample_id))
++    assert lengths == [2, 2]
++    assert sorted(seen) == list(range(5))
++    assert all(source.closed and source.iterator_closed for source in sources)
++    assert all(store.closed for store in stores)
++
++
++def test_cleanup_attempts_all_sources_without_hiding_primary_failure():
++    from specforge.training.torchtitan.validation import _close_all
++
++    closed = []
++
++    def failed_close():
++        closed.append("first")
++        raise RuntimeError("cleanup error")
++
++    first = SimpleNamespace(close=failed_close)
++    second = SimpleNamespace(close=lambda: closed.append("second"))
++    with pytest.raises(ValueError, match="forward error"):
++        try:
++            raise ValueError("forward error")
++        finally:
++            _close_all(first, second)
++    assert closed == ["first", "second"]
++    with pytest.raises(RuntimeError, match="cleanup error"):
++        _close_all(first, second)

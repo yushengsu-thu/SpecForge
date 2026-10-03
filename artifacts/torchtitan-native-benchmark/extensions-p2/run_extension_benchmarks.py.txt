@@ -1,0 +1,67 @@
+"""Run fresh-process paired experiments on an immutable source snapshot."""
+import argparse
+import json
+import os
+import subprocess
+import time
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--tag', required=True)
+parser.add_argument('--algorithms', nargs='+', default=['dflash', 'dflash2', 'dspark'])
+parser.add_argument('--cases', nargs='+', default=['bf16', 'fp8', 'cuda', 'graph'])
+parser.add_argument('--repeats', type=int, default=1)
+parser.add_argument('--warmup', type=int, default=10)
+parser.add_argument('--steps', type=int, default=20)
+parser.add_argument('--gpus', default='4,5')
+args = parser.parse_args()
+root = Path('/scratch/specforge-torchtitan-20261003')
+source = root / f'extension-bench-source-{args.tag}'
+driver = root / f'extension-bench-driver-{args.tag}'
+output = root / f'extension-bench-{args.tag}'
+output.mkdir(exist_ok=True)
+cases = {
+    'bf16': [],
+    'fp8': ['--fp8', 'rowwise'],
+    'fp8-gw-hp': ['--fp8', 'rowwise_with_gw_hp'],
+    'cuda': ['--cuda-graphs'],
+    'fp8-cuda': ['--fp8', 'rowwise', '--cuda-graphs'],
+    'graph': ['--titan-engine', 'graph', '--cuda-graphs'],
+    'graph-no-cuda': ['--titan-engine', 'graph'],
+    'graph-full': ['--titan-engine', 'graph', '--graph-inductor', 'full', '--cuda-graphs'],
+}
+manifest = []
+for repeat in range(args.repeats):
+    for algorithm in args.algorithms:
+        order = args.cases if repeat % 2 == 0 else list(reversed(args.cases))
+        for case in order:
+            name = f'{algorithm}-{case}-{repeat + 1}'
+            command = [str(root / 'venv/bin/python'), '-m', 'torch.distributed.run',
+                       '--standalone', '--nproc-per-node=2',
+                       str(driver / 'scripts/benchmark_training_backends.py'),
+                       '--specforge-root', str(source), '--backend', 'torchtitan',
+                       '--algorithm', algorithm, '--compile',
+                       '--warmup-steps', str(args.warmup), '--steps', str(args.steps),
+                       '--output', str(output / f'{name}.json'), *cases[case]]
+            environment = {**os.environ, 'CUDA_VISIBLE_DEVICES': args.gpus,
+                           'PYTHONPATH': str(source), 'OMP_NUM_THREADS': '1',
+                           'SPECFORGE_DFLASH_FUSED_HEAD': '1',
+                           'SPECFORGE_DFLASH2_FUSED_CONV': '1'}
+            started = time.time()
+            print(json.dumps({'start': name, 'time': started}), flush=True)
+            with (output / f'{name}.log').open('w') as log:
+                try:
+                    result = subprocess.run(command, env=environment, cwd=source,
+                                            stdout=log, stderr=subprocess.STDOUT,
+                                            timeout=1200)
+                    code = result.returncode
+                except subprocess.TimeoutExpired:
+                    code = 'timeout'
+            record = {'name': name, 'command': command, 'started': started,
+                      'seconds': time.time() - started, 'exit_code': code,
+                      'environment': {k: environment[k] for k in (
+                          'CUDA_VISIBLE_DEVICES', 'OMP_NUM_THREADS',
+                          'SPECFORGE_DFLASH_FUSED_HEAD', 'SPECFORGE_DFLASH2_FUSED_CONV')}}
+            manifest.append(record)
+            (output / 'launch-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+            print(json.dumps(record), flush=True)

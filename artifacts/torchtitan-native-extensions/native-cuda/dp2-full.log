@@ -1,0 +1,83 @@
+W1003 03:35:54.064000 2020283 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:35:54.081000 2020282 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:35:54.091000 2020283 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:35:54.107000 2020282 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+[titan] 2026-10-03 03:35:56,233 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 03:35:56,239 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 03:35:56,241 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 03:35:56,244 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 03:35:56,244 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 03:35:56,246 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 03:35:56,247 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 03:35:56,252 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 03:35:56,252 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 03:35:56,253 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 03:35:56,253 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 03:35:56,253 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 03:35:56,254 - root - INFO - [34mModel specforge dflash2 [31msize: 30,048 total parameters[39m
+[titan] 2026-10-03 03:35:56,261 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 03:35:56,262 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 03:35:56,262 - root - INFO - [34mModel specforge dflash2 [31msize: 30,048 total parameters[39m
+[titan] 2026-10-03 03:35:56,264 - root - INFO - Compiling each TransformerBlock with torch.compile
+[titan] 2026-10-03 03:35:56,272 - root - INFO - Compiling each TransformerBlock with torch.compile
+[titan] 2026-10-03 03:35:56,289 - root - INFO - Applied FSDP to the model
+[titan] 2026-10-03 03:35:56,301 - root - INFO - Applied FSDP to the model
+[titan] 2026-10-03 03:35:57,269 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 03:35:57,269 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 03:35:57,269 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 03:35:57,269 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.002, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 03:35:57,270 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 03:35:57,270 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 03:35:57,270 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 03:35:57,270 - root - INFO - Checkpointing active. Checkpoints will be loaded from and saved to /scratch/specforge-torchtitan-20261003/native-cuda-extension-validation/dp2-full/checkpoint
+[titan] 2026-10-03 03:35:57,271 - root - INFO - Trainer is initialized with local batch size 2, global batch size 8, gradient accumulation steps 2, sequence length 32, total steps 3 (warmup 0)
+[titan] 2026-10-03 03:35:57,271 - root - INFO - No checkpoint was provided, this is a fresh start.
+[titan] 2026-10-03 03:35:57,271 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 03:35:57,271 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.002, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 03:35:57,272 - root - INFO - Checkpointing active. Checkpoints will be loaded from and saved to /scratch/specforge-torchtitan-20261003/native-cuda-extension-validation/dp2-full/checkpoint
+[titan] 2026-10-03 03:35:57,272 - root - INFO - Trainer is initialized with local batch size 2, global batch size 8, gradient accumulation steps 2, sequence length 32, total steps 3 (warmup 0)
+[titan] 2026-10-03 03:35:57,273 - root - INFO - No checkpoint was provided, this is a fresh start.
+[titan] 2026-10-03 03:35:57,273 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 03:36:12,924 - root - INFO - Recorded CUDA graph
+[titan] 2026-10-03 03:36:12,925 - root - INFO - Recorded CUDA graph
+[titan] 2026-10-03 03:36:13,079 - root - INFO - [31mstep:  1  [32mloss: 11.10647  [38;2;180;60;0mgrad_norm:  4.0925  [38;2;54;234;195mmemory:  0.10GiB(0.07%)  [34mtps: 8  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 03:36:13,079 - root - INFO - [31mstep:  1  [32mloss: 11.10647  [38;2;180;60;0mgrad_norm:  4.0925  [38;2;54;234;195mmemory:  0.10GiB(0.07%)  [34mtps: 8  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 03:36:13,079 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 03:36:13,079 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 03:36:13,403 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.13 seconds
+[titan] 2026-10-03 03:36:13,404 - root - INFO - Finished saving the checkpoint in 0.32 seconds.
+[titan] 2026-10-03 03:36:13,404 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:02:00
+[titan] 2026-10-03 03:36:13,404 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.14 seconds
+[titan] 2026-10-03 03:36:13,404 - root - INFO - Finished saving the checkpoint in 0.33 seconds.
+[titan] 2026-10-03 03:36:13,405 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:02:00
+[titan] 2026-10-03 03:36:13,421 - root - INFO - [31mstep:  2  [32mloss: 11.49515  [38;2;180;60;0mgrad_norm:  4.4948  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 374  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 03:36:13,421 - root - INFO - [31mstep:  2  [32mloss: 11.49515  [38;2;180;60;0mgrad_norm:  4.4948  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 374  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 03:36:13,421 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 03:36:13,421 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 03:36:13,493 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.00 seconds
+[titan] 2026-10-03 03:36:13,494 - root - INFO - Finished saving the checkpoint in 0.07 seconds.
+[titan] 2026-10-03 03:36:13,498 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.00 seconds
+[titan] 2026-10-03 03:36:13,499 - root - INFO - Finished saving the checkpoint in 0.08 seconds.
+[titan] 2026-10-03 03:36:13,506 - root - INFO - [31mstep:  3  [32mloss: 11.61245  [38;2;180;60;0mgrad_norm:  3.9140  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 1,507  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 03:36:13,506 - root - INFO - [31mstep:  3  [32mloss: 11.61245  [38;2;180;60;0mgrad_norm:  3.9140  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 1,506  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 03:36:13,506 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 03:36:13,506 - root - INFO - Saving a full checkpoint at last step, step 3.
+[titan] 2026-10-03 03:36:13,507 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 03:36:13,507 - root - INFO - Saving a full checkpoint at last step, step 3.
+[titan] 2026-10-03 03:36:13,578 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.00 seconds
+[titan] 2026-10-03 03:36:13,578 - root - INFO - Last step checkpoint completed in 0.07s
+[titan] 2026-10-03 03:36:13,578 - root - INFO - Sleeping 2 seconds for other ranks to complete
+[titan] 2026-10-03 03:36:13,583 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.00 seconds
+[titan] 2026-10-03 03:36:13,583 - root - INFO - Last step checkpoint completed in 0.08s
+[titan] 2026-10-03 03:36:13,583 - root - INFO - Training completed
+[titan] 2026-10-03 03:36:15,578 - root - INFO - Training completed

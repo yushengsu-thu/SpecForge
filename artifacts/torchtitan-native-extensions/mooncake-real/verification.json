@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "core_commit": "c70a5f413220e6ce68247afb528664986502300f",
+  "matched_source_files": 175,
+  "torch": "2.14.0+cu130",
+  "torchtitan": "0.3.0",
+  "mooncake": "0.3.13.dev0+g4dbe5a4c",
+  "algorithm": "dflash2",
+  "parallelism": "DP2/FSDP2",
+  "attention": "eager",
+  "transport": "real Mooncake TCP, same host, pageable host receive",
+  "memcpy_shortcut_disabled_on_consumer": true,
+  "kernel_policy": "Shipping defaults; neither fused-head nor fused-convolution environment switch overridden",
+  "producer_natural_steps": 3,
+  "lr_schedule_horizon": 100,
+  "optimizer_steps": 3,
+  "logged_losses": {
+    "1": 11.83076,
+    "2": 10.24214,
+    "3": 11.29974
+  },
+  "unique_durable_acks": 12,
+  "physically_removed_tensor_objects": 48,
+  "checkpoint_steps": [
+    1,
+    2,
+    3
+  ],
+  "hf_export_exists": true,
+  "completed_checkpoint_resume": {
+    "optimizer_steps_executed": 0,
+    "dispatched_samples": 0,
+    "skipped_acked_samples": 12,
+    "ledger_unchanged": true,
+    "checkpoint_bytes_unchanged": true,
+    "hf_export_bytes_unchanged": true,
+    "consumer_done_republished": true
+  },
+  "boundaries": [
+    "Synthetic published features; no SGLang capture server",
+    "One host TCP; no RDMA or multi-node validation",
+    "Tiny two-layer fixture; no performance or training-quality claim"
+  ]
+}

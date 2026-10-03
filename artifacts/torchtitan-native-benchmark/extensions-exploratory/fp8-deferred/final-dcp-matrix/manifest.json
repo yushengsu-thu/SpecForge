@@ -1,0 +1,50 @@
+[
+  {
+    "name": "tp1-rowwise",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/torchrun",
+      "--standalone",
+      "--nproc-per-node=2",
+      "-m",
+      "tests.test_training.test_torchtitan_fp8_parallel",
+      "--tp",
+      "1",
+      "--compile",
+      "--recipe",
+      "rowwise",
+      "--steps",
+      "3",
+      "--report",
+      "/scratch/specforge-torchtitan-20261003/fp8-extension-evidence-final/tp1-rowwise.json",
+      "--checkpoint-dir",
+      "/scratch/specforge-torchtitan-20261003/fp8-extension-evidence-final/tp1-rowwise-checkpoint"
+    ],
+    "returncode": 1,
+    "elapsed_seconds": 32.60633850097656,
+    "report_written": true
+  },
+  {
+    "name": "tp2-rowwise_with_gw_hp",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/torchrun",
+      "--standalone",
+      "--nproc-per-node=2",
+      "-m",
+      "tests.test_training.test_torchtitan_fp8_parallel",
+      "--tp",
+      "2",
+      "--compile",
+      "--recipe",
+      "rowwise_with_gw_hp",
+      "--steps",
+      "3",
+      "--report",
+      "/scratch/specforge-torchtitan-20261003/fp8-extension-evidence-final/tp2-rowwise_with_gw_hp.json",
+      "--checkpoint-dir",
+      "/scratch/specforge-torchtitan-20261003/fp8-extension-evidence-final/tp2-rowwise_with_gw_hp-checkpoint"
+    ],
+    "returncode": 1,
+    "elapsed_seconds": 63.919989585876465,
+    "report_written": true
+  }
+]

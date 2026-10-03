@@ -1,7 +1,14 @@
 # Native TorchTitan training benchmark evidence
 
-The production engine is core commit `36eb793a4fba7fabb441821e9cb7b3f8279bca97`.
+The initial engine is core commit `36eb793a4fba7fabb441821e9cb7b3f8279bca97`.
 This archive is evidence for the separate benchmark PR, not a second backend.
+
+The later [27-trial extension matrix](extensions-p2/README.md) compares
+compiled native training, native CUDA graphs and full GraphTrainer using its
+own immutable source snapshot. [Exploratory extension/FP8 evidence](extensions-exploratory/README.md)
+is separate from that matrix, and [runtime validation](../torchtitan-native-extensions/README.md)
+records graph, evaluation and online integration checks. Do not combine timings
+from these different source snapshots into one matched comparison.
 
 - `h200-dp2.json`: audited aggregate of 18 fresh-process trials.
 - `dp2/`: all raw DP2 baseline/native trials, including complete per-step timing,

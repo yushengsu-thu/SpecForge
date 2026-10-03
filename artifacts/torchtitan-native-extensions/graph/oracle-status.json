@@ -1,0 +1,17 @@
+[
+  {
+    "case": "graph-oracle-dflash2",
+    "exit_code": 0,
+    "seconds": 17.783764123916626
+  },
+  {
+    "case": "graph-oracle-dflash",
+    "exit_code": 0,
+    "seconds": 16.182494163513184
+  },
+  {
+    "case": "graph-oracle-dspark",
+    "exit_code": 0,
+    "seconds": 16.382421493530273
+  }
+]

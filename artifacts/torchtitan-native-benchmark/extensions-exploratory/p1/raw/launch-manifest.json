@@ -1,0 +1,76 @@
+[
+  {
+    "name": "dflash2-graph-1",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-driver-p1/scripts/benchmark_training_backends.py",
+      "--specforge-root",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-source-p1",
+      "--backend",
+      "torchtitan",
+      "--algorithm",
+      "dflash2",
+      "--compile",
+      "--warmup-steps",
+      "10",
+      "--steps",
+      "20",
+      "--output",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-p1/dflash2-graph-1.json",
+      "--titan-engine",
+      "graph",
+      "--cuda-graphs"
+    ],
+    "started": 1790999123.1957107,
+    "seconds": 96.77225923538208,
+    "exit_code": 0,
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "4,5",
+      "OMP_NUM_THREADS": "1",
+      "SPECFORGE_DFLASH_FUSED_HEAD": "1",
+      "SPECFORGE_DFLASH2_FUSED_CONV": "1"
+    }
+  },
+  {
+    "name": "dflash2-graph-full-1",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-driver-p1/scripts/benchmark_training_backends.py",
+      "--specforge-root",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-source-p1",
+      "--backend",
+      "torchtitan",
+      "--algorithm",
+      "dflash2",
+      "--compile",
+      "--warmup-steps",
+      "10",
+      "--steps",
+      "20",
+      "--output",
+      "/scratch/specforge-torchtitan-20261003/extension-bench-p1/dflash2-graph-full-1.json",
+      "--titan-engine",
+      "graph",
+      "--graph-inductor",
+      "full",
+      "--cuda-graphs"
+    ],
+    "started": 1790999219.9685402,
+    "seconds": 102.42811584472656,
+    "exit_code": 0,
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "4,5",
+      "OMP_NUM_THREADS": "1",
+      "SPECFORGE_DFLASH_FUSED_HEAD": "1",
+      "SPECFORGE_DFLASH2_FUSED_CONV": "1"
+    }
+  }
+]

@@ -1,0 +1,997 @@
+{
+  "complete": true,
+  "expected_trials": 27,
+  "completed_trials": 27,
+  "missing": [],
+  "input_directory": "raw",
+  "provenance": {
+    "benchmark_sha256": "59f9de2c12a104ec35dea61f63a024cf6c720a5c9a91552428cb167686702d9f",
+    "recipe_helpers_sha256": "ec507e956af026d6aeab0c1efb12f2bcdab46f5109aa26798df8e4f0d5c6ad7b",
+    "source_sha256": {
+      "specforge/training/backend.py": "0b47b95e0aebbcd6f44aa94e17a62906ebcab36a44eb1fb4e7b7e4abbe5741f2",
+      "specforge/training/controller.py": "16322d15235ea7001f60b7b24e0de92bbb8a5f3b6b80da799b9bfbf17719d9f0",
+      "specforge/optimizer.py": "a136f17a4612eb31c842ddac79c35bfdcb1e62ab410046433bfd6008265ddc81",
+      "specforge/algorithms/common/dflash_family_model.py": "b777d95a873ebdb3e2370023fb58498c9eaad9ccccecda938a12aa3ddb396c71",
+      "specforge/training/torchtitan/runtime.py": "05c820e082e60ab8f273c4d96d01d98bfb66bc911a4e3308119dd9177c228b9f",
+      "specforge/training/torchtitan/frontend.py": "8c38123d109022608828685751544d0adc4d355af160b6771767d6b40daa0645",
+      "specforge/training/torchtitan/model.py": "4e7d4baf555c6770062aa82dafbb5c8f066c71d8c13b0f53a1d1c7a462a5b894",
+      "specforge/training/torchtitan/parallelize.py": "da6541600b209d2ff8bbadb6c513d8efb4e585105c6f53713b5b2932d6fb0764",
+      "specforge/training/torchtitan/data.py": "dd88b86ec2006cd1d225720d2330837bfb543594233f01c636218c39869edab0",
+      "specforge/training/torchtitan/loss.py": "c8f2fff28da5b9abb15e530d20f292a4d702e34cd56eb1dcf73b11ee46afa926",
+      "specforge/training/torchtitan/metrics.py": "96c8a7729b26609553f48753523c03e57b00af8293ef47b3faad567203895747",
+      "specforge/training/torchtitan/graph.py": "099f7d613e0ac21cec45c362383b4369ec40b2486171fd51bc49eb4efc61b02f",
+      "specforge/training/torchtitan/graph_parallelize.py": "54b5c5ed5e74ba126de422dd0e7b006106353790e79a31e5266f082488c1ad3b"
+    },
+    "versions": {
+      "torch": "2.14.0",
+      "torchtitan": "0.3.0",
+      "transformers": "5.12.1",
+      "triton": "3.8.0"
+    },
+    "cuda": "13.0",
+    "device": "NVIDIA H200"
+  },
+  "comparison_contract_by_algorithm": {
+    "dflash": {
+      "config": {
+        "architectures": [
+          "DFlashDraftModel"
+        ],
+        "attention_bias": false,
+        "attention_dropout": 0.0,
+        "block_size": 16,
+        "bos_token_id": 151643,
+        "dflash_config": {
+          "mask_token_id": 151669,
+          "target_layer_ids": [
+            1,
+            9,
+            17,
+            25,
+            33
+          ]
+        },
+        "dtype": "bfloat16",
+        "eos_token_id": 151645,
+        "head_dim": 128,
+        "hidden_act": "silu",
+        "hidden_size": 2560,
+        "initializer_range": 0.02,
+        "intermediate_size": 9728,
+        "layer_types": [
+          "full_attention",
+          "full_attention",
+          "full_attention",
+          "full_attention",
+          "full_attention"
+        ],
+        "max_position_embeddings": 40960,
+        "max_window_layers": 5,
+        "model_type": "qwen3",
+        "num_attention_heads": 32,
+        "num_hidden_layers": 5,
+        "num_key_value_heads": 8,
+        "num_target_layers": 36,
+        "rms_norm_eps": 1e-06,
+        "rope_scaling": null,
+        "rope_theta": 1000000,
+        "sliding_window": null,
+        "tie_word_embeddings": false,
+        "use_cache": true,
+        "use_sliding_window": false,
+        "vocab_size": 151936
+      },
+      "seed": 2026,
+      "world_size": 2,
+      "data_degree": 2,
+      "batch_size": 1,
+      "accumulation_steps": 2,
+      "seq_length": 4096,
+      "num_anchors": 512,
+      "objective_chunk_blocks": 128,
+      "attention": "flex_attention",
+      "sharding": "SHARD_GRAD_OP",
+      "learning_rate": 0.0001,
+      "initial_draft_sha256": "18c0daed81f0f5f189f6cd74b08af091754c02709717b48f5c823d6f7d64eb3a",
+      "frozen_target_sha256": "021278f688fc23167877560a5642788e73811a8df6f9c0c4329b6499277938d8",
+      "features_and_anchors_by_rank": [
+        {
+          "data_rank": 0,
+          "features": [
+            "f6c481812733531efe1dd7aba3dca0d83f72e35fa65512ad81d8fabfc5e425ad",
+            "b2a29143f54f28c4ce108a46617f319c527caa57da96c70a7f0c863caacf1de8"
+          ],
+          "anchors": "ae18b7f36a7546ddc877c5ffbaa9eb6d998e15b8a8a7f709c6c58296f041d235"
+        },
+        {
+          "data_rank": 1,
+          "features": [
+            "4496cad84e4e25c816ab547878ef48f2a1f8ff3e9d7ebe0417ac3f85eefee973",
+            "d246683c878bb064986fb92c63376318000716093b4c1b652e8e34ddada91b27"
+          ],
+          "anchors": "77042523138513d8f66d791ae99bd19db9dd839c247a4d3ebe56926cab591ca4"
+        }
+      ],
+      "warmup_steps": 10,
+      "steps": 20,
+      "feature_residency": "pinned CPU input IDs/loss masks; cached GPU hidden states"
+    },
+    "dflash2": {
+      "config": {
+        "architectures": [
+          "DFlash2DraftModel"
+        ],
+        "attention_bias": false,
+        "attention_dropout": 0.0,
+        "block_size": 16,
+        "bos_token_id": 151643,
+        "dflash_config": {
+          "mask_token_id": 151669,
+          "target_layer_ids": [
+            1,
+            9,
+            17,
+            25,
+            33
+          ],
+          "conv_group_size": 16,
+          "conv_kernel_size": 2,
+          "selector_rank": 256,
+          "selector_top_k": 16
+        },
+        "dtype": "bfloat16",
+        "eos_token_id": 151645,
+        "head_dim": 128,
+        "hidden_act": "silu",
+        "hidden_size": 2560,
+        "initializer_range": 0.02,
+        "intermediate_size": 9728,
+        "layer_types": [
+          "full_attention",
+          "full_attention",
+          "full_attention",
+          "full_attention",
+          "full_attention"
+        ],
+        "max_position_embeddings": 40960,
+        "max_window_layers": 5,
+        "model_type": "qwen3",
+        "num_attention_heads": 32,
+        "num_hidden_layers": 5,
+        "num_key_value_heads": 8,
+        "num_target_layers": 36,
+        "rms_norm_eps": 1e-06,
+        "rope_scaling": null,
+        "rope_theta": 1000000,
+        "sliding_window": null,
+        "tie_word_embeddings": false,
+        "use_cache": true,
+        "use_sliding_window": false,
+        "vocab_size": 151936
+      },
+      "seed": 2026,
+      "world_size": 2,
+      "data_degree": 2,
+      "batch_size": 1,
+      "accumulation_steps": 2,
+      "seq_length": 4096,
+      "num_anchors": 512,
+      "objective_chunk_blocks": 128,
+      "attention": "flex_attention",
+      "sharding": "SHARD_GRAD_OP",
+      "learning_rate": 0.0001,
+      "initial_draft_sha256": "e78d87bc040d7ec1c5bf9a21b5b5eb4484cbe1b086b9038eaf6ec9b31df9882c",
+      "frozen_target_sha256": "021278f688fc23167877560a5642788e73811a8df6f9c0c4329b6499277938d8",
+      "features_and_anchors_by_rank": [
+        {
+          "data_rank": 0,
+          "features": [
+            "f6c481812733531efe1dd7aba3dca0d83f72e35fa65512ad81d8fabfc5e425ad",
+            "b2a29143f54f28c4ce108a46617f319c527caa57da96c70a7f0c863caacf1de8"
+          ],
+          "anchors": "ae18b7f36a7546ddc877c5ffbaa9eb6d998e15b8a8a7f709c6c58296f041d235"
+        },
+        {
+          "data_rank": 1,
+          "features": [
+            "4496cad84e4e25c816ab547878ef48f2a1f8ff3e9d7ebe0417ac3f85eefee973",
+            "d246683c878bb064986fb92c63376318000716093b4c1b652e8e34ddada91b27"
+          ],
+          "anchors": "77042523138513d8f66d791ae99bd19db9dd839c247a4d3ebe56926cab591ca4"
+        }
+      ],
+      "warmup_steps": 10,
+      "steps": 20,
+      "feature_residency": "pinned CPU input IDs/loss masks; cached GPU hidden states"
+    },
+    "dspark": {
+      "config": {
+        "architectures": [
+          "DSparkDraftModel"
+        ],
+        "attention_bias": false,
+        "attention_dropout": 0.0,
+        "block_size": 16,
+        "bos_token_id": 151643,
+        "dflash_config": {
+          "mask_token_id": 151669,
+          "target_layer_ids": [
+            1,
+            9,
+            17,
+            25,
+            33
+          ],
+          "attention_mode": "gqa",
+          "projector_type": "dspark",
+          "markov_head_type": "vanilla",
+          "markov_rank": 256,
+          "confidence_head_alpha": 1.0,
+          "enable_confidence_head": true,
+          "confidence_head_with_markov": true
+        },
+        "dtype": "bfloat16",
+        "eos_token_id": 151645,
+        "head_dim": 128,
+        "hidden_act": "silu",
+        "hidden_size": 2560,
+        "initializer_range": 0.02,
+        "intermediate_size": 9728,
+        "layer_types": [
+          "full_attention",
+          "full_attention",
+          "full_attention",
+          "full_attention",
+          "full_attention"
+        ],
+        "max_position_embeddings": 40960,
+        "max_window_layers": 5,
+        "model_type": "qwen3",
+        "num_attention_heads": 32,
+        "num_hidden_layers": 5,
+        "num_key_value_heads": 8,
+        "num_target_layers": 36,
+        "rms_norm_eps": 1e-06,
+        "rope_scaling": null,
+        "rope_theta": 1000000,
+        "sliding_window": null,
+        "tie_word_embeddings": false,
+        "use_cache": true,
+        "use_sliding_window": false,
+        "vocab_size": 151936
+      },
+      "seed": 2026,
+      "world_size": 2,
+      "data_degree": 2,
+      "batch_size": 1,
+      "accumulation_steps": 2,
+      "seq_length": 4096,
+      "num_anchors": 512,
+      "objective_chunk_blocks": 128,
+      "attention": "flex_attention",
+      "sharding": "SHARD_GRAD_OP",
+      "learning_rate": 0.0001,
+      "initial_draft_sha256": "fde833f818ed964ce0e37abc63d344c5cfc208ef9838d02c0470b9e2ab9f8c72",
+      "frozen_target_sha256": "021278f688fc23167877560a5642788e73811a8df6f9c0c4329b6499277938d8",
+      "features_and_anchors_by_rank": [
+        {
+          "data_rank": 0,
+          "features": [
+            "f6c481812733531efe1dd7aba3dca0d83f72e35fa65512ad81d8fabfc5e425ad",
+            "b2a29143f54f28c4ce108a46617f319c527caa57da96c70a7f0c863caacf1de8"
+          ],
+          "anchors": "ae18b7f36a7546ddc877c5ffbaa9eb6d998e15b8a8a7f709c6c58296f041d235"
+        },
+        {
+          "data_rank": 1,
+          "features": [
+            "4496cad84e4e25c816ab547878ef48f2a1f8ff3e9d7ebe0417ac3f85eefee973",
+            "d246683c878bb064986fb92c63376318000716093b4c1b652e8e34ddada91b27"
+          ],
+          "anchors": "77042523138513d8f66d791ae99bd19db9dd839c247a4d3ebe56926cab591ca4"
+        }
+      ],
+      "warmup_steps": 10,
+      "steps": 20,
+      "feature_residency": "pinned CPU input IDs/loss masks; cached GPU hidden states"
+    }
+  },
+  "shared_runtime": {
+    "parameter_storage": "float32",
+    "gradient_reduce_dtype": "float32",
+    "compute_dtype": "bfloat16",
+    "adam_state_dtype": "float32",
+    "kernel_environment": {
+      "SPECFORGE_DFLASH_FUSED_HEAD": "1",
+      "SPECFORGE_DFLASH2_FUSED_CONV": "1"
+    }
+  },
+  "groups": [
+    {
+      "algorithm": "dflash",
+      "case": "bf16",
+      "trials": 3,
+      "steady_ms": {
+        "median": 230.61856627464294,
+        "min": 229.99618761241436,
+        "max": 230.69268371909857,
+        "values": [
+          229.99618761241436,
+          230.69268371909857,
+          230.61856627464294
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 13.068819046020508,
+        "min": 13.068819046020508,
+        "max": 13.068819046020508,
+        "values": [
+          13.068819046020508,
+          13.068819046020508,
+          13.068819046020508
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 14.349609375,
+        "min": 14.349609375,
+        "max": 14.349609375,
+        "values": [
+          14.349609375,
+          14.349609375,
+          14.349609375
+        ]
+      },
+      "build_seconds": {
+        "median": 35.09908883087337,
+        "min": 35.059911232441664,
+        "max": 35.65408908948302,
+        "values": [
+          35.059911232441664,
+          35.65408908948302,
+          35.09908883087337
+        ]
+      },
+      "first_window_seconds": {
+        "median": 2.3190508726984262,
+        "min": 2.282989038154483,
+        "max": 11.347951255738735,
+        "values": [
+          11.347951255738735,
+          2.282989038154483,
+          2.3190508726984262
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 4.375302352011204,
+        "min": 4.337165085598826,
+        "max": 13.40811075270176,
+        "values": [
+          13.40811075270176,
+          4.337165085598826,
+          4.375302352011204
+        ]
+      },
+      "raw_files": [
+        "dflash-bf16-1.json",
+        "dflash-bf16-2.json",
+        "dflash-bf16-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "latency_change_percent_vs_compiled_native": 0.0
+    },
+    {
+      "algorithm": "dflash",
+      "case": "cuda",
+      "trials": 3,
+      "steady_ms": {
+        "median": 225.204317830503,
+        "min": 224.59047194570303,
+        "max": 225.67110136151314,
+        "values": [
+          224.59047194570303,
+          225.67110136151314,
+          225.204317830503
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 6.089440822601318,
+        "min": 6.089440822601318,
+        "max": 6.089440822601318,
+        "values": [
+          6.089440822601318,
+          6.089440822601318,
+          6.089440822601318
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 14.419921875,
+        "min": 14.419921875,
+        "max": 14.419921875,
+        "values": [
+          14.419921875,
+          14.419921875,
+          14.419921875
+        ]
+      },
+      "build_seconds": {
+        "median": 35.52287143282592,
+        "min": 35.05881114676595,
+        "max": 36.666529189795256,
+        "values": [
+          35.05881114676595,
+          36.666529189795256,
+          35.52287143282592
+        ]
+      },
+      "first_window_seconds": {
+        "median": 2.3171686325222254,
+        "min": 2.2838987950235605,
+        "max": 2.371057851240039,
+        "values": [
+          2.2838987950235605,
+          2.3171686325222254,
+          2.371057851240039
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 4.339155854657292,
+        "min": 4.299789287149906,
+        "max": 4.38894397392869,
+        "values": [
+          4.299789287149906,
+          4.339155854657292,
+          4.38894397392869
+        ]
+      },
+      "raw_files": [
+        "dflash-cuda-1.json",
+        "dflash-cuda-2.json",
+        "dflash-cuda-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "latency_change_percent_vs_compiled_native": -2.3477070955736257
+    },
+    {
+      "algorithm": "dflash",
+      "case": "graph-full",
+      "trials": 3,
+      "steady_ms": {
+        "median": 222.66067285090685,
+        "min": 222.37205039709806,
+        "max": 222.83325251191854,
+        "values": [
+          222.66067285090685,
+          222.83325251191854,
+          222.37205039709806
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 7.101708889007568,
+        "min": 7.100732326507568,
+        "max": 7.101708889007568,
+        "values": [
+          7.100732326507568,
+          7.101708889007568,
+          7.101708889007568
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 16.876953125,
+        "min": 16.853515625,
+        "max": 16.876953125,
+        "values": [
+          16.853515625,
+          16.876953125,
+          16.876953125
+        ]
+      },
+      "build_seconds": {
+        "median": 35.765824444592,
+        "min": 35.54674710705876,
+        "max": 35.7843796890229,
+        "values": [
+          35.7843796890229,
+          35.765824444592,
+          35.54674710705876
+        ]
+      },
+      "first_window_seconds": {
+        "median": 6.835357895120978,
+        "min": 6.742666138336062,
+        "max": 37.552121527493,
+        "values": [
+          37.552121527493,
+          6.742666138336062,
+          6.835357895120978
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 8.8248973749578,
+        "min": 8.734775517135859,
+        "max": 39.53633465990424,
+        "values": [
+          39.53633465990424,
+          8.734775517135859,
+          8.8248973749578
+        ]
+      },
+      "raw_files": [
+        "dflash-graph-full-1.json",
+        "dflash-graph-full-2.json",
+        "dflash-graph-full-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.009926319122314453,
+        0.009926319122314453,
+        0.009926319122314453
+      ],
+      "latency_change_percent_vs_compiled_native": -3.4506733574343085
+    },
+    {
+      "algorithm": "dflash2",
+      "case": "bf16",
+      "trials": 3,
+      "steady_ms": {
+        "median": 213.68500776588917,
+        "min": 213.6832857504487,
+        "max": 214.2653651535511,
+        "values": [
+          214.2653651535511,
+          213.6832857504487,
+          213.68500776588917
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 16.235044956207275,
+        "min": 16.235044956207275,
+        "max": 16.235044956207275,
+        "values": [
+          16.235044956207275,
+          16.235044956207275,
+          16.235044956207275
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 17.783203125,
+        "min": 17.783203125,
+        "max": 17.783203125,
+        "values": [
+          17.783203125,
+          17.783203125,
+          17.783203125
+        ]
+      },
+      "build_seconds": {
+        "median": 36.68405059911311,
+        "min": 36.28743047080934,
+        "max": 36.74455410800874,
+        "values": [
+          36.28743047080934,
+          36.74455410800874,
+          36.68405059911311
+        ]
+      },
+      "first_window_seconds": {
+        "median": 2.6701246332377195,
+        "min": 2.6468021608889103,
+        "max": 2.685697255656123,
+        "values": [
+          2.6468021608889103,
+          2.685697255656123,
+          2.6701246332377195
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 4.598560580983758,
+        "min": 4.582807321101427,
+        "max": 4.611403588205576,
+        "values": [
+          4.582807321101427,
+          4.611403588205576,
+          4.598560580983758
+        ]
+      },
+      "raw_files": [
+        "dflash2-bf16-1.json",
+        "dflash2-bf16-2.json",
+        "dflash2-bf16-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "latency_change_percent_vs_compiled_native": 0.0
+    },
+    {
+      "algorithm": "dflash2",
+      "case": "cuda",
+      "trials": 3,
+      "steady_ms": {
+        "median": 208.52368511259556,
+        "min": 207.86551758646965,
+        "max": 208.70831608772278,
+        "values": [
+          208.70831608772278,
+          207.86551758646965,
+          208.52368511259556
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 6.805836200714111,
+        "min": 6.805836200714111,
+        "max": 6.805836200714111,
+        "values": [
+          6.805836200714111,
+          6.805836200714111,
+          6.805836200714111
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 17.748046875,
+        "min": 17.748046875,
+        "max": 17.748046875,
+        "values": [
+          17.748046875,
+          17.748046875,
+          17.748046875
+        ]
+      },
+      "build_seconds": {
+        "median": 36.663702273741364,
+        "min": 36.59980941563845,
+        "max": 36.67395396158099,
+        "values": [
+          36.663702273741364,
+          36.59980941563845,
+          36.67395396158099
+        ]
+      },
+      "first_window_seconds": {
+        "median": 2.800563547760248,
+        "min": 2.783648604527116,
+        "max": 2.8011478520929813,
+        "values": [
+          2.783648604527116,
+          2.800563547760248,
+          2.8011478520929813
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 4.715161146596074,
+        "min": 4.68853534758091,
+        "max": 4.8121286276727915,
+        "values": [
+          4.715161146596074,
+          4.8121286276727915,
+          4.68853534758091
+        ]
+      },
+      "raw_files": [
+        "dflash2-cuda-1.json",
+        "dflash2-cuda-2.json",
+        "dflash2-cuda-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "latency_change_percent_vs_compiled_native": -2.4153882891720158
+    },
+    {
+      "algorithm": "dflash2",
+      "case": "graph-full",
+      "trials": 3,
+      "steady_ms": {
+        "median": 212.87455689162016,
+        "min": 212.66695111989975,
+        "max": 213.04464805871248,
+        "values": [
+          213.04464805871248,
+          212.87455689162016,
+          212.66695111989975
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 7.996335506439209,
+        "min": 7.996335506439209,
+        "max": 7.996335506439209,
+        "values": [
+          7.996335506439209,
+          7.996335506439209,
+          7.996335506439209
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 18.45703125,
+        "min": 18.45703125,
+        "max": 18.45703125,
+        "values": [
+          18.45703125,
+          18.45703125,
+          18.45703125
+        ]
+      },
+      "build_seconds": {
+        "median": 37.18156458064914,
+        "min": 37.06768556497991,
+        "max": 37.388170812278986,
+        "values": [
+          37.18156458064914,
+          37.388170812278986,
+          37.06768556497991
+        ]
+      },
+      "first_window_seconds": {
+        "median": 12.76530777104199,
+        "min": 12.692418040707707,
+        "max": 12.828077509999275,
+        "values": [
+          12.828077509999275,
+          12.76530777104199,
+          12.692418040707707
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 14.674039153382182,
+        "min": 14.59746720828116,
+        "max": 14.7468585614115,
+        "values": [
+          14.7468585614115,
+          14.674039153382182,
+          14.59746720828116
+        ]
+      },
+      "raw_files": [
+        "dflash2-graph-full-1.json",
+        "dflash2-graph-full-2.json",
+        "dflash2-graph-full-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.5145964622497559,
+        0.5161528587341309,
+        0.5169711112976074
+      ],
+      "latency_change_percent_vs_compiled_native": -0.37927362464142966
+    },
+    {
+      "algorithm": "dspark",
+      "case": "bf16",
+      "trials": 3,
+      "steady_ms": {
+        "median": 419.71835773438215,
+        "min": 419.1749542951584,
+        "max": 419.8575997725129,
+        "values": [
+          419.8575997725129,
+          419.71835773438215,
+          419.1749542951584
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 19.19935655593872,
+        "min": 19.19935655593872,
+        "max": 19.19935655593872,
+        "values": [
+          19.19935655593872,
+          19.19935655593872,
+          19.19935655593872
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 20.720703125,
+        "min": 20.720703125,
+        "max": 20.720703125,
+        "values": [
+          20.720703125,
+          20.720703125,
+          20.720703125
+        ]
+      },
+      "build_seconds": {
+        "median": 36.93944057263434,
+        "min": 36.89892112836242,
+        "max": 37.37514187209308,
+        "values": [
+          36.93944057263434,
+          37.37514187209308,
+          36.89892112836242
+        ]
+      },
+      "first_window_seconds": {
+        "median": 2.439914518967271,
+        "min": 2.4374411646276712,
+        "max": 2.4419872239232063,
+        "values": [
+          2.4419872239232063,
+          2.4374411646276712,
+          2.439914518967271
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 6.211350047960877,
+        "min": 6.208940129727125,
+        "max": 6.214997842907906,
+        "values": [
+          6.214997842907906,
+          6.208940129727125,
+          6.211350047960877
+        ]
+      },
+      "raw_files": [
+        "dspark-bf16-1.json",
+        "dspark-bf16-2.json",
+        "dspark-bf16-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "latency_change_percent_vs_compiled_native": 0.0
+    },
+    {
+      "algorithm": "dspark",
+      "case": "cuda",
+      "trials": 3,
+      "steady_ms": {
+        "median": 413.1398871541023,
+        "min": 413.1017541512847,
+        "max": 414.7660695016384,
+        "values": [
+          413.1017541512847,
+          413.1398871541023,
+          414.7660695016384
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 6.673486709594727,
+        "min": 6.673486709594727,
+        "max": 6.673486709594727,
+        "values": [
+          6.673486709594727,
+          6.673486709594727,
+          6.673486709594727
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 21.095703125,
+        "min": 21.095703125,
+        "max": 21.095703125,
+        "values": [
+          21.095703125,
+          21.095703125,
+          21.095703125
+        ]
+      },
+      "build_seconds": {
+        "median": 37.04252368211746,
+        "min": 36.852465173229575,
+        "max": 42.68778005242348,
+        "values": [
+          42.68778005242348,
+          37.04252368211746,
+          36.852465173229575
+        ]
+      },
+      "first_window_seconds": {
+        "median": 2.6334606260061264,
+        "min": 2.602800512686372,
+        "max": 2.710345584899187,
+        "values": [
+          2.6334606260061264,
+          2.602800512686372,
+          2.710345584899187
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 6.361208751797676,
+        "min": 6.326493615284562,
+        "max": 6.4329268131405115,
+        "values": [
+          6.361208751797676,
+          6.326493615284562,
+          6.4329268131405115
+        ]
+      },
+      "raw_files": [
+        "dspark-cuda-1.json",
+        "dspark-cuda-2.json",
+        "dspark-cuda-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "latency_change_percent_vs_compiled_native": -1.567353550078221
+    },
+    {
+      "algorithm": "dspark",
+      "case": "graph-full",
+      "trials": 3,
+      "steady_ms": {
+        "median": 306.6254938021302,
+        "min": 306.056285277009,
+        "max": 306.8606602028012,
+        "values": [
+          306.8606602028012,
+          306.6254938021302,
+          306.056285277009
+        ]
+      },
+      "peak_allocated_gib": {
+        "median": 7.831680774688721,
+        "min": 7.831680774688721,
+        "max": 7.831680774688721,
+        "values": [
+          7.831680774688721,
+          7.831680774688721,
+          7.831680774688721
+        ]
+      },
+      "peak_reserved_gib": {
+        "median": 24.720703125,
+        "min": 24.720703125,
+        "max": 24.720703125,
+        "values": [
+          24.720703125,
+          24.720703125,
+          24.720703125
+        ]
+      },
+      "build_seconds": {
+        "median": 40.236523896455765,
+        "min": 37.28614964708686,
+        "max": 41.33816742897034,
+        "values": [
+          41.33816742897034,
+          37.28614964708686,
+          40.236523896455765
+        ]
+      },
+      "first_window_seconds": {
+        "median": 36.0564880091697,
+        "min": 35.83765896037221,
+        "max": 44.00917457230389,
+        "values": [
+          44.00917457230389,
+          35.83765896037221,
+          36.0564880091697
+        ]
+      },
+      "total_warmup_seconds": {
+        "median": 38.79135474562645,
+        "min": 38.58872469142079,
+        "max": 46.75043691135943,
+        "values": [
+          46.75043691135943,
+          38.58872469142079,
+          38.79135474562645
+        ]
+      },
+      "raw_files": [
+        "dspark-graph-full-1.json",
+        "dspark-graph-full-2.json",
+        "dspark-graph-full-3.json"
+      ],
+      "max_abs_loss_trajectory_difference_vs_bf16": [
+        0.005043506622314453,
+        0.005043506622314453,
+        0.005043506622314453
+      ],
+      "latency_change_percent_vs_compiled_native": -26.9449410177628
+    }
+  ],
+  "method": "Median of per-process medians; ranges span independent process medians.",
+  "quality_claim": false
+}

@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "comparison": "bitwise",
+  "step": 3,
+  "baseline": "/scratch/specforge-torchtitan-20261003/online-native-full/output/native-online",
+  "resumed": "/scratch/specforge-torchtitan-20261003/online-native-resume/output/native-online",
+  "dcp": {
+    "tensors": 152,
+    "non_tensor_leaves": 562
+  },
+  "hf_export_tensors": 36,
+  "total": {
+    "tensors": 188,
+    "non_tensor_leaves": 562
+  },
+  "excluded_fixture_identity_paths": [
+    "root.train_state.specforge_resume_contract.specforge_model_provenance.1.1.1",
+    "root.train_state.specforge_resume_contract.stream_path",
+    "root.train_state.specforge_resume_contract.ledger_path"
+  ],
+  "scope": "model, optimizer, scheduler, rank RNG, data progress, other DCP state and exported draft"
+}

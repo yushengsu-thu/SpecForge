@@ -1,0 +1,90 @@
+[
+  {
+    "name": "tp1-rowwise",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/torchrun",
+      "--standalone",
+      "--nproc-per-node=2",
+      "-m",
+      "tests.test_training.test_torchtitan_fp8_parallel",
+      "--tp",
+      "1",
+      "--compile",
+      "--recipe",
+      "rowwise",
+      "--steps",
+      "3",
+      "--report",
+      "/scratch/specforge-torchtitan-20261003/fp8-extension-evidence/tp1-rowwise.json"
+    ],
+    "returncode": 1,
+    "elapsed_seconds": 78.3145740032196,
+    "report_written": true
+  },
+  {
+    "name": "tp1-rowwise_with_gw_hp",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/torchrun",
+      "--standalone",
+      "--nproc-per-node=2",
+      "-m",
+      "tests.test_training.test_torchtitan_fp8_parallel",
+      "--tp",
+      "1",
+      "--compile",
+      "--recipe",
+      "rowwise_with_gw_hp",
+      "--steps",
+      "3",
+      "--report",
+      "/scratch/specforge-torchtitan-20261003/fp8-extension-evidence/tp1-rowwise_with_gw_hp.json"
+    ],
+    "returncode": 1,
+    "elapsed_seconds": 68.04223895072937,
+    "report_written": true
+  },
+  {
+    "name": "tp2-rowwise",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/torchrun",
+      "--standalone",
+      "--nproc-per-node=2",
+      "-m",
+      "tests.test_training.test_torchtitan_fp8_parallel",
+      "--tp",
+      "2",
+      "--compile",
+      "--recipe",
+      "rowwise",
+      "--steps",
+      "3",
+      "--report",
+      "/scratch/specforge-torchtitan-20261003/fp8-extension-evidence/tp2-rowwise.json"
+    ],
+    "returncode": 1,
+    "elapsed_seconds": 75.38956832885742,
+    "report_written": true
+  },
+  {
+    "name": "tp2-rowwise_with_gw_hp",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/torchrun",
+      "--standalone",
+      "--nproc-per-node=2",
+      "-m",
+      "tests.test_training.test_torchtitan_fp8_parallel",
+      "--tp",
+      "2",
+      "--compile",
+      "--recipe",
+      "rowwise_with_gw_hp",
+      "--steps",
+      "3",
+      "--report",
+      "/scratch/specforge-torchtitan-20261003/fp8-extension-evidence/tp2-rowwise_with_gw_hp.json"
+    ],
+    "returncode": 1,
+    "elapsed_seconds": 68.630930185318,
+    "report_written": true
+  }
+]

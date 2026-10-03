@@ -1,0 +1,15 @@
+{
+  "ack_count": 12,
+  "ack_ids_sha256": "a2b2440f32c9ce8710caf5ebfcdebf78e55d96bc8e64f256119f3819c1e3fa2e",
+  "marker": {
+    "global_step": 3,
+    "optimizer_durable": true
+  },
+  "consumer_done_mtime_ns": 1791001373567374738,
+  "checkpoint_sha256": {
+    "checkpoint/step-3/.metadata": "78032299ce14bc721da6d41dcdf15e9cd7f9d103b2b63544e965e692b66ec373",
+    "checkpoint/step-3/__0_0.distcp": "d6094de11ded2bd937415ceda3fb5f21905fb8e4cb92c74a0e16862e68c93c0a",
+    "checkpoint/step-3/__1_0.distcp": "8c87a44adf95e3c35b268ffbd9f13a975e289c0acd744d17d1c69af6ad794ac6"
+  },
+  "export_sha256": "8a16d8d4b6d710d6f25ba6719d3c01a600871b32c0caf6c32fd1cff1af7728a5"
+}

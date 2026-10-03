@@ -1,0 +1,35 @@
+{
+  "dp2": {
+    "checkpoint_bitwise_equal": true,
+    "differences": [],
+    "compared": {
+      "tensors": 152,
+      "values": 563
+    },
+    "export_keys": 36,
+    "resume_export_bitwise_equal": true,
+    "capture_logged": true
+  },
+  "tp2": {
+    "checkpoint_bitwise_equal": true,
+    "differences": [],
+    "compared": {
+      "tensors": 152,
+      "values": 560
+    },
+    "export_keys": 36,
+    "resume_export_bitwise_equal": true,
+    "capture_logged": true
+  },
+  "cp2": {
+    "checkpoint_bitwise_equal": true,
+    "differences": [],
+    "compared": {
+      "tensors": 152,
+      "values": 560
+    },
+    "export_keys": 36,
+    "resume_export_bitwise_equal": true,
+    "capture_logged": true
+  }
+}

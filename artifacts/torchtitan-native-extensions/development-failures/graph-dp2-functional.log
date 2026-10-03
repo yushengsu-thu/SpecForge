@@ -1,0 +1,156 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+W1003 03:26:15.125000 2014572 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:26:15.135000 2014571 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:26:15.335000 2014571 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 03:26:15.337000 2014572 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+[titan] 2026-10-03 03:26:17,462 - specforge.training.torchtitan.frontend - ERROR - Native TorchTitan training failed
+Traceback (most recent call last):
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 768, in execute
+    native = _native_config(
+             ^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/graph_probe.py", line 15, in factory
+    config=original(*args,**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 586, in _native_config
+    validator_options = BaseValidator.Config(enable=False)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: BaseValidator.Config.__init__() got an unexpected keyword argument 'enable'
+Traceback (most recent call last):
+  File "/scratch/specforge-torchtitan-20261003/graph_probe.py", line 28, in <module>
+    raise SystemExit(main(sys.argv[1:]))
+                     ^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/cli.py", line 365, in main
+    status = cli.main(args=argv, prog_name="specforge", standalone_mode=False)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/click/core.py", line 1552, in main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/click/core.py", line 2032, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/click/core.py", line 1415, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/click/core.py", line 910, in invoke
+    return callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/cli.py", line 263, in train
+    _train(bind_run(role_config, resolved.algorithm))
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/cli.py", line 127, in _train
+    return build_application_run(resolved).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/assembly.py", line 80, in run
+    return self.execute()
+           ^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 768, in execute
+    native = _native_config(
+             ^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/graph_probe.py", line 15, in factory
+    config=original(*args,**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 586, in _native_config
+    validator_options = BaseValidator.Config(enable=False)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: BaseValidator.Config.__init__() got an unexpected keyword argument 'enable'
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+[titan] 2026-10-03 03:26:17,481 - specforge.training.torchtitan.frontend - ERROR - Native TorchTitan training failed
+Traceback (most recent call last):
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 768, in execute
+    native = _native_config(
+             ^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/graph_probe.py", line 15, in factory
+    config=original(*args,**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 586, in _native_config
+    validator_options = BaseValidator.Config(enable=False)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: BaseValidator.Config.__init__() got an unexpected keyword argument 'enable'
+Traceback (most recent call last):
+  File "/scratch/specforge-torchtitan-20261003/graph_probe.py", line 28, in <module>
+    raise SystemExit(main(sys.argv[1:]))
+                     ^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/cli.py", line 365, in main
+    status = cli.main(args=argv, prog_name="specforge", standalone_mode=False)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/click/core.py", line 1552, in main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/click/core.py", line 2032, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/click/core.py", line 1415, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/click/core.py", line 910, in invoke
+    return callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/cli.py", line 263, in train
+    _train(bind_run(role_config, resolved.algorithm))
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/cli.py", line 127, in _train
+    return build_application_run(resolved).run()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/assembly.py", line 80, in run
+    return self.execute()
+           ^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 768, in execute
+    native = _native_config(
+             ^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/graph_probe.py", line 15, in factory
+    config=original(*args,**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/training/torchtitan/frontend.py", line 586, in _native_config
+    validator_options = BaseValidator.Config(enable=False)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: BaseValidator.Config.__init__() got an unexpected keyword argument 'enable'
+E1003 03:26:18.215000 2014443 torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: 1) local_rank: 0 (pid: 2014571) of binary: /scratch/specforge-torchtitan-20261003/venv/bin/python
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1142, in <module>
+    main()
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 380, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1138, in main
+    run(args)
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/run.py", line 1129, in run
+    elastic_launch(
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/scratch/specforge-torchtitan-20261003/graph_probe.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-10-03_03:26:18
+  host      : h200-10-220-51-9
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 2014572) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-10-03_03:26:18
+  host      : h200-10-220-51-9
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 2014571) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
