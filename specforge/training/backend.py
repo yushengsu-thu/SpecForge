@@ -85,14 +85,15 @@ class ParallelConfig:
         tp_size: int = 1,
         sp_ulysses_size: int = 1,
         sp_ring_size: int = 1,
-        sharding_strategy: str = "SHARD_GRAD_OP",
+        sharding_strategy: Optional[str] = None,
         param_dtype: torch.dtype = torch.bfloat16,
     ) -> "ParallelConfig":
         """Carry every group built by :func:`specforge.distributed.init_distributed`."""
         # Env override for the FSDP sharding strategy — e.g. FSDP_SHARDING=NO_SHARD
         # runs DDP-style (full params replicated, one grad all-reduce, no param
         # all-gather). Default unchanged when the env var is unset.
-        sharding_strategy = os.environ.get("FSDP_SHARDING", sharding_strategy)
+        if sharding_strategy is None:
+            sharding_strategy = os.environ.get("FSDP_SHARDING", "SHARD_GRAD_OP")
         if not dist.is_initialized():
             return cls(
                 world_size=1,
@@ -150,6 +151,10 @@ class TrainingBackend(abc.ABC):
     #: denominator inside the optimizer's single host read, letting
     #: ``TrainerCore`` skip its own synchronizing check.
     checks_loss_denominator: bool = False
+
+    def forward_context(self, *, is_boundary: bool = True):
+        """Configure backend state before the microbatch's forward/backward."""
+        return contextlib.nullcontext()
 
     @abc.abstractmethod
     def prepare_model(self, model: nn.Module) -> nn.Module: ...

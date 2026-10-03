@@ -504,6 +504,49 @@ The world size must be divisible by
 `training.sp_ulysses_size * training.sp_ring_size`. Use a shared `output_dir`
 for multi-rank checkpoints.
 
+### TorchTitan backend
+
+The default `training.backend: fsdp` uses SpecForge's existing FSDP backend.
+Install the optional dependency and select `torchtitan` to use TorchTitan
+0.3.0's FSDP2 decoder sharding policy:
+
+```bash
+pip install -e '.[torchtitan]'
+specforge train -c examples/configs/offline/colocated/qwen3-8b-dflash-offline.yaml \
+  training.backend=torchtitan
+```
+
+Equivalently, add `backend: torchtitan` under `training` in a recipe. This first
+implementation supports dense text DFlash, DFlash2, and DSpark drafts on CUDA,
+with BF16 parameters and data parallelism (`tp_size: 1`,
+`sp_ulysses_size: 1`, `sp_ring_size: 1`). It
+accepts `fsdp_sharding: SHARD_GRAD_OP` (the default) and `FULL_SHARD`.
+DFlash2 continues to use `strategy: dflash` and its DFlash2 draft config.
+
+SpecForge still owns the model, loss, FP32-master optimizer, learning-rate
+schedule, feature loading, and checkpoint contract. Only the draft is sharded;
+frozen target embedding and output tables stay replicated. Decoder blocks
+follow the selected reshard policy. The draft root stays materialized through
+the outer loss forward because DFlash2 and DSpark use root heads after the
+draft's forward returns. This backend does not enable TorchTitan's trainer,
+SPMD tensor annotations, tensor/context/pipeline parallelism, or compilation.
+The adapter's two-GPU numerical and resume tests pass with SpecForge's pinned
+PyTorch 2.13.0 and with PyTorch 2.14.0. This validates the FSDP2 integration used
+here, not every feature in the upstream TorchTitan trainer.
+
+Full training resume requires the same backend, sharding mode, and world size
+as the saved run. Older checkpoints without a backend marker are treated as
+FSDP checkpoints. Use `model.draft_checkpoint_path` for a weights-only warm
+start when switching backends; optimizer and scheduler history are then reset.
+Model export keeps the existing parameter names and plain tensor format.
+
+The distributed numerical gate needs no model downloads:
+
+```bash
+torchrun --standalone --nproc-per-node=2 \
+  -m tests.test_runtime.test_torchtitan_distributed --output /tmp/torchtitan-gate
+```
+
 ## Loader and profiling controls
 
 `data.dataloader_num_workers` controls ordered background feature

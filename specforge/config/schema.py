@@ -894,6 +894,8 @@ class DeploymentConfig(StrictConfigModel):
 
 class TrainingConfig(StrictConfigModel):
     strategy: str = "eagle3"
+    #: Optional TorchTitan v0.3 FSDP2 path for text DFlash-family drafts.
+    backend: Literal["fsdp", "torchtitan"] = "fsdp"
     num_epochs: int = Field(default=1, gt=0)
     max_steps: Optional[int] = Field(default=None, gt=0)
     total_steps: Optional[int] = Field(default=None, gt=0)
@@ -991,6 +993,17 @@ class TrainingConfig(StrictConfigModel):
 
     @model_validator(mode="after")
     def _validate_training_shape(self):
+        if self.backend == "torchtitan":
+            if self.strategy not in ("dflash", "dspark"):
+                raise ValueError(
+                    "training.backend=torchtitan supports dflash and dspark"
+                )
+            if self.tp_size != 1 or self.sp_ulysses_size != 1 or self.sp_ring_size != 1:
+                raise ValueError("training.backend=torchtitan requires trainer TP/SP=1")
+            if self.fsdp_sharding == "NO_SHARD":
+                raise ValueError(
+                    "training.backend=torchtitan requires SHARD_GRAD_OP or FULL_SHARD"
+                )
         if not 0.0 <= self.dpace_alpha <= 1.0:
             raise ValueError("training.dpace_alpha must be in [0, 1]")
         if not 0.0 < self.down_sample_ratio <= 1.0:
@@ -1305,6 +1318,10 @@ class Config(StrictConfigModel):
                 )
         if self.training.role == "producer" and self.training.resume_from is not None:
             raise ValueError("training.resume_from is valid only for a trainer role")
+        if self.training.backend == "torchtitan" and (
+            self.model.torch_dtype != "bfloat16" or self.model.input_modality != "text"
+        ):
+            raise ValueError("training.backend=torchtitan requires BF16 text models")
         if self.training.attention_backend == "usp":
             if mode != "offline":
                 raise ValueError("USP attention currently requires offline features")

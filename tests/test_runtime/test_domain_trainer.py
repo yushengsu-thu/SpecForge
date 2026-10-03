@@ -56,7 +56,7 @@ class DomainTrainerWiringTest(unittest.TestCase):
             @classmethod
             def from_distributed(cls, **kw):
                 cap["parallel_kw"] = kw
-                return "PARALLEL"
+                return SimpleNamespace(sharding_strategy="SHARD_GRAD_OP")
 
         class FakeBackend:
             def __init__(self, parallel, *, optimizer_factory):
@@ -220,13 +220,20 @@ class DomainTrainerWiringTest(unittest.TestCase):
         self.assertIsNone(cap["ctrl_kw"]["ack_fn"])
         self.assertEqual(
             cap["parallel_kw"],
-            {"tp_size": 1, "sp_ulysses_size": 1, "sp_ring_size": 1},
+            {
+                "tp_size": 1,
+                "sp_ulysses_size": 1,
+                "sp_ring_size": 1,
+                "sharding_strategy": None,
+            },
         )
 
         # run identity rides the shared checkpoint payload, validated on resume
         self.assertEqual(
             cap["ctrl_kw"]["checkpoint_extra"],
             {
+                "training_backend": "fsdp",
+                "backend_sharding": "SHARD_GRAD_OP",
                 "dataset_size": 6,
                 "batch_size": 2,
                 "accumulation_steps": 3,

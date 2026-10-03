@@ -45,6 +45,7 @@ dev = [
 ]
 fa = ["flash-attn", "ninja", "packaging"]
 liger = ["liger-kernel"]
+torchtitan = ["torchtitan==0.3.0"]
 
 [tool.setuptools.dynamic]
 version = {file = "version.txt"}
