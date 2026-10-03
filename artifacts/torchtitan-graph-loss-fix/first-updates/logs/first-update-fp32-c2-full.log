@@ -1,0 +1,190 @@
+W1003 06:29:37.538000 2074356 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 06:29:37.565000 2074356 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 06:29:37.664000 2074357 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 06:29:37.691000 2074357 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/first-update-source-candidate2/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/first-update-source-candidate2/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 06:29:39,269 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 06:29:39,275 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 06:29:39,280 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 06:29:39,281 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 06:29:39,282 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 06:29:39,288 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 06:29:39,289 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 06:29:39,289 - root - INFO - [34mModel specforge dflash2 [31msize: 118,720 total parameters[39m
+[titan] 2026-10-03 06:29:39,311 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 06:29:39,312 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 06:29:39,423 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 06:29:39,430 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 06:29:39,434 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 06:29:39,435 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 06:29:39,437 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 06:29:39,444 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 06:29:39,445 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 06:29:39,445 - root - INFO - [34mModel specforge dflash2 [31msize: 118,720 total parameters[39m
+[titan] 2026-10-03 06:29:39,468 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 06:29:39,468 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 06:29:40,693 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 06:29:40,693 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 06:29:40,694 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 06:29:40,694 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 06:29:40,694 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 06:29:40,694 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 06:29:40,694 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 06:29:40,694 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 06:29:40,694 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 06:29:40,695 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 128, total steps 2 (warmup 0)
+[titan] 2026-10-03 06:29:40,695 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 06:29:40,695 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 128, total steps 2 (warmup 0)
+[titan] 2026-10-03 06:29:40,695 - root - INFO - NUMA binding applied for GPU 1
+[titan] 2026-10-03 06:29:40,695 - root - INFO - NUMA binding applied for GPU 0
+[titan] 2026-10-03 06:29:40,974 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 06:29:40,974 - root - INFO - Training starts at step 1
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[titan] 2026-10-03 06:29:42,836 - root - INFO - minimal_fx_tracer took 1.849s
+[titan] 2026-10-03 06:29:42,836 - root - INFO - Applying 10 graph passes:
+  1. functionalize_fused_kernels
+  2. eliminate_dead_code_pass
+  3. canonicalize_graph_pass
+  4. deduplicate_fsdp_unshard_chains_pass
+  5. tag_with_memory_policy_pass
+  6. apply_cpu_offload_pass
+  7. selective_activation_remat_pass
+  8. joint_transformer_block_bucketing_reordering_pass
+  9. full_inductor_compilation_pass
+  10. cudagraph_pass
+[titan] 2026-10-03 06:29:42,943 - root - INFO - minimal_fx_tracer took 1.956s
+[titan] 2026-10-03 06:29:42,944 - root - INFO - Applying 10 graph passes:
+  1. functionalize_fused_kernels
+  2. eliminate_dead_code_pass
+  3. canonicalize_graph_pass
+  4. deduplicate_fsdp_unshard_chains_pass
+  5. tag_with_memory_policy_pass
+  6. apply_cpu_offload_pass
+  7. selective_activation_remat_pass
+  8. joint_transformer_block_bucketing_reordering_pass
+  9. full_inductor_compilation_pass
+  10. cudagraph_pass
+[titan] 2026-10-03 06:29:44,417 - root - INFO - Eliminated dead code from the graph
+[titan] 2026-10-03 06:29:44,468 - root - INFO - Removed 75 identity view/reshape node(s) from the graph
+[titan] 2026-10-03 06:29:44,516 - root - INFO - Removed 80 back-to-back transpose node(s) from the graph
+[titan] 2026-10-03 06:29:44,536 - root - INFO - Eliminated dead code from the graph
+[titan] 2026-10-03 06:29:44,589 - root - INFO - Removed 75 identity view/reshape node(s) from the graph
+[titan] 2026-10-03 06:29:44,613 - root - INFO - Normalized 404 view op(s) to reshape
+[titan] 2026-10-03 06:29:44,637 - root - INFO - Removed 80 back-to-back transpose node(s) from the graph
+[titan] 2026-10-03 06:29:44,670 - root - INFO - Applied selective activation checkpointing (SAC) graph pass.
+[titan] 2026-10-03 06:29:44,670 - root - INFO -   Forced 4 nodes to MUST_SAVE at layer boundaries
+[titan] 2026-10-03 06:29:44,670 - root - INFO -   Layer non-layer: 13 MUST_SAVE, 44 RECOMPUTE
+[titan] 2026-10-03 06:29:44,670 - root - INFO -   Layer 0: 29 MUST_SAVE, 174 RECOMPUTE
+[titan] 2026-10-03 06:29:44,670 - root - INFO -   Layer 1: 28 MUST_SAVE, 176 RECOMPUTE
+[titan] 2026-10-03 06:29:44,735 - root - INFO - Normalized 404 view op(s) to reshape
+[titan] 2026-10-03 06:29:44,800 - root - INFO - Applied selective activation checkpointing (SAC) graph pass.
+[titan] 2026-10-03 06:29:44,800 - root - INFO -   Forced 4 nodes to MUST_SAVE at layer boundaries
+[titan] 2026-10-03 06:29:44,800 - root - INFO -   Layer non-layer: 13 MUST_SAVE, 44 RECOMPUTE
+[titan] 2026-10-03 06:29:44,800 - root - INFO -   Layer 0: 29 MUST_SAVE, 174 RECOMPUTE
+[titan] 2026-10-03 06:29:44,800 - root - INFO -   Layer 1: 28 MUST_SAVE, 176 RECOMPUTE
+[titan] 2026-10-03 06:29:45,370 - root - INFO - FSDP reorder: 5 overlap deps across 5 target nodes
+[titan] 2026-10-03 06:29:45,526 - root - INFO - FSDP reorder: 5 overlap deps across 5 target nodes
+[titan] 2026-10-03 06:30:06,314 - root - INFO - Applied cudagraph pass.
+[titan] 2026-10-03 06:30:06,314 - root - INFO - All 10 graph passes took 23.478s
+[titan] 2026-10-03 06:30:06,555 - root - INFO - Applied cudagraph pass.
+[titan] 2026-10-03 06:30:06,555 - root - INFO - All 10 graph passes took 23.611s
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.732000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 06:30:06.733000 2074357 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.733000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 06:30:06.734000 2074356 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-fp32-c2-full/step1-before_clip.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-fp32-c2-full/step1-before_adam.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-fp32-c2-full/step1-after_adam.pt", "parameters": 36}
+[titan] 2026-10-03 06:30:07,036 - root - INFO - [31mstep:  1  [32mloss:  4.91070  [38;2;180;60;0mgrad_norm:  0.9111  [38;2;54;234;195mmemory:  0.06GiB(0.04%)  [34mtps: 9  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 06:30:07,036 - root - INFO - [31mstep:  1  [32mloss:  4.91070  [38;2;180;60;0mgrad_norm:  0.9111  [38;2;54;234;195mmemory:  0.06GiB(0.04%)  [34mtps: 9  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 06:30:07,048 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+[titan] 2026-10-03 06:30:07,048 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-fp32-c2-full/step2-before_clip.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-fp32-c2-full/step2-before_adam.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-fp32-c2-full/step2-after_adam.pt", "parameters": 36}
+[titan] 2026-10-03 06:30:07,156 - root - INFO - Sleeping 2 seconds for other ranks to complete
+[titan] 2026-10-03 06:30:07,156 - root - INFO - Training completed
+[titan] 2026-10-03 06:30:09,156 - root - INFO - Training completed
+{
+  "output": "/scratch/specforge-torchtitan-20261003/first-update-fp32-c2-full.json",
+  "optimizer_step_seconds_mean": 0.10606050491333008,
+  "optimizer_step_seconds_median": 0.10606050491333008,
+  "optimizer_step_seconds_p95": 0.10606050491333008,
+  "input_context_tokens_per_second": 4827.433175227605
+}

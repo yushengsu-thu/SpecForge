@@ -1,0 +1,80 @@
+W1003 06:01:03.296000 2066655 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 06:01:03.298000 2066656 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 06:01:03.323000 2066655 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 06:01:03.325000 2066656 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/extension-bench-source-p4/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/extension-bench-source-p4/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 06:01:25,210 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 06:01:25,217 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 06:01:25,221 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 06:01:25,222 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 06:01:25,223 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 06:01:25,232 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 06:01:25,233 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 06:01:25,233 - root - INFO - [34mModel specforge dflash2 [31msize: 1,410,272,512 total parameters[39m
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 06:01:25,237 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 06:01:25,243 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 06:01:25,245 - root - INFO - Compiling each TransformerBlock with torch.compile
+[titan] 2026-10-03 06:01:25,247 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 06:01:25,248 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 06:01:25,249 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 06:01:25,258 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 06:01:25,259 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 06:01:25,259 - root - INFO - [34mModel specforge dflash2 [31msize: 1,410,272,512 total parameters[39m
+[titan] 2026-10-03 06:01:25,270 - root - INFO - Compiling each TransformerBlock with torch.compile
+[titan] 2026-10-03 06:01:25,280 - root - INFO - Applied FSDP to the model
+[titan] 2026-10-03 06:01:25,306 - root - INFO - Applied FSDP to the model
+[titan] 2026-10-03 06:01:37,652 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 06:01:37,652 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 06:01:37,653 - root - INFO - CUDA memory usage for model: 5.81GiB(4.16%)
+[titan] 2026-10-03 06:01:37,653 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 06:01:37,653 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 06:01:37,653 - root - INFO - CUDA memory usage for model: 5.81GiB(4.16%)
+[titan] 2026-10-03 06:01:37,653 - root - INFO - Optimizer AdamW (model_part=0): 81 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 06:01:37,654 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 06:01:37,654 - root - INFO - Optimizer AdamW (model_part=0): 81 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 06:01:37,654 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 4096, total steps 30 (warmup 0)
+[titan] 2026-10-03 06:01:37,655 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 06:01:37,655 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 4096, total steps 30 (warmup 0)
+[titan] 2026-10-03 06:01:37,970 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 06:01:37,970 - root - INFO - Training starts at step 1
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/_dynamo/variables/functions.py:2762: UserWarning: Dynamo detected a call to a `functools.lru_cache`-wrapped function at 'dflash2.py:177'. Dynamo ignores the cache wrapper and directly traces the wrapped function. Silent incorrectness is only a *potential* risk, not something we have observed. Enable TORCH_LOGS=+dynamo for a DEBUG stack trace.
+
+This call originates from:
+  File "/scratch/specforge-torchtitan-20261003/extension-bench-source-p4/specforge/modeling/draft/dflash2.py", line 177, in _fused_convolution
+    fused = _load_fused_grouped_conv()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  torch._dynamo.utils.warn_once(msg)
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/_dynamo/variables/functions.py:2762: UserWarning: Dynamo detected a call to a `functools.lru_cache`-wrapped function at 'dflash2.py:177'. Dynamo ignores the cache wrapper and directly traces the wrapped function. Silent incorrectness is only a *potential* risk, not something we have observed. Enable TORCH_LOGS=+dynamo for a DEBUG stack trace.
+
+This call originates from:
+  File "/scratch/specforge-torchtitan-20261003/extension-bench-source-p4/specforge/modeling/draft/dflash2.py", line 177, in _fused_convolution
+    fused = _load_fused_grouped_conv()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  torch._dynamo.utils.warn_once(msg)
+[titan] 2026-10-03 06:01:43,822 - root - INFO - Recorded CUDA graph
+[titan] 2026-10-03 06:01:43,823 - root - INFO - Recorded CUDA graph
+[titan] 2026-10-03 06:01:44,141 - root - INFO - [31mstep:  1  [32mloss: 12.44116  [38;2;180;60;0mgrad_norm:  4.8364  [38;2;54;234;195mmemory: 17.76GiB(12.71%)  [34mtps: 434  [36mtflops: 6.84  [35mmfu: 0.69%[39m
+[titan] 2026-10-03 06:01:44,141 - root - INFO - [31mstep:  1  [32mloss: 12.44116  [38;2;180;60;0mgrad_norm:  4.8364  [38;2;54;234;195mmemory: 17.76GiB(12.71%)  [34mtps: 433  [36mtflops: 6.83  [35mmfu: 0.69%[39m
+[titan] 2026-10-03 06:01:44,142 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+[titan] 2026-10-03 06:01:44,142 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[titan] 2026-10-03 06:01:50,092 - root - INFO - Training completed
+[titan] 2026-10-03 06:01:50,092 - root - INFO - Sleeping 2 seconds for other ranks to complete
+[titan] 2026-10-03 06:01:52,092 - root - INFO - Training completed
+{
+  "output": "/scratch/specforge-torchtitan-20261003/extension-bench-p4/dflash2-titan-cuda-1.json",
+  "optimizer_step_seconds_mean": 0.20436038626357914,
+  "optimizer_step_seconds_median": 0.20433918479830027,
+  "optimizer_step_seconds_p95": 0.20713014528155327,
+  "input_context_tokens_per_second": 80172.09352339112
+}

@@ -35,7 +35,10 @@ checkpoint corruption.
 
 The whole-model FP32 native eager/raw-joint control has identical first two
 losses, first-step gradient relative L2 error `4.910e-8`, and first Adam update
-relative L2 error `3.276e-7`. This supports BF16 rounding amplification, while
+relative L2 error `3.276e-7`. A separate full-Inductor FP32 control also has
+identical first-step loss: unclipped gradient relative L2 error `2.94897e-7`,
+first Adam update relative L2 error `1.68630e-5`, and second-step loss absolute
+difference `2.384e-7`. These controls support BF16 rounding amplification, while
 not proving real-data convergence. See `first-updates/` for all parameters,
 initial-value checks, before-clip gradients and optimizer-state comparisons.
 
@@ -78,6 +81,12 @@ backward produces different gradients on repeated calls with unchanged inputs;
 native deterministic mode gives one repeated gradient, identical to eager.
 This localizes the lifecycle variation to indexed-gradient atomics rather than
 lost checkpoint state. **Production determinism defaults were not changed.**
+
+`native-cuda-final/` repeats public-CLI native Trainer compilation and CUDA
+capture on the final committed source for DP2, TP2 and CP2. Each layout's three
+uninterrupted steps versus one plus resume to three match all 152 DCP tensors
+and 36 exported weights bitwise. These correctness runs began after the timing
+matrix ended and their elapsed times are excluded from performance claims.
 
 ## Validation and provenance
 

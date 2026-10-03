@@ -1,0 +1,4 @@
+{"layout": "tp2", "phase": "full", "exit_code": 0}
+{"layout": "tp2", "phase": "cut", "exit_code": 0}
+{"layout": "tp2", "phase": "resume", "exit_code": 0}
+{"checkpoint_bitwise_equal": true, "differences": [], "compared": {"tensors": 152, "values": 561}, "export_keys": 36, "resume_export_bitwise_equal": true, "capture_logged": true}

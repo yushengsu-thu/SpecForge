@@ -1,0 +1,24 @@
+{
+  "benchmark_code_commit": "56130f347a9d2c0b67a7f9330f3359b22e34fcf5",
+  "files": {
+    "benchmark_training_backends.py": {
+      "measured_sha256": "f0188942613339d9456fed5dd0cabd30f340744fa6d5510dc9df312cd5de4c5d",
+      "final_sha256": "af39b2c4629ebf8d81894d094c497bb189d4f04359a8087911d08b03c7e8495b",
+      "bytes_equal": false,
+      "ast_equal": true
+    },
+    "training_benchmark_recipes.py": {
+      "measured_sha256": "ec507e956af026d6aeab0c1efb12f2bcdab46f5109aa26798df8e4f0d5c6ad7b",
+      "final_sha256": "ec507e956af026d6aeab0c1efb12f2bcdab46f5109aa26798df8e4f0d5c6ad7b",
+      "bytes_equal": true,
+      "ast_equal": true
+    },
+    "training_backend_matrix.py": {
+      "measured_sha256": "8627fe35917bd87182eb8d82027a6e2ade6c20c31bafed7e7824054eb0cfd0d3",
+      "final_sha256": "f2b07a48296445a546bc1ab2cd8edb4d6b7e79d7cc18bad44110d9d540f698f6",
+      "bytes_equal": false,
+      "ast_equal": false
+    }
+  },
+  "matrix_change": "Post-run algorithm/recipe identity validation only; frozen execute script unchanged."
+}

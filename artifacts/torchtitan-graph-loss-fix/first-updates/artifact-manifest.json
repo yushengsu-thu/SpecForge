@@ -1,6 +1,7 @@
 {
-  "README.md": "7d8940f09cd3e08c800a624b12af8fbde1038a9e58d719046242ef6b25791491",
+  "README.md": "8adbafbfe15cc067520f74afd26f821e69fa389990ee82454976b0b7967004bc",
   "commands.json": "f73b7a2695768eb6a0c30f578a6b0c35835d1c2b81c74fae3d6d526516d4da50",
+  "logs/first-update-fp32-c2-full.log": "45097bae1a5c29ab1a41428c5db838aa5d379b1d440a318f2d31997f054f328d",
   "logs/first-update-fp32-c2-native.log": "5550aa8222236eff115acc80b1e6e609348cbf6b1e8653291b4c756f818d7517",
   "logs/first-update-fp32-c2-raw.log": "b3e7c26a6c18173e05f5b1cb2b9abc8117bcb73854b6187c655c823cd9618122",
   "logs/first-update-tiny-native.log": "07de69c7836af79ec12234b37d7f791b299b3b002070864958cb670030075d7d",
@@ -19,8 +20,10 @@
   "provenance/collectors/first-update-tiny16-c2-eagerattention-native/collector.py": "1d85be58e1c1f10b7c273b1064ee95851983200ca3e3948108af8ccd82e92a33",
   "provenance/collectors/first-update-tiny16-c2-eagerattention-raw/collector.py": "1d85be58e1c1f10b7c273b1064ee95851983200ca3e3948108af8ccd82e92a33",
   "provenance/collectors/first-update-tiny16-c2-minimalregional/collector.py": "1d85be58e1c1f10b7c273b1064ee95851983200ca3e3948108af8ccd82e92a33",
+  "provenance/first-update-fp32-c2-full-command.json": "b0a608ae1a4a0b7a41267ae5b4b28ac577a8cdbad01ecd3bcc3ad84f1022989b",
   "provenance/source_hashes.json": "5a427a71f97626a2881405e568dbfbf5b88245ac6946eb12b185052c75a9d741",
   "reports/first-update-fp32-c2-comparison.json": "df3aa1e10dec7616db88889d8868e6b3d7ba73940e9192e6111fb027911f3042",
+  "reports/first-update-fp32-c2-native-vs-full.json": "991dd52a404335b3e8e036e324228eb6acad6aa034e8151ac3e05533277267ab",
   "reports/first-update-tiny16-c2-comparison.json": "b9ecc16bf53ee3ecaf917408047abafaddc88f7a4f186c042fb9ffd55f552859",
   "reports/first-update-tiny16-c2-eager-vs-graph.json": "98ae1fbf54028e1ea303e6eb5fff61e1a10eeb8e15ee4fd12fdeb7c37b40bdfb",
   "reports/first-update-tiny16-c2-eager-vs-minimalregional.json": "d2c033f468dea86f4f6ade0f67913bea5e695c9ede697ce969db97c715a5ae46",
@@ -29,6 +32,7 @@
   "reports/first-update-tiny16-c2-eager-vs-regional.json": "acf2d4661cf0dd6096c3754f70cc4dcc803a5a7a5d33f0c2138808fa401c739d",
   "reports/first-update-tiny16-c2-eagerattention-native-vs-eagerattention-raw.json": "f1ad273035b1832a052baf85d8cd4662933fdc943928f9ecd791a3bb1908caeb",
   "reports/first-update-tiny16-comparison.json": "7664238b9fb105f10e77deb9b4093b9ea90d8a17a8011fc9196f9a4de5d7a612",
+  "runs/first-update-fp32-c2-full.json": "15017fb7d8aaa054a3595582594c018545a7cbce0c5a7039032d63f2e0556628",
   "runs/first-update-fp32-c2-native.json": "372b90cf9e21f126e3faf1f8bcad5db18c87dfb38696a939a496e5911d830d94",
   "runs/first-update-fp32-c2-raw.json": "66629ae4629b77f2b78a00801558230734a005dc5d06cf20331aec79d6b265d3",
   "runs/first-update-tiny16-c2-eager.json": "f5f0f1484a1c53b9faf760e3b9ab19857ae296fd7f5c3b024208242554b2ebdb",
@@ -44,5 +48,6 @@
   "scripts/benchmark_training_backends.py": "6db380bb306ef68a4264e570416c3c64a8cf02d1315855242021ca7fa1a3cf61",
   "scripts/collect_titan_first_updates.py": "b0dce3cf9222cc5e1f988f7eec34dd3fd1863cacd0031e72654736350dbb49a9",
   "scripts/compare_titan_first_updates.py": "a7fae48529852912eb24c50d306a3490c3cd42f6a6f4a90917bd59d03ae90c9a",
+  "scripts/run_fp32_full_probe_after_matrix.py": "3277815e2d5fb7507074c0b8222a5af2609d8b37e50f0cc7131a6e1853a8b2fe",
   "scripts/training_benchmark_recipes.py": "ec507e956af026d6aeab0c1efb12f2bcdab46f5109aa26798df8e4f0d5c6ad7b"
 }

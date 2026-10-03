@@ -1,0 +1,15 @@
+/scratch/specforge-torchtitan-20261003/extension-bench-source-p4/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/extension-bench-source-p4/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/venv213/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+/scratch/specforge-torchtitan-20261003/venv213/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+{
+  "output": "/scratch/specforge-torchtitan-20261003/extension-bench-p4/dflash-fsdp213-3.json",
+  "optimizer_step_seconds_mean": 0.2705300503410399,
+  "optimizer_step_seconds_median": 0.2703298442065716,
+  "optimizer_step_seconds_p95": 0.2718916106969118,
+  "input_context_tokens_per_second": 60562.58807236291
+}

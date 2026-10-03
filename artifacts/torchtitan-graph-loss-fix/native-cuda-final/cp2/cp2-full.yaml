@@ -1,0 +1,52 @@
+data:
+  cache_dir: /scratch/specforge-torchtitan-20261003/cli-smoke213/cache
+  dataloader_num_workers: 0
+  hidden_states_path: /scratch/specforge-torchtitan-20261003/cli-smoke213/features
+  max_length: 32
+deployment:
+  mode: local_colocated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 2
+model:
+  draft_model_config: /scratch/specforge-torchtitan-20261003/cli-smoke213/draft.json
+  embedding_key: model.embed_tokens.weight
+  mask_token_id: 63
+  target_model_path: /scratch/specforge-torchtitan-20261003/cli-smoke213/target
+  torch_dtype: bfloat16
+output_dir: /scratch/specforge-torchtitan-20261003/native-cuda-loss-fix-cp2
+run_id: cp2-full
+tracking:
+  report_to: none
+training:
+  accumulation_steps: 2
+  attention_backend: eager
+  backend: torchtitan
+  batch_size: 2
+  dflash2_selector_loss_alpha: 1.0
+  dflash2_selector_ramp_ratio: 0.5
+  dflash_teacher_metrics: false
+  dist_timeout: 2
+  fsdp_sharding: FULL_SHARD
+  learning_rate: 0.002
+  log_interval: 1
+  lr_scheduler: constant
+  max_grad_norm: 1.0
+  max_steps: 3
+  num_anchors: 5
+  num_epochs: 4
+  objective_chunk_blocks: 0
+  save_interval: 1
+  seed: 831
+  strategy: dflash
+  torchtitan:
+    compile: true
+    cp_size: 2
+    disable_cuda_graphs: false
+    engine: trainer
+    export_draft: true
+    pp_schedule: 1F1B
+    pp_size: 1
+  total_steps: 100
+  tp_size: 1
+  warmup_ratio: 0.0
