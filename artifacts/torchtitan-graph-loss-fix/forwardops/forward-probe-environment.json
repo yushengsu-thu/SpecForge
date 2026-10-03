@@ -1,0 +1,49 @@
+{
+  "python": "3.12.3",
+  "torch": "2.14.0+cu130",
+  "cuda_runtime": "13.0",
+  "device": "NVIDIA H200",
+  "packages": {
+    "transformers": "5.12.1",
+    "torchtitan": "0.3.0",
+    "triton": "3.8.0"
+  },
+  "source_base_commit": "c70a5f413220e6ce68247afb528664986502300f",
+  "source_state": "separate graph-numerics-tests source snapshot plus new numerics.py and convolution compile-route fix; no parameter getter cache used by isolated probes",
+  "scoped_compiler_policy": {
+    "emulate_precision_casts": true,
+    "eager_numerics.division_rounding": true
+  },
+  "float32_matmul_precision": "highest",
+  "allow_tf32_matmul": false,
+  "files": {
+    "qwen3_modeling": {
+      "path": "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/transformers/models/qwen3/modeling_qwen3.py",
+      "sha256": "fbdcfeeb1b54135ca67ba7df924da92f4b264e1252b517eea2de989289ebaeab"
+    },
+    "torchtitan_inductor_passes": {
+      "path": "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torchtitan/experiments/graph_trainer/inductor_passes.py",
+      "sha256": "576fc9a75e492e8135f863eb1d704c1ef8bc1cd721cd626f797e72a5aa471e0e"
+    },
+    "specforge_numerics": {
+      "path": "/scratch/specforge-torchtitan-20261003/graph-numerics-tests/specforge/training/torchtitan/numerics.py",
+      "sha256": "2924fdd2ef61cd73e4d37fbb627c7b402d4e0d648ef013ba6c7f5ddf51cd19f2"
+    },
+    "forward_component_probe.py": {
+      "path": "/scratch/specforge-torchtitan-20261003/forward_component_probe.py",
+      "sha256": "48746bfab8de111cfb804830584a96266c904d7b894f3984ae474fb82729cc21"
+    },
+    "rms_precision_probe.py": {
+      "path": "/scratch/specforge-torchtitan-20261003/rms_precision_probe.py",
+      "sha256": "43c6a9b702aed1e4391188e3d166878a2cc07549fac18a176e45387a5cd4177e"
+    },
+    "context_gradient_grouping_probe.py": {
+      "path": "/scratch/specforge-torchtitan-20261003/context_gradient_grouping_probe.py",
+      "sha256": "7def37223d18db94d0570425187691bc38c51ffa0db813681b1009bfc80a8a31"
+    },
+    "context_gradient_grouping_pointwise_probe.py": {
+      "path": "/scratch/specforge-torchtitan-20261003/context_gradient_grouping_pointwise_probe.py",
+      "sha256": "c98246b91840691f74d38b01d0829031109a2d8e8b3cd34308c894a25e66cf0e"
+    }
+  }
+}

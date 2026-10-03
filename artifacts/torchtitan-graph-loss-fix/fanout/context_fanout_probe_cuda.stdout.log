@@ -1,0 +1,6 @@
+{"case": "eager/merge=False", "loss": 0.37890625, "gradient": [0.0078125], "gradient_abs_error_vs_fp64_sum": 0.00018310546875}
+{"case": "per_layer_compile/merge=False", "loss": 0.37890625, "gradient": [0.01171875], "gradient_abs_error_vs_fp64_sum": 0.00372314453125}
+{"case": "full_joint_compile/merge=False", "loss": 0.37890625, "gradient": [0.0078125], "gradient_abs_error_vs_fp64_sum": 0.00018310546875}
+{"case": "eager/merge=True", "loss": 0.37890625, "gradient": [0.01171875], "gradient_abs_error_vs_fp64_sum": 0.00372314453125}
+{"case": "per_layer_compile/merge=True", "loss": 0.37890625, "gradient": [0.01171875], "gradient_abs_error_vs_fp64_sum": 0.00372314453125}
+{"case": "full_joint_compile/merge=True", "loss": 0.37890625, "gradient": [0.01171875], "gradient_abs_error_vs_fp64_sum": 0.00372314453125}

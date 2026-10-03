@@ -1,0 +1,62 @@
+[
+  {
+    "phase": "full",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/graph_deterministic_cli_probe.py",
+      "train",
+      "--config",
+      "/scratch/specforge-torchtitan-20261003/graph-loss-lifecycle-full-deterministic/full.yaml"
+    ],
+    "exit_code": 0
+  },
+  {
+    "phase": "cut",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/graph_deterministic_cli_probe.py",
+      "train",
+      "--config",
+      "/scratch/specforge-torchtitan-20261003/graph-loss-lifecycle-full-deterministic/cut.yaml"
+    ],
+    "exit_code": 0
+  },
+  {
+    "phase": "resume",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/graph_deterministic_cli_probe.py",
+      "train",
+      "--config",
+      "/scratch/specforge-torchtitan-20261003/graph-loss-lifecycle-full-deterministic/resume.yaml"
+    ],
+    "exit_code": 0
+  },
+  {
+    "phase": "eval",
+    "command": [
+      "/scratch/specforge-torchtitan-20261003/venv/bin/python",
+      "-m",
+      "torch.distributed.run",
+      "--standalone",
+      "--nproc-per-node=2",
+      "/scratch/specforge-torchtitan-20261003/graph_deterministic_cli_probe.py",
+      "train",
+      "--config",
+      "/scratch/specforge-torchtitan-20261003/graph-loss-lifecycle-full-deterministic/eval.yaml"
+    ],
+    "exit_code": 0
+  }
+]

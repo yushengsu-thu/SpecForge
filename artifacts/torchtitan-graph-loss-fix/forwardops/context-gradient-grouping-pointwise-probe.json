@@ -1,0 +1,62 @@
+{
+  "native_block_vs_eager": [
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "bitwise": false,
+      "different": 150,
+      "numel": 512,
+      "max_abs": 0.03125,
+      "relative_l2": 0.0026326468372615455
+    }
+  ],
+  "full_joint_vs_eager": [
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    }
+  ],
+  "manual_grouped_vs_native": {
+    "bitwise": true,
+    "different": 0,
+    "numel": 512,
+    "max_abs": 0.0,
+    "relative_l2": 0.0
+  },
+  "manual_grouped_vs_eager": {
+    "bitwise": false,
+    "different": 150,
+    "numel": 512,
+    "max_abs": 0.03125,
+    "relative_l2": 0.0026326468372615455
+  }
+}

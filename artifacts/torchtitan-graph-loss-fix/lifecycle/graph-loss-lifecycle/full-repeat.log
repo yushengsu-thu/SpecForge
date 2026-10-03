@@ -1,0 +1,203 @@
+W1003 05:40:50.894000 2059919 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:40:50.921000 2059919 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:40:51.121000 2059920 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:40:51.148000 2059920 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/graph-loss-source-candidate3/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/graph-loss-source-candidate3/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+Loading ['model.embed_tokens.weight', 'lm_head.weight'] from model.safetensors...
+ -> Loaded Embeddings
+ -> Loaded LM Head
+[titan] 2026-10-03 05:40:53,051 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 05:40:53,057 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 05:40:53,062 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 05:40:53,062 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 05:40:53,064 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 05:40:53,071 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 05:40:53,071 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:40:53,072 - root - INFO - [34mModel specforge dflash2 [31msize: 30,048 total parameters[39m
+[titan] 2026-10-03 05:40:53,095 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 05:40:53,095 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 05:40:53,188 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 05:40:53,194 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 05:40:53,199 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 05:40:53,199 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 05:40:53,201 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 05:40:53,208 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 05:40:53,208 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:40:53,209 - root - INFO - [34mModel specforge dflash2 [31msize: 30,048 total parameters[39m
+[titan] 2026-10-03 05:40:53,231 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 05:40:53,232 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 05:40:54,301 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:40:54,302 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 05:40:54,302 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 05:40:54,302 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:40:54,302 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 05:40:54,302 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.002, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 05:40:54,302 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 05:40:54,303 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.002, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 05:40:54,303 - root - INFO - Checkpointing active. Checkpoints will be loaded from and saved to /scratch/specforge-torchtitan-20261003/graph-loss-lifecycle/full-repeat/checkpoint
+[titan] 2026-10-03 05:40:54,303 - root - INFO - Trainer is initialized with local batch size 2, global batch size 8, gradient accumulation steps 2, sequence length 32, total steps 3 (warmup 0)
+[titan] 2026-10-03 05:40:54,304 - root - INFO - Checkpointing active. Checkpoints will be loaded from and saved to /scratch/specforge-torchtitan-20261003/graph-loss-lifecycle/full-repeat/checkpoint
+[titan] 2026-10-03 05:40:54,304 - root - INFO - Trainer is initialized with local batch size 2, global batch size 8, gradient accumulation steps 2, sequence length 32, total steps 3 (warmup 0)
+[titan] 2026-10-03 05:40:54,304 - root - INFO - NUMA binding applied for GPU 0
+[titan] 2026-10-03 05:40:54,304 - root - INFO - No checkpoint was provided, this is a fresh start.
+[titan] 2026-10-03 05:40:54,304 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 05:40:54,304 - root - INFO - NUMA binding applied for GPU 1
+[titan] 2026-10-03 05:40:54,305 - root - INFO - No checkpoint was provided, this is a fresh start.
+[titan] 2026-10-03 05:40:54,305 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 05:40:56,048 - root - INFO - minimal_fx_tracer took 1.721s
+[titan] 2026-10-03 05:40:56,049 - root - INFO - Applying 10 graph passes:
+  1. functionalize_fused_kernels
+  2. eliminate_dead_code_pass
+  3. canonicalize_graph_pass
+  4. deduplicate_fsdp_unshard_chains_pass
+  5. tag_with_memory_policy_pass
+  6. apply_cpu_offload_pass
+  7. selective_activation_remat_pass
+  8. joint_transformer_block_bucketing_reordering_pass
+  9. full_inductor_compilation_pass
+  10. cudagraph_pass
+[titan] 2026-10-03 05:40:56,064 - root - INFO - minimal_fx_tracer took 1.737s
+[titan] 2026-10-03 05:40:56,064 - root - INFO - Applying 10 graph passes:
+  1. functionalize_fused_kernels
+  2. eliminate_dead_code_pass
+  3. canonicalize_graph_pass
+  4. deduplicate_fsdp_unshard_chains_pass
+  5. tag_with_memory_policy_pass
+  6. apply_cpu_offload_pass
+  7. selective_activation_remat_pass
+  8. joint_transformer_block_bucketing_reordering_pass
+  9. full_inductor_compilation_pass
+  10. cudagraph_pass
+[titan] 2026-10-03 05:40:57,702 - root - INFO - Eliminated dead code from the graph
+[titan] 2026-10-03 05:40:57,703 - root - INFO - Eliminated dead code from the graph
+[titan] 2026-10-03 05:40:57,750 - root - INFO - Removed 75 identity view/reshape node(s) from the graph
+[titan] 2026-10-03 05:40:57,752 - root - INFO - Removed 75 identity view/reshape node(s) from the graph
+[titan] 2026-10-03 05:40:57,796 - root - INFO - Removed 77 back-to-back transpose node(s) from the graph
+[titan] 2026-10-03 05:40:57,798 - root - INFO - Removed 77 back-to-back transpose node(s) from the graph
+[titan] 2026-10-03 05:40:57,888 - root - INFO - Normalized 302 view op(s) to reshape
+[titan] 2026-10-03 05:40:57,889 - root - INFO - Normalized 302 view op(s) to reshape
+[titan] 2026-10-03 05:40:57,941 - root - INFO - Applied selective activation checkpointing (SAC) graph pass.
+[titan] 2026-10-03 05:40:57,941 - root - INFO -   Forced 4 nodes to MUST_SAVE at layer boundaries
+[titan] 2026-10-03 05:40:57,941 - root - INFO -   Layer non-layer: 8 MUST_SAVE, 58 RECOMPUTE
+[titan] 2026-10-03 05:40:57,941 - root - INFO -   Layer 0: 14 MUST_SAVE, 215 RECOMPUTE
+[titan] 2026-10-03 05:40:57,941 - root - INFO -   Layer 1: 13 MUST_SAVE, 217 RECOMPUTE
+[titan] 2026-10-03 05:40:57,941 - root - INFO - Applied selective activation checkpointing (SAC) graph pass.
+[titan] 2026-10-03 05:40:57,941 - root - INFO -   Forced 4 nodes to MUST_SAVE at layer boundaries
+[titan] 2026-10-03 05:40:57,941 - root - INFO -   Layer non-layer: 8 MUST_SAVE, 58 RECOMPUTE
+[titan] 2026-10-03 05:40:57,942 - root - INFO -   Layer 0: 14 MUST_SAVE, 215 RECOMPUTE
+[titan] 2026-10-03 05:40:57,942 - root - INFO -   Layer 1: 13 MUST_SAVE, 217 RECOMPUTE
+[titan] 2026-10-03 05:40:58,814 - root - INFO - FSDP reorder: 8 overlap deps across 8 target nodes
+[titan] 2026-10-03 05:40:58,821 - root - INFO - FSDP reorder: 8 overlap deps across 8 target nodes
+[titan] 2026-10-03 05:41:00,358 - root - INFO - Applied cudagraph pass.
+[titan] 2026-10-03 05:41:00,358 - root - INFO - All 10 graph passes took 4.309s
+[titan] 2026-10-03 05:41:00,362 - root - INFO - Applied cudagraph pass.
+[titan] 2026-10-03 05:41:00,362 - root - INFO - All 10 graph passes took 4.298s
+[rank1]:W1003 05:41:00.531000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:41:00.532000 2059920 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.532000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.533000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.534000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.534000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:41:00.534000 2059919 torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[titan] 2026-10-03 05:41:00,780 - root - INFO - [31mstep:  1  [32mloss: 11.10739  [38;2;180;60;0mgrad_norm:  4.0919  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 17  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:41:00,780 - root - INFO - [31mstep:  1  [32mloss: 11.10739  [38;2;180;60;0mgrad_norm:  4.0919  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 17  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:41:00,780 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 05:41:00,780 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 05:41:01,104 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.14 seconds
+[titan] 2026-10-03 05:41:01,105 - root - INFO - Finished saving the checkpoint in 0.32 seconds.
+[titan] 2026-10-03 05:41:01,105 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:02:00
+[titan] 2026-10-03 05:41:01,113 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.14 seconds
+[titan] 2026-10-03 05:41:01,114 - root - INFO - Finished saving the checkpoint in 0.33 seconds.
+[titan] 2026-10-03 05:41:01,114 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:02:00
+[titan] 2026-10-03 05:41:01,126 - root - INFO - [31mstep:  2  [32mloss: 11.49704  [38;2;180;60;0mgrad_norm:  4.4942  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 370  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:41:01,126 - root - INFO - [31mstep:  2  [32mloss: 11.49704  [38;2;180;60;0mgrad_norm:  4.4942  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 370  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:41:01,126 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 05:41:01,126 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 05:41:01,199 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.00 seconds
+[titan] 2026-10-03 05:41:01,199 - root - INFO - Finished saving the checkpoint in 0.07 seconds.
+[titan] 2026-10-03 05:41:01,204 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.00 seconds
+[titan] 2026-10-03 05:41:01,204 - root - INFO - Finished saving the checkpoint in 0.08 seconds.
+[titan] 2026-10-03 05:41:01,215 - root - INFO - [31mstep:  3  [32mloss: 11.61181  [38;2;180;60;0mgrad_norm:  3.9135  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 1,450  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:41:01,215 - root - INFO - [31mstep:  3  [32mloss: 11.61181  [38;2;180;60;0mgrad_norm:  3.9135  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 1,448  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:41:01,215 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 05:41:01,215 - root - INFO - Saving the checkpoint.
+[titan] 2026-10-03 05:41:01,215 - root - INFO - Saving a full checkpoint at last step, step 3.
+[titan] 2026-10-03 05:41:01,215 - root - INFO - Saving a full checkpoint at last step, step 3.
+[titan] 2026-10-03 05:41:01,287 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.00 seconds
+[titan] 2026-10-03 05:41:01,287 - root - INFO - Last step checkpoint completed in 0.07s
+[titan] 2026-10-03 05:41:01,287 - root - INFO - Sleeping 2 seconds for other ranks to complete
+[titan] 2026-10-03 05:41:01,291 - root - INFO - [GC] GC collection invoked by checkpointer. took 0.00 seconds
+[titan] 2026-10-03 05:41:01,292 - root - INFO - Last step checkpoint completed in 0.08s
+[titan] 2026-10-03 05:41:01,292 - root - INFO - Training completed
+[titan] 2026-10-03 05:41:03,287 - root - INFO - Training completed

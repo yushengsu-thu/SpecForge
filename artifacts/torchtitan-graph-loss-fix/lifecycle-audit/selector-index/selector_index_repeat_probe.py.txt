@@ -1,0 +1,81 @@
+"""Isolate indexed BF16 gradient reduction without optimizer or checkpointing."""
+
+import hashlib
+import json
+import sys
+
+import torch
+from torch.fx.experimental.proxy_tensor import make_fx
+from torchtitan.experiments.graph_trainer.inductor_passes import (
+    full_inductor_compilation_pass,
+)
+
+
+def joint(weight, indices, seed):
+    loss = (weight[indices] * seed).float().sum()
+    return loss, torch.autograd.grad(loss, weight)[0]
+
+
+def main():
+    policy = {
+        "emulate_precision_casts": True,
+        "eager_numerics.division_rounding": True,
+    }
+    torch.manual_seed(831)
+    report = {"torch": torch.__version__, "compiler_policy": policy, "cases": []}
+    for count in (320, 4096):
+        weight = torch.randn(64, 4, device="cuda", dtype=torch.bfloat16)
+        weight.requires_grad_(True)
+        indices = torch.randint(64, (count,), device="cuda")
+        seed = torch.randn(count, 4, device="cuda", dtype=torch.bfloat16) * 0.001
+        reference = torch.zeros_like(weight, dtype=torch.float64)
+        reference.index_add_(0, indices, seed.double())
+        for mode, deterministic in (
+            ("eager", False),
+            ("full_inductor", False),
+            ("full_inductor", True),
+        ):
+            torch.use_deterministic_algorithms(deterministic)
+            with torch._inductor.config.patch(policy):
+                if mode == "full_inductor":
+                    graph = make_fx(joint, tracing_mode="fake")(weight, indices, seed)
+                    executable = full_inductor_compilation_pass(
+                        graph, (weight, indices, seed)
+                    )
+                else:
+                    executable = joint
+                gradients, losses = [], []
+                for _ in range(100):
+                    loss, gradient = executable(weight, indices, seed)
+                    gradients.append(gradient.detach().clone())
+                    losses.append(loss.detach().clone())
+                torch.cuda.synchronize()
+            values = torch.stack(gradients).cpu()
+            differences = values != values[0]
+            encoded = [
+                hashlib.sha256(value.view(torch.uint8).numpy().tobytes()).hexdigest()
+                for value in values
+            ]
+            case = {
+                "count": count,
+                "mode": mode,
+                "deterministic_algorithms": deterministic,
+                "repeats": len(gradients),
+                "unique_gradients": len(set(encoded)),
+                "runs_different_from_first": int(differences.flatten(1).any(1).sum()),
+                "max_abs_difference_from_first": (values - values[0]).abs().max().item(),
+                "max_abs_error_vs_fp64_index_sum": (
+                    values.double() - reference.cpu()
+                ).abs().max().item(),
+                "losses_bitwise_equal": bool((torch.stack(losses) == losses[0]).all()),
+                "first_gradient_sha256": encoded[0],
+            }
+            report["cases"].append(case)
+            print(json.dumps(case), flush=True)
+    torch.use_deterministic_algorithms(False)
+    with open(sys.argv[1], "w") as handle:
+        json.dump(report, handle, indent=2)
+
+
+if __name__ == "__main__":
+    main()

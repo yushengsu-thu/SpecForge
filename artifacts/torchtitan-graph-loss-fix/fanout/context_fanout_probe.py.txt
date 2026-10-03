@@ -1,0 +1,101 @@
+"""Standalone arithmetic probe; not SpecForge production code."""
+
+import json
+import sys
+
+import torch
+from torch.fx.experimental.proxy_tensor import make_fx
+from torchtitan.experiments.graph_trainer.inductor_passes import (
+    full_inductor_compilation_pass,
+)
+
+class LayerGradientMerge(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, context):
+        return context.clone(), context.clone()
+
+    @staticmethod
+    def backward(ctx, key_gradient, value_gradient):
+        return key_gradient + value_gradient
+
+
+def layer(hidden, context, coefficient, *, merge=False):
+    key, value = LayerGradientMerge.apply(context) if merge else (context, context)
+    return hidden + key * coefficient[0] + value * coefficient[1]
+
+
+def objective(context, coefficients, *, call=layer, merge=False):
+    hidden = torch.zeros_like(context)
+    for coefficient in coefficients:
+        hidden = call(hidden, context, coefficient, merge=merge)
+    return hidden.float().sum()
+
+
+def joint(context, coefficients, *, call=layer, merge=False):
+    loss = objective(context, coefficients, call=call, merge=merge)
+    return loss, torch.autograd.grad(loss, context)[0]
+
+
+def main():
+    device = torch.device(sys.argv[1] if len(sys.argv) > 1 else "cpu")
+    coefficients = torch.tensor(
+        [[1.0, 0.004], [-1.0, 0.004]], device=device, dtype=torch.bfloat16
+    )
+    context = torch.full(
+        (64,), 0.5, device=device, dtype=torch.bfloat16, requires_grad=True
+    )
+    report = {
+        "torch": torch.__version__,
+        "device": str(device),
+        "coefficients": coefficients.tolist(),
+        "exact_derivative_of_stored_coefficients": coefficients.double().sum().item(),
+        "cases": {},
+        "graphs": {},
+    }
+    policy = {
+        "emulate_precision_casts": True,
+        "eager_numerics.division_rounding": True,
+    }
+    report["compiler_policy"] = policy
+    with torch._inductor.config.patch(policy):
+        compiled_layer = torch.compile(layer, fullgraph=True)
+        for merge in (False, True):
+            for mode in ("eager", "per_layer_compile", "full_joint_compile"):
+                if mode == "full_joint_compile":
+
+                    def trace_target(x, values):
+                        return joint(x, values, merge=merge)
+
+                    graph = make_fx(trace_target, tracing_mode="fake")(
+                        context, coefficients
+                    )
+                    report["graphs"][f"merge={merge}"] = graph.code
+                    executable = full_inductor_compilation_pass(
+                        graph, (context, coefficients)
+                    )
+                    loss, gradient = executable(context, coefficients)
+                else:
+                    loss, gradient = joint(
+                        context,
+                        coefficients,
+                        call=compiled_layer if mode == "per_layer_compile" else layer,
+                        merge=merge,
+                    )
+                if device.type == "cuda":
+                    torch.cuda.synchronize()
+                case = {
+                    "loss": loss.item(),
+                    "gradient": gradient.unique().tolist(),
+                    "gradient_abs_error_vs_fp64_sum": (
+                        gradient.double() - coefficients.double().sum()
+                    ).abs().max().item(),
+                }
+                report["cases"][f"{mode}/merge={merge}"] = case
+                print(json.dumps({"case": f"{mode}/merge={merge}", **case}), flush=True)
+    if len(sys.argv) > 2:
+        with open(sys.argv[2], "w") as handle:
+            json.dump(report, handle, indent=2)
+
+
+if __name__ == "__main__":
+    main()

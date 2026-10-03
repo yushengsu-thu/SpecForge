@@ -1,0 +1,15 @@
+{
+  "python": "3.12.3",
+  "torch": "2.14.0+cu130",
+  "cuda_runtime": "13.0",
+  "torchtitan": "0.3.0",
+  "triton": "3.8.0",
+  "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+  "source_sha256": {
+    "/scratch/specforge-torchtitan-20261003/context_fanout_probe.py": "772107b92a3c09c7a1af83c78dd9c05fc1bde3c1cf979553d52e3157134f85ae",
+    "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/_inductor/config.py": "9171c2ed249e13a19a2ae22dba0db14f3c4fe11762108f87c8a4e85f96945b0a",
+    "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torchtitan/experiments/graph_trainer/inductor_passes.py": "576fc9a75e492e8135f863eb1d704c1ef8bc1cd721cd626f797e72a5aa471e0e"
+  },
+  "gpu_probe_visible_devices": "1",
+  "gpu_device": "NVIDIA H200"
+}

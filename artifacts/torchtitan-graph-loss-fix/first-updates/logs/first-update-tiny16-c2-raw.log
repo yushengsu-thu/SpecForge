@@ -1,0 +1,98 @@
+W1003 05:31:44.465000 2055572 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:31:44.468000 2055573 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:31:44.491000 2055572 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:31:44.494000 2055573 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/first-update-source-candidate2/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/first-update-source-candidate2/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:31:46,230 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:31:46,231 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 05:31:46,236 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 05:31:46,237 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 05:31:46,241 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 05:31:46,241 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 05:31:46,241 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 05:31:46,242 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 05:31:46,242 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 05:31:46,243 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 05:31:46,249 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 05:31:46,249 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 05:31:46,249 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:31:46,250 - root - INFO - [34mModel specforge dflash2 [31msize: 118,720 total parameters[39m
+[titan] 2026-10-03 05:31:46,250 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:31:46,250 - root - INFO - [34mModel specforge dflash2 [31msize: 118,720 total parameters[39m
+[titan] 2026-10-03 05:31:46,272 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 05:31:46,272 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 05:31:46,272 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 05:31:46,273 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 05:31:47,594 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:31:47,594 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 05:31:47,594 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 05:31:47,594 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:31:47,594 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 05:31:47,594 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 05:31:47,594 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 05:31:47,595 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:31:47,595 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 128, total steps 2 (warmup 0)
+[titan] 2026-10-03 05:31:47,595 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 05:31:47,595 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:31:47,595 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 128, total steps 2 (warmup 0)
+[titan] 2026-10-03 05:31:47,595 - root - INFO - NUMA binding applied for GPU 0
+[titan] 2026-10-03 05:31:47,598 - root - INFO - NUMA binding applied for GPU 1
+[titan] 2026-10-03 05:31:47,819 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 05:31:47,819 - root - INFO - Training starts at step 1
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/nn/attention/flex_attention.py:2596: UserWarning: flex_attention called without torch.compile() - this will use an unfused implementation that materializes the full scores matrix instead of generating a fused kernel.
+
+SOLUTION: Use torch.compile(flex_attention)(...)
+
+If you want to debug your score_mod/mask_mod, you can set:
+torch.nn.attention.flex_attention._FLEX_ATTENTION_DISABLE_COMPILE_DEBUG = True
+
+This will allow you to use print statements or breakpoints. Note: This doesn't work with the backwards pass and may produce incorrect results.
+  _warn_once(
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/nn/attention/flex_attention.py:2596: UserWarning: flex_attention called without torch.compile() - this will use an unfused implementation that materializes the full scores matrix instead of generating a fused kernel.
+
+SOLUTION: Use torch.compile(flex_attention)(...)
+
+If you want to debug your score_mod/mask_mod, you can set:
+torch.nn.attention.flex_attention._FLEX_ATTENTION_DISABLE_COMPILE_DEBUG = True
+
+This will allow you to use print statements or breakpoints. Note: This doesn't work with the backwards pass and may produce incorrect results.
+  _warn_once(
+[titan] 2026-10-03 05:31:50,039 - root - INFO - minimal_fx_tracer took 2.207s
+[titan] 2026-10-03 05:31:50,040 - root - INFO - Disabled 11 graph passes: ['eliminate_dead_code_pass', 'canonicalize_graph_pass', 'deduplicate_fsdp_unshard_chains_pass', 'tag_with_memory_policy_pass', 'apply_cpu_offload_pass', 'selective_activation_remat_pass', 'joint_transformer_block_bucketing_reordering_pass', 'annotate_flex_attention_for_regional_inductor_pass', 'regional_inductor_pass', 'insert_kernel_annotations_pass', 'cudagraph_pass']
+[titan] 2026-10-03 05:31:50,040 - root - INFO - Applying 1 graph passes:
+  1. functionalize_fused_kernels
+[titan] 2026-10-03 05:31:50,096 - root - INFO - minimal_fx_tracer took 2.264s
+[titan] 2026-10-03 05:31:50,097 - root - INFO - Disabled 11 graph passes: ['eliminate_dead_code_pass', 'canonicalize_graph_pass', 'deduplicate_fsdp_unshard_chains_pass', 'tag_with_memory_policy_pass', 'apply_cpu_offload_pass', 'selective_activation_remat_pass', 'joint_transformer_block_bucketing_reordering_pass', 'annotate_flex_attention_for_regional_inductor_pass', 'regional_inductor_pass', 'insert_kernel_annotations_pass', 'cudagraph_pass']
+[titan] 2026-10-03 05:31:50,097 - root - INFO - Applying 1 graph passes:
+  1. functionalize_fused_kernels
+[titan] 2026-10-03 05:31:51,748 - root - INFO - All 1 graph passes took 1.708s
+[titan] 2026-10-03 05:31:51,848 - root - INFO - All 1 graph passes took 1.751s
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-raw/step1-before_clip.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-raw/step1-before_adam.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-raw/step1-after_adam.pt", "parameters": 36}
+[titan] 2026-10-03 05:31:53,582 - root - INFO - [31mstep:  1  [32mloss:  4.91065  [38;2;180;60;0mgrad_norm:  0.9107  [38;2;54;234;195mmemory:  0.03GiB(0.02%)  [34mtps: 35  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:31:53,582 - root - INFO - [31mstep:  1  [32mloss:  4.91065  [38;2;180;60;0mgrad_norm:  0.9107  [38;2;54;234;195mmemory:  0.03GiB(0.02%)  [34mtps: 35  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:31:53,583 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+[titan] 2026-10-03 05:31:53,583 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-raw/step2-before_clip.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-raw/step2-before_adam.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-raw/step2-after_adam.pt", "parameters": 36}
+[titan] 2026-10-03 05:31:53,781 - root - INFO - Training completed
+[titan] 2026-10-03 05:31:53,781 - root - INFO - Sleeping 2 seconds for other ranks to complete
+[titan] 2026-10-03 05:31:55,782 - root - INFO - Training completed
+{
+  "output": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-raw.json",
+  "optimizer_step_seconds_mean": 0.19675623252987862,
+  "optimizer_step_seconds_median": 0.19675623252987862,
+  "optimizer_step_seconds_p95": 0.19675623252987862,
+  "input_context_tokens_per_second": 2602.2047353557136
+}

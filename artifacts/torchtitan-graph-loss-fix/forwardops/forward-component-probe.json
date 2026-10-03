@@ -1,0 +1,233 @@
+[
+  {
+    "component": "rmsnorm_2560",
+    "native_compile_vs_eager": [
+      {
+        "bitwise": false,
+        "different": 60,
+        "numel": 20971520,
+        "max_abs": 0.015625,
+        "relative_l2": 9.628877384031236e-06
+      }
+    ],
+    "full_inductor_vs_eager": [
+      {
+        "bitwise": false,
+        "different": 60,
+        "numel": 20971520,
+        "max_abs": 0.015625,
+        "relative_l2": 9.628877384031236e-06
+      }
+    ],
+    "full_vs_native": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 20971520,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ]
+  },
+  {
+    "component": "rmsnorm_128",
+    "native_compile_vs_eager": [
+      {
+        "bitwise": false,
+        "different": 13,
+        "numel": 8388608,
+        "max_abs": 0.015625,
+        "relative_l2": 7.63870284565542e-06
+      }
+    ],
+    "full_inductor_vs_eager": [
+      {
+        "bitwise": false,
+        "different": 13,
+        "numel": 8388608,
+        "max_abs": 0.015625,
+        "relative_l2": 7.63870284565542e-06
+      }
+    ],
+    "full_vs_native": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 8388608,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ]
+  },
+  {
+    "component": "mlp",
+    "native_compile_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1310720,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_inductor_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1310720,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_vs_native": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1310720,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ]
+  },
+  {
+    "component": "rotary_embedding",
+    "native_compile_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1572864,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      },
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1572864,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_inductor_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1572864,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      },
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1572864,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_vs_native": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1572864,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      },
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 1572864,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ]
+  },
+  {
+    "component": "silu",
+    "native_compile_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 65536,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_inductor_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 65536,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_vs_native": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 65536,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ]
+  },
+  {
+    "component": "sin_bf16",
+    "native_compile_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 786432,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_inductor_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 786432,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_vs_native": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 786432,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ]
+  },
+  {
+    "component": "cos_bf16",
+    "native_compile_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 786432,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_inductor_vs_eager": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 786432,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ],
+    "full_vs_native": [
+      {
+        "bitwise": true,
+        "different": 0,
+        "numel": 786432,
+        "max_abs": 0.0,
+        "relative_l2": 0.0
+      }
+    ]
+  }
+]

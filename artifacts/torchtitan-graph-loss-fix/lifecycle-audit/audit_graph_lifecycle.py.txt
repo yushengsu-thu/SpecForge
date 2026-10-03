@@ -1,0 +1,98 @@
+"""Read-only source checkpoint comparison; extracted copies are audit outputs."""
+
+import hashlib
+import json
+from pathlib import Path
+
+import torch
+from torch.distributed.checkpoint.format_utils import dcp_to_torch_save
+
+root = Path("/scratch/specforge-torchtitan-20261003/graph-loss-lifecycle")
+out = Path("/scratch/specforge-torchtitan-20261003/graph-loss-lifecycle-audit")
+out.mkdir(exist_ok=True)
+
+
+def flattened(value, prefix=""):
+    if isinstance(value, dict):
+        result = {}
+        for key, child in value.items():
+            result.update(flattened(child, f"{prefix}/{key}"))
+        return result
+    if isinstance(value, (tuple, list)):
+        result = {}
+        for index, child in enumerate(value):
+            result.update(flattened(child, f"{prefix}/{index}"))
+        return result
+    return {prefix: value}
+
+
+states = {}
+metadata_hashes = {}
+for phase in ("full", "cut", "resume", "eval", "full-repeat"):
+    for step in (1, 2, 3):
+        checkpoint = root / phase / "checkpoint" / f"step-{step}"
+        if not (checkpoint / ".metadata").exists():
+            continue
+        destination = out / f"{phase}-step-{step}.pt"
+        if not destination.exists():
+            dcp_to_torch_save(checkpoint, destination)
+        key = f"{phase}-step-{step}"
+        states[key] = flattened(torch.load(destination, weights_only=False))
+        metadata_hashes[key] = hashlib.sha256(
+            (checkpoint / ".metadata").read_bytes()
+        ).hexdigest()
+
+
+def compare(left, right):
+    a, b = states[left], states[right]
+    record = {
+        "left": left,
+        "right": right,
+        "missing_keys": sorted(a.keys() - b.keys()),
+        "extra_keys": sorted(b.keys() - a.keys()),
+        "tensor_differences": {},
+        "value_differences": {},
+        "equal_tensors": 0,
+    }
+    for key in a.keys() & b.keys():
+        x, y = a[key], b[key]
+        if not isinstance(x, torch.Tensor):
+            if x != y:
+                record["value_differences"][key] = [x, y]
+            continue
+        if torch.equal(x, y):
+            record["equal_tensors"] += 1
+            continue
+        delta = x.double() - y.double()
+        difference = {
+            "shape": list(x.shape),
+            "dtype": str(x.dtype),
+            "changed_elements": int((x != y).sum()),
+            "total_elements": x.numel(),
+            "max_abs": delta.abs().max().item(),
+            "relative_l2": (
+                delta.norm() / x.double().norm().clamp_min(1e-300)
+            ).item(),
+            "reference_max_abs": x.abs().max().item(),
+        }
+        if x.dtype == torch.float32:
+            same_sign = torch.signbit(x) == torch.signbit(y)
+            ulps = (x.view(torch.int32).long() - y.view(torch.int32).long()).abs()
+            difference["max_ulp_same_sign"] = (
+                ulps[same_sign].max().item() if same_sign.any() else None
+            )
+            difference["changed_sign_elements"] = int((~same_sign).sum())
+        record["tensor_differences"][key] = difference
+    return record
+
+
+report = {"source_metadata_sha256": metadata_hashes, "comparisons": []}
+for phase in ("cut", "resume", "eval", "full-repeat"):
+    for step in (1, 2, 3):
+        key = f"{phase}-step-{step}"
+        if key not in states:
+            continue
+        record = compare(f"full-step-{step}", key)
+        report["comparisons"].append(record)
+        print(json.dumps(record), flush=True)
+(out / "comparison.json").write_text(json.dumps(report, indent=2) + "\n")

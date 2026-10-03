@@ -1,0 +1,66 @@
+W1003 05:36:09.057000 2057188 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:36:09.059000 2057187 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:36:09.084000 2057188 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:36:09.086000 2057187 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/first-update-source-candidate2/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/first-update-source-candidate2/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:36:10,811 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 05:36:10,817 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 05:36:10,822 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 05:36:10,822 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 05:36:10,823 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 05:36:10,830 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 05:36:10,830 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:36:10,831 - root - INFO - [34mModel specforge dflash2 [31msize: 118,720 total parameters[39m
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:36:10,847 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 05:36:10,854 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 05:36:10,857 - root - INFO - Applied FSDP to the model
+[titan] 2026-10-03 05:36:10,858 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 05:36:10,859 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 05:36:10,860 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 05:36:10,867 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 05:36:10,868 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:36:10,868 - root - INFO - [34mModel specforge dflash2 [31msize: 118,720 total parameters[39m
+[titan] 2026-10-03 05:36:10,893 - root - INFO - Applied FSDP to the model
+[titan] 2026-10-03 05:36:11,997 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:36:11,997 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 05:36:11,997 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 05:36:11,998 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 05:36:11,998 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:36:11,998 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 128, total steps 2 (warmup 0)
+[titan] 2026-10-03 05:36:12,002 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:36:12,002 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 05:36:12,002 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 05:36:12,003 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 05:36:12,003 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:36:12,003 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 128, total steps 2 (warmup 0)
+[titan] 2026-10-03 05:36:12,397 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 05:36:12,397 - root - INFO - Training starts at step 1
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-eagerattention-native/step1-before_clip.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-eagerattention-native/step1-before_adam.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-eagerattention-native/step1-after_adam.pt", "parameters": 36}
+[titan] 2026-10-03 05:36:13,661 - root - INFO - [31mstep:  1  [32mloss:  4.91072  [38;2;180;60;0mgrad_norm:  0.9109  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 92  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:36:13,661 - root - INFO - [31mstep:  1  [32mloss:  4.91072  [38;2;180;60;0mgrad_norm:  0.9109  [38;2;54;234;195mmemory:  0.04GiB(0.03%)  [34mtps: 90  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:36:13,662 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+[titan] 2026-10-03 05:36:13,662 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-eagerattention-native/step2-before_clip.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-eagerattention-native/step2-before_adam.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-eagerattention-native/step2-after_adam.pt", "parameters": 36}
+[titan] 2026-10-03 05:36:13,812 - root - INFO - Training completed
+[titan] 2026-10-03 05:36:13,812 - root - INFO - Sleeping 2 seconds for other ranks to complete
+[titan] 2026-10-03 05:36:15,812 - root - INFO - Training completed
+{
+  "output": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-eagerattention-native.json",
+  "optimizer_step_seconds_mean": 0.14831595495343208,
+  "optimizer_step_seconds_median": 0.14831595495343208,
+  "optimizer_step_seconds_p95": 0.14831595495343208,
+  "input_context_tokens_per_second": 3452.089831877876
+}

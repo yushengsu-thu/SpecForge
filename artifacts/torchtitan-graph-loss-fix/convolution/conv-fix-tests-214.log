@@ -1,0 +1,18 @@
+............ [100%]
+=============================== warnings summary ===============================
+specforge/modeling/draft/llama3_eagle.py:33
+  /scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+    warnings.warn(
+
+tests/test_modeling/test_dflash2_fused_conv.py::DFlash2FusedConvParityTest::test_compile_preserves_fused_prepare_finish_and_gradients
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/_dynamo/variables/functions.py:2762: UserWarning: Dynamo detected a call to a `functools.lru_cache`-wrapped function at 'dflash2.py:177'. Dynamo ignores the cache wrapper and directly traces the wrapped function. Silent incorrectness is only a *potential* risk, not something we have observed. Enable TORCH_LOGS=+dynamo for a DEBUG stack trace.
+  
+  This call originates from:
+    File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/dflash2.py", line 177, in _fused_convolution
+      fused = _load_fused_grouped_conv()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  
+    torch._dynamo.utils.warn_once(msg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+12 passed, 2 warnings, 295 subtests passed in 32.48s

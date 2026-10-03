@@ -1,0 +1,65 @@
+/scratch/specforge-torchtitan-20261003/context_gradient_grouping_pointwise_probe.py:20: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  return dict(bitwise=bool(torch.equal(found,wanted)),different=int(torch.count_nonzero(d)),numel=d.numel(),max_abs=float(d.abs().max()),relative_l2=float(d.norm()/wanted.double().norm()))
+{
+  "native_block_vs_eager": [
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "bitwise": false,
+      "different": 150,
+      "numel": 512,
+      "max_abs": 0.03125,
+      "relative_l2": 0.0026326468372615455
+    }
+  ],
+  "full_joint_vs_eager": [
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    {
+      "bitwise": true,
+      "different": 0,
+      "numel": 512,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    }
+  ],
+  "manual_grouped_vs_native": {
+    "bitwise": true,
+    "different": 0,
+    "numel": 512,
+    "max_abs": 0.0,
+    "relative_l2": 0.0
+  },
+  "manual_grouped_vs_eager": {
+    "bitwise": false,
+    "different": 150,
+    "numel": 512,
+    "max_abs": 0.03125,
+    "relative_l2": 0.0026326468372615455
+  }
+}

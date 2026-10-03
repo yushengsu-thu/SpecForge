@@ -1,0 +1,67 @@
+{
+  "torch": "2.14.0+cu130",
+  "device": "cuda",
+  "coefficients": [
+    [
+      1.0,
+      0.003997802734375
+    ],
+    [
+      -1.0,
+      0.003997802734375
+    ]
+  ],
+  "exact_derivative_of_stored_coefficients": 0.00799560546875,
+  "cases": {
+    "eager/merge=False": {
+      "loss": 0.37890625,
+      "gradient": [
+        0.0078125
+      ],
+      "gradient_abs_error_vs_fp64_sum": 0.00018310546875
+    },
+    "per_layer_compile/merge=False": {
+      "loss": 0.37890625,
+      "gradient": [
+        0.01171875
+      ],
+      "gradient_abs_error_vs_fp64_sum": 0.00372314453125
+    },
+    "full_joint_compile/merge=False": {
+      "loss": 0.37890625,
+      "gradient": [
+        0.0078125
+      ],
+      "gradient_abs_error_vs_fp64_sum": 0.00018310546875
+    },
+    "eager/merge=True": {
+      "loss": 0.37890625,
+      "gradient": [
+        0.01171875
+      ],
+      "gradient_abs_error_vs_fp64_sum": 0.00372314453125
+    },
+    "per_layer_compile/merge=True": {
+      "loss": 0.37890625,
+      "gradient": [
+        0.01171875
+      ],
+      "gradient_abs_error_vs_fp64_sum": 0.00372314453125
+    },
+    "full_joint_compile/merge=True": {
+      "loss": 0.37890625,
+      "gradient": [
+        0.01171875
+      ],
+      "gradient_abs_error_vs_fp64_sum": 0.00372314453125
+    }
+  },
+  "graphs": {
+    "merge=False": "\n\n\ndef forward(self, x_1, values_1):\n    zeros_like = torch.ops.aten.zeros_like.default(x_1, pin_memory = False)\n    unbind = torch.ops.aten.unbind.int(values_1);  values_1 = None\n    getitem = unbind[0]\n    getitem_1 = unbind[1];  unbind = None\n    select = torch.ops.aten.select.int(getitem, 0, 0)\n    mul = torch.ops.aten.mul.Tensor(x_1, select)\n    add = torch.ops.aten.add.Tensor(zeros_like, mul);  zeros_like = mul = None\n    select_1 = torch.ops.aten.select.int(getitem, 0, 1);  getitem = None\n    mul_1 = torch.ops.aten.mul.Tensor(x_1, select_1)\n    add_1 = torch.ops.aten.add.Tensor(add, mul_1);  add = mul_1 = None\n    select_2 = torch.ops.aten.select.int(getitem_1, 0, 0)\n    mul_2 = torch.ops.aten.mul.Tensor(x_1, select_2)\n    add_2 = torch.ops.aten.add.Tensor(add_1, mul_2);  add_1 = mul_2 = None\n    select_3 = torch.ops.aten.select.int(getitem_1, 0, 1);  getitem_1 = None\n    mul_3 = torch.ops.aten.mul.Tensor(x_1, select_3);  x_1 = None\n    add_3 = torch.ops.aten.add.Tensor(add_2, mul_3);  add_2 = mul_3 = None\n    _to_copy = torch.ops.aten._to_copy.default(add_3, dtype = torch.float32);  add_3 = None\n    sum_1 = torch.ops.aten.sum.default(_to_copy);  _to_copy = None\n    ones_like = torch.ops.aten.ones_like.default(sum_1, pin_memory = False, memory_format = torch.preserve_format)\n    expand = torch.ops.aten.expand.default(ones_like, [64]);  ones_like = None\n    _to_copy_1 = torch.ops.aten._to_copy.default(expand, dtype = torch.bfloat16, layout = torch.strided, device = device(type='cuda', index=0));  expand = None\n    mul_4 = torch.ops.aten.mul.Tensor(_to_copy_1, select_3);  select_3 = None\n    mul_5 = torch.ops.aten.mul.Tensor(_to_copy_1, select_2);  select_2 = None\n    add_4 = torch.ops.aten.add.Tensor(mul_4, mul_5);  mul_4 = mul_5 = None\n    mul_6 = torch.ops.aten.mul.Tensor(_to_copy_1, select_1);  select_1 = None\n    add_5 = torch.ops.aten.add.Tensor(add_4, mul_6);  add_4 = mul_6 = None\n    mul_7 = torch.ops.aten.mul.Tensor(_to_copy_1, select);  _to_copy_1 = select = None\n    add_6 = torch.ops.aten.add.Tensor(add_5, mul_7);  add_5 = mul_7 = None\n    return (sum_1, add_6)\n    ",
+    "merge=True": "\n\n\ndef forward(self, x_1, values_1):\n    zeros_like = torch.ops.aten.zeros_like.default(x_1, pin_memory = False)\n    unbind = torch.ops.aten.unbind.int(values_1);  values_1 = None\n    getitem = unbind[0]\n    getitem_1 = unbind[1];  unbind = None\n    clone = torch.ops.aten.clone.default(x_1)\n    clone_1 = torch.ops.aten.clone.default(x_1)\n    select = torch.ops.aten.select.int(getitem, 0, 0)\n    mul = torch.ops.aten.mul.Tensor(clone, select);  clone = None\n    add = torch.ops.aten.add.Tensor(zeros_like, mul);  zeros_like = mul = None\n    select_1 = torch.ops.aten.select.int(getitem, 0, 1);  getitem = None\n    mul_1 = torch.ops.aten.mul.Tensor(clone_1, select_1);  clone_1 = None\n    add_1 = torch.ops.aten.add.Tensor(add, mul_1);  add = mul_1 = None\n    clone_2 = torch.ops.aten.clone.default(x_1)\n    clone_3 = torch.ops.aten.clone.default(x_1);  x_1 = None\n    select_2 = torch.ops.aten.select.int(getitem_1, 0, 0)\n    mul_2 = torch.ops.aten.mul.Tensor(clone_2, select_2);  clone_2 = None\n    add_2 = torch.ops.aten.add.Tensor(add_1, mul_2);  add_1 = mul_2 = None\n    select_3 = torch.ops.aten.select.int(getitem_1, 0, 1);  getitem_1 = None\n    mul_3 = torch.ops.aten.mul.Tensor(clone_3, select_3);  clone_3 = None\n    add_3 = torch.ops.aten.add.Tensor(add_2, mul_3);  add_2 = mul_3 = None\n    _to_copy = torch.ops.aten._to_copy.default(add_3, dtype = torch.float32);  add_3 = None\n    sum_1 = torch.ops.aten.sum.default(_to_copy);  _to_copy = None\n    ones_like = torch.ops.aten.ones_like.default(sum_1, pin_memory = False, memory_format = torch.preserve_format)\n    expand = torch.ops.aten.expand.default(ones_like, [64]);  ones_like = None\n    _to_copy_1 = torch.ops.aten._to_copy.default(expand, dtype = torch.bfloat16, layout = torch.strided, device = device(type='cuda', index=0));  expand = None\n    mul_4 = torch.ops.aten.mul.Tensor(_to_copy_1, select_3);  select_3 = None\n    mul_5 = torch.ops.aten.mul.Tensor(_to_copy_1, select_2);  select_2 = None\n    add_4 = torch.ops.aten.add.Tensor(mul_5, mul_4);  mul_5 = mul_4 = None\n    mul_6 = torch.ops.aten.mul.Tensor(_to_copy_1, select_1);  select_1 = None\n    mul_7 = torch.ops.aten.mul.Tensor(_to_copy_1, select);  _to_copy_1 = select = None\n    add_5 = torch.ops.aten.add.Tensor(mul_7, mul_6);  mul_7 = mul_6 = None\n    add_6 = torch.ops.aten.add.Tensor(add_4, add_5);  add_4 = add_5 = None\n    return (sum_1, add_6)\n    "
+  },
+  "compiler_policy": {
+    "emulate_precision_casts": true,
+    "eager_numerics.division_rounding": true
+  }
+}

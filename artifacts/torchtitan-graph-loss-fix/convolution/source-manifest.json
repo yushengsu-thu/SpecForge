@@ -1,0 +1,9 @@
+{
+  "source_base": "c70a5f413220e6ce68247afb528664986502300f",
+  "source_state": "uncommitted convolution-route fix; separate from earlier p2 benchmark",
+  "sha256": {
+    "specforge/modeling/draft/dflash2.py": "4d06b8a7ba078856aa87779a7f0e08b3308f1ef4bd00603060596defa3c27515",
+    "tests/test_modeling/test_dflash2_fused_conv.py": "f1163cf90281c8845f1bf043c8444f0fe5af608372e2eb73c6e5bfb1edde547e",
+    "specforge/modeling/draft/dflash2_conv_triton.py": "6522d94ac6eab93c9b651ddd4c636a979f601ae62fcc5a2fc836496620bc0291"
+  }
+}

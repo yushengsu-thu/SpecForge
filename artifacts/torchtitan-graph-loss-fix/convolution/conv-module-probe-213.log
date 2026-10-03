@@ -1,0 +1,14 @@
+/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/venv213/lib/python3.12/site-packages/torch/_dynamo/variables/functions.py:2590: UserWarning: Dynamo detected a call to a `functools.lru_cache`-wrapped function at 'dflash2.py:177'. Dynamo ignores the cache wrapper and directly traces the wrapped function. Silent incorrectness is only a *potential* risk, not something we have observed. Enable TORCH_LOGS=+dynamo for a DEBUG stack trace.
+
+This call originates from:
+  File "/scratch/specforge-torchtitan-20261003/SpecForge-titan-extensions/specforge/modeling/draft/dflash2.py", line 177, in _fused_convolution
+    fused = _load_fused_grouped_conv()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  torch._dynamo.utils.warn_once(msg)
+/scratch/specforge-torchtitan-20261003/venv213/lib/python3.12/site-packages/torch/_inductor/compile_fx.py:321: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+{"dtype": "torch.float32", "triton_operators": 0, "errors": {"prepared": {"bitwise": true, "relative_l2": 0.0, "max_abs": 0.0}, "finished": {"bitwise": true, "relative_l2": 0.0, "max_abs": 0.0}, "grad_inputs": {"bitwise": false, "relative_l2": 6.928851727493379e-08, "max_abs": 7.62939453125e-06}, "grad_mixer": {"bitwise": true, "relative_l2": 0.0, "max_abs": 0.0}, "grad_base_kernel": {"bitwise": false, "relative_l2": 9.054764418218684e-08, "max_abs": 2.288818359375e-05}, "grad_kernel_projection": {"bitwise": false, "relative_l2": 9.548751571610433e-08, "max_abs": 0.0001220703125}}}
+{"dtype": "torch.bfloat16", "triton_operators": 0, "errors": {"prepared": {"bitwise": true, "relative_l2": 0.0, "max_abs": 0.0}, "finished": {"bitwise": true, "relative_l2": 0.0, "max_abs": 0.0}, "grad_inputs": {"bitwise": false, "relative_l2": 0.0034722568801975493, "max_abs": 0.5}, "grad_mixer": {"bitwise": true, "relative_l2": 0.0, "max_abs": 0.0}, "grad_base_kernel": {"bitwise": false, "relative_l2": 0.0024698616909859562, "max_abs": 0.5625}, "grad_kernel_projection": {"bitwise": false, "relative_l2": 0.002968739462632873, "max_abs": 4.0}}}

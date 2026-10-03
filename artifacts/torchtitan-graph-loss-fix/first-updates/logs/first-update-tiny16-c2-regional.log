@@ -1,0 +1,268 @@
+W1003 05:28:08.737000 2054380 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:28:08.738000 2054379 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:28:08.764000 2054380 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1003 05:28:08.764000 2054379 venv/lib/python3.12/site-packages/torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/scratch/specforge-torchtitan-20261003/first-update-source-candidate2/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+/scratch/specforge-torchtitan-20261003/first-update-source-candidate2/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+  warnings.warn(
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:28:10,510 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 05:28:10,517 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:28:10,519 - root - WARNING - ENV[TORCH_NCCL_ASYNC_ERROR_HANDLING] = 1 will be overridden to 3 based on job config
+[titan] 2026-10-03 05:28:10,521 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 05:28:10,521 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 05:28:10,523 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 05:28:10,525 - root - INFO - Building device mesh with parallelism: pp=1, dp_replicate=1, dp_shard=2, cp=1, tp=1, ep=1
+[titan] 2026-10-03 05:28:10,529 - root - INFO - Successfully created meshes with active dimensions: ['batch', 'loss', 'fsdp']
+[titan] 2026-10-03 05:28:10,529 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 05:28:10,529 - root - INFO - [GC] Initial GC collection took 0.00 seconds
+[titan] 2026-10-03 05:28:10,530 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:28:10,530 - root - INFO - [34mModel specforge dflash2 [31msize: 118,720 total parameters[39m
+[titan] 2026-10-03 05:28:10,530 - root - INFO - Building specforge dflash2
+[titan] 2026-10-03 05:28:10,537 - root - INFO - CUDA capacity: NVIDIA H200 with 139.80GiB memory
+[titan] 2026-10-03 05:28:10,537 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:28:10,538 - root - INFO - [34mModel specforge dflash2 [31msize: 118,720 total parameters[39m
+[titan] 2026-10-03 05:28:10,552 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 05:28:10,553 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 05:28:10,560 - root - INFO - Applied Data Parallel (simple_fsdp) (dp mode=fully_shard) to the model
+[titan] 2026-10-03 05:28:10,560 - root - INFO - aot_fx_trace compile mode: graph capture will happen at training time
+[titan] 2026-10-03 05:28:11,930 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:28:11,930 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 05:28:11,930 - root - WARNING - Error running lspci: [Errno 2] No such file or directory: 'lspci', fallback to use device_name
+[titan] 2026-10-03 05:28:11,930 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 05:28:11,930 - root - INFO - Peak FLOPS used for computing MFU: 9.890e+14
+[titan] 2026-10-03 05:28:11,930 - root - INFO - CUDA memory usage for model: 0.00GiB(0.00%)
+[titan] 2026-10-03 05:28:11,930 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 05:28:11,931 - root - INFO - Optimizer AdamW (model_part=0): 36 params [.*] {'fused': True, 'foreach': False, 'lr': 0.0001, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0.0}
+[titan] 2026-10-03 05:28:11,931 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:28:11,931 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 128, total steps 2 (warmup 0)
+[titan] 2026-10-03 05:28:11,931 - root - WARNING - initial_load_model_only=True has no effect without an initial_load_path.
+[titan] 2026-10-03 05:28:11,931 - root - INFO - Trainer is initialized with local batch size 1, global batch size 4, gradient accumulation steps 2, sequence length 128, total steps 2 (warmup 0)
+[titan] 2026-10-03 05:28:11,931 - root - INFO - NUMA binding applied for GPU 0
+[titan] 2026-10-03 05:28:11,932 - root - INFO - NUMA binding applied for GPU 1
+[titan] 2026-10-03 05:28:12,409 - root - INFO - Training starts at step 1
+[titan] 2026-10-03 05:28:12,409 - root - INFO - Training starts at step 1
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/nn/attention/flex_attention.py:2596: UserWarning: flex_attention called without torch.compile() - this will use an unfused implementation that materializes the full scores matrix instead of generating a fused kernel.
+
+SOLUTION: Use torch.compile(flex_attention)(...)
+
+If you want to debug your score_mod/mask_mod, you can set:
+torch.nn.attention.flex_attention._FLEX_ATTENTION_DISABLE_COMPILE_DEBUG = True
+
+This will allow you to use print statements or breakpoints. Note: This doesn't work with the backwards pass and may produce incorrect results.
+  _warn_once(
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/nn/attention/flex_attention.py:2596: UserWarning: flex_attention called without torch.compile() - this will use an unfused implementation that materializes the full scores matrix instead of generating a fused kernel.
+
+SOLUTION: Use torch.compile(flex_attention)(...)
+
+If you want to debug your score_mod/mask_mod, you can set:
+torch.nn.attention.flex_attention._FLEX_ATTENTION_DISABLE_COMPILE_DEBUG = True
+
+This will allow you to use print statements or breakpoints. Note: This doesn't work with the backwards pass and may produce incorrect results.
+  _warn_once(
+[titan] 2026-10-03 05:28:14,545 - root - INFO - minimal_fx_tracer took 2.122s
+[titan] 2026-10-03 05:28:14,545 - root - INFO - Applying 12 graph passes:
+  1. functionalize_fused_kernels
+  2. eliminate_dead_code_pass
+  3. canonicalize_graph_pass
+  4. deduplicate_fsdp_unshard_chains_pass
+  5. tag_with_memory_policy_pass
+  6. apply_cpu_offload_pass
+  7. selective_activation_remat_pass
+  8. joint_transformer_block_bucketing_reordering_pass
+  9. annotate_flex_attention_for_regional_inductor_pass
+  10. regional_inductor_pass
+  11. insert_kernel_annotations_pass
+  12. cudagraph_pass
+[titan] 2026-10-03 05:28:14,626 - root - INFO - minimal_fx_tracer took 2.203s
+[titan] 2026-10-03 05:28:14,627 - root - INFO - Applying 12 graph passes:
+  1. functionalize_fused_kernels
+  2. eliminate_dead_code_pass
+  3. canonicalize_graph_pass
+  4. deduplicate_fsdp_unshard_chains_pass
+  5. tag_with_memory_policy_pass
+  6. apply_cpu_offload_pass
+  7. selective_activation_remat_pass
+  8. joint_transformer_block_bucketing_reordering_pass
+  9. annotate_flex_attention_for_regional_inductor_pass
+  10. regional_inductor_pass
+  11. insert_kernel_annotations_pass
+  12. cudagraph_pass
+[titan] 2026-10-03 05:28:16,330 - root - INFO - Eliminated dead code from the graph
+[titan] 2026-10-03 05:28:16,385 - root - INFO - Removed 76 identity view/reshape node(s) from the graph
+[titan] 2026-10-03 05:28:16,438 - root - INFO - Removed 80 back-to-back transpose node(s) from the graph
+[titan] 2026-10-03 05:28:16,445 - root - INFO - Eliminated dead code from the graph
+[titan] 2026-10-03 05:28:16,501 - root - INFO - Removed 76 identity view/reshape node(s) from the graph
+[titan] 2026-10-03 05:28:16,542 - root - INFO - Normalized 303 view op(s) to reshape
+[titan] 2026-10-03 05:28:16,554 - root - INFO - Removed 80 back-to-back transpose node(s) from the graph
+[titan] 2026-10-03 05:28:16,602 - root - INFO - Applied selective activation checkpointing (SAC) graph pass.
+[titan] 2026-10-03 05:28:16,602 - root - INFO -   Forced 4 nodes to MUST_SAVE at layer boundaries
+[titan] 2026-10-03 05:28:16,602 - root - INFO -   Layer non-layer: 13 MUST_SAVE, 58 RECOMPUTE
+[titan] 2026-10-03 05:28:16,602 - root - INFO -   Layer 0: 30 MUST_SAVE, 168 RECOMPUTE
+[titan] 2026-10-03 05:28:16,602 - root - INFO -   Layer 1: 29 MUST_SAVE, 170 RECOMPUTE
+[titan] 2026-10-03 05:28:16,667 - root - INFO - Normalized 303 view op(s) to reshape
+[titan] 2026-10-03 05:28:16,736 - root - INFO - Applied selective activation checkpointing (SAC) graph pass.
+[titan] 2026-10-03 05:28:16,736 - root - INFO -   Forced 4 nodes to MUST_SAVE at layer boundaries
+[titan] 2026-10-03 05:28:16,737 - root - INFO -   Layer non-layer: 13 MUST_SAVE, 58 RECOMPUTE
+[titan] 2026-10-03 05:28:16,737 - root - INFO -   Layer 0: 30 MUST_SAVE, 168 RECOMPUTE
+[titan] 2026-10-03 05:28:16,737 - root - INFO -   Layer 1: 29 MUST_SAVE, 170 RECOMPUTE
+[titan] 2026-10-03 05:28:17,277 - root - INFO - FSDP reorder: 5 overlap deps across 5 target nodes
+[titan] 2026-10-03 05:28:17,436 - root - INFO - FSDP reorder: 5 overlap deps across 5 target nodes
+Autotune Choices Stats:
+{"num_choices": 6, "num_triton_choices": 6, "best_kernel": "triton_flex_attention_5", "best_kernel_desc": "BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=64, BLOCK_N=64, FLOAT32_PRECISION=\"'ieee'\", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4", "best_time": 0.012927999719977379, "best_triton_pos": 0}
+AUTOTUNE flex_attention(1x4x32x16, 1x2x160x16, 1x2x160x16, 1x4x32, 1x4x32, 1x1x1, 1x1x1x2, 1x1x1, 1x1x1x2, 1x8, 1x8)
+strides: [2048, 16, 64, 1], [5120, 16, 32, 1], [5120, 16, 32, 1], [128, 32, 1], [128, 32, 1], [1, 1, 1], [2, 2, 2, 1], [1, 1, 1], [2, 2, 2, 1], [8, 1], [8, 1]
+dtypes: torch.bfloat16, torch.bfloat16, torch.bfloat16, torch.float32, torch.float32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int64, torch.bool
+  triton_flex_attention_5 0.0129 ms 100.0% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=64, BLOCK_N=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_4 0.0142 ms 91.0% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=64, BLOCK_N=128, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_2 0.0185 ms 69.8% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=128, BLOCK_N=128, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=2, num_warps=8
+  triton_flex_attention_3 0.0196 ms 66.1% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=128, BLOCK_N=128, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=1, num_warps=8
+  triton_flex_attention_0 0.0216 ms 59.8% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=128, BLOCK_N=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_1 0.0329 ms 39.3% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=128, BLOCK_N=128, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+SingleProcess AUTOTUNE benchmarking takes 0.2076 seconds and 1.8668 seconds precompiling for 6 choices
+Autotune Choices Stats:
+{"num_choices": 6, "num_triton_choices": 6, "best_kernel": "triton_flex_attention_5", "best_kernel_desc": "BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=64, BLOCK_N=64, FLOAT32_PRECISION=\"'ieee'\", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4", "best_time": 0.011935999616980553, "best_triton_pos": 0}
+AUTOTUNE flex_attention(1x4x32x16, 1x2x160x16, 1x2x160x16, 1x4x32, 1x4x32, 1x1x1, 1x1x1x2, 1x1x1, 1x1x1x2, 1x8, 1x8)
+strides: [2048, 16, 64, 1], [5120, 16, 32, 1], [5120, 16, 32, 1], [128, 32, 1], [128, 32, 1], [1, 1, 1], [2, 2, 2, 1], [1, 1, 1], [2, 2, 2, 1], [8, 1], [8, 1]
+dtypes: torch.bfloat16, torch.bfloat16, torch.bfloat16, torch.float32, torch.float32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int64, torch.bool
+  triton_flex_attention_5 0.0119 ms 100.0% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=64, BLOCK_N=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_4 0.0134 ms 89.2% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=64, BLOCK_N=128, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_2 0.0176 ms 67.7% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=128, BLOCK_N=128, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=2, num_warps=8
+  triton_flex_attention_3 0.0185 ms 64.5% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=128, BLOCK_N=128, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=1, num_warps=8
+  triton_flex_attention_0 0.0206 ms 58.0% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=128, BLOCK_N=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_1 0.0320 ms 37.3% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M=128, BLOCK_N=128, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+SingleProcess AUTOTUNE benchmarking takes 0.1357 seconds and 1.9711 seconds precompiling for 6 choices
+Autotune Choices Stats:
+{"num_choices": 12, "num_triton_choices": 12, "best_kernel": "triton_flex_attention_backward_17", "best_kernel_desc": "BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION=\"'ieee'\", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4", "best_time": 0.011231999844312668, "best_triton_pos": 0}
+AUTOTUNE flex_attention_backward(1x4x32x16, 1x2x160x16, 1x2x160x16, 1x4x32, 1x4x32, 1x4x32x16, 1x4x32x16, 1x2x160x16, 1x1x1, 1x1x1x2, 1x1x2, 1x1x2x1, 1x1x1, 1x1x1x2, 1x1x2, 1x1x2x1, 1x8, 1x8)
+strides: [2048, 16, 64, 1], [5120, 16, 32, 1], [5120, 16, 32, 1], [128, 32, 1], [128, 32, 1], [2048, 16, 64, 1], [2048, 16, 64, 1], [5120, 16, 32, 1], [1, 1, 1], [2, 2, 2, 1], [2, 2, 1], [2, 2, 1, 1], [1, 1, 1], [2, 2, 2, 1], [2, 2, 1], [2, 2, 1, 1], [8, 1], [8, 1]
+dtypes: torch.bfloat16, torch.bfloat16, torch.bfloat16, torch.float32, torch.float32, torch.bfloat16, torch.bfloat16, torch.bfloat16, torch.int32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int64, torch.bool
+  triton_flex_attention_backward_17 0.0112 ms 100.0% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_backward_19 0.0114 ms 98.6% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=5, num_warps=4
+  triton_flex_attention_backward_18 0.0117 ms 95.6% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=4, num_warps=4
+  triton_flex_attention_backward_13 0.0119 ms 94.4% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=32, BLOCK_N1=32, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_backward_23 0.0121 ms 92.9% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=64, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=5, num_warps=4
+  triton_flex_attention_backward_21 0.0124 ms 90.7% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=64, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_backward_22 0.0126 ms 89.3% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=64, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=4, num_warps=4
+  triton_flex_attention_backward_15 0.0128 ms 88.0% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=32, BLOCK_N1=32, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=5, num_warps=4
+  triton_flex_attention_backward_20 0.0131 ms 86.0% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=64, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=1, num_warps=4
+  triton_flex_attention_backward_16 0.0133 ms 84.6% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=1, num_warps=4
+SingleProcess AUTOTUNE benchmarking takes 0.2024 seconds and 2.3924 seconds precompiling for 12 choices
+Autotune Choices Stats:
+{"num_choices": 12, "num_triton_choices": 12, "best_kernel": "triton_flex_attention_backward_17", "best_kernel_desc": "BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION=\"'ieee'\", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4", "best_time": 0.011296000331640244, "best_triton_pos": 0}
+AUTOTUNE flex_attention_backward(1x4x32x16, 1x2x160x16, 1x2x160x16, 1x4x32, 1x4x32, 1x4x32x16, 1x4x32x16, 1x2x160x16, 1x1x1, 1x1x1x2, 1x1x2, 1x1x2x1, 1x1x1, 1x1x1x2, 1x1x2, 1x1x2x1, 1x8, 1x8)
+strides: [2048, 16, 64, 1], [5120, 16, 32, 1], [5120, 16, 32, 1], [128, 32, 1], [128, 32, 1], [2048, 16, 64, 1], [2048, 16, 64, 1], [5120, 16, 32, 1], [1, 1, 1], [2, 2, 2, 1], [2, 2, 1], [2, 2, 1, 1], [1, 1, 1], [2, 2, 2, 1], [2, 2, 1], [2, 2, 1, 1], [8, 1], [8, 1]
+dtypes: torch.bfloat16, torch.bfloat16, torch.bfloat16, torch.float32, torch.float32, torch.bfloat16, torch.bfloat16, torch.bfloat16, torch.int32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int32, torch.int64, torch.bool
+  triton_flex_attention_backward_17 0.0113 ms 100.0% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_backward_19 0.0113 ms 99.7% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=5, num_warps=4
+  triton_flex_attention_backward_18 0.0117 ms 96.7% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=4, num_warps=4
+  triton_flex_attention_backward_13 0.0117 ms 96.2% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=32, BLOCK_N1=32, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_backward_23 0.0122 ms 92.4% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=64, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=5, num_warps=4
+  triton_flex_attention_backward_21 0.0124 ms 91.5% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=64, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=3, num_warps=4
+  triton_flex_attention_backward_22 0.0125 ms 90.1% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=64, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=4, num_warps=4
+  triton_flex_attention_backward_15 0.0126 ms 89.4% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=32, BLOCK_N1=32, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=5, num_warps=4
+  triton_flex_attention_backward_20 0.0130 ms 87.2% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=64, BLOCK_M2=64, BLOCK_N1=64, BLOCK_N2=64, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=1, num_warps=4
+  triton_flex_attention_backward_12 0.0130 ms 86.9% BLOCKS_ARE_CONTIGUOUS=False, BLOCK_M1=32, BLOCK_M2=32, BLOCK_N1=32, BLOCK_N2=32, FLOAT32_PRECISION="'ieee'", GQA_SHARED_HEADS=2, HAS_FULL_BLOCKS=True, IS_DIVISIBLE=False, OUTPUT_LOGSUMEXP=True, OUTPUT_MAX=False, PRESCALE_QK=False, QK_HEAD_DIM=16, QK_HEAD_DIM_ROUNDED=16, ROWS_GUARANTEED_SAFE=False, SAFE_HEAD_DIM=True, SM_SCALE=0.25, SPARSE_KV_BLOCK_SIZE=128, SPARSE_Q_BLOCK_SIZE=128, USE_TMA=False, V_HEAD_DIM=16, V_HEAD_DIM_ROUNDED=16, WRITE_DQ=True, num_stages=1, num_warps=4
+SingleProcess AUTOTUNE benchmarking takes 0.2027 seconds and 2.4144 seconds precompiling for 12 choices
+[titan] 2026-10-03 05:28:27,490 - root - INFO - Applied cudagraph pass.
+[titan] 2026-10-03 05:28:27,490 - root - INFO - All 12 graph passes took 12.945s
+[titan] 2026-10-03 05:28:27,711 - root - INFO - Applied cudagraph pass.
+[titan] 2026-10-03 05:28:27,711 - root - INFO - All 12 graph passes took 13.084s
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.934000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank1]:W1003 05:28:28.935000 2054380 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.936000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.936000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.936000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.936000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.936000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.936000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.936000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.936000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+[rank0]:W1003 05:28:28.937000 2054379 venv/lib/python3.12/site-packages/torch/_library/opaque_object.py:314] is_opaque_value is deprecated, use is_custom_class_obj instead
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-regional/step1-before_clip.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-regional/step1-before_adam.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-regional/step1-after_adam.pt", "parameters": 36}
+[titan] 2026-10-03 05:28:29,214 - root - INFO - [31mstep:  1  [32mloss:  4.91068  [38;2;180;60;0mgrad_norm:  0.9104  [38;2;54;234;195mmemory:  0.09GiB(0.07%)  [34mtps: 14  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:28:29,214 - root - INFO - [31mstep:  1  [32mloss:  4.91068  [38;2;180;60;0mgrad_norm:  0.9104  [38;2;54;234;195mmemory:  0.09GiB(0.07%)  [34mtps: 14  [36mtflops: 0.00  [35mmfu: 0.00%[39m
+[titan] 2026-10-03 05:28:29,215 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+[titan] 2026-10-03 05:28:29,215 - root - INFO - Synchronizing and adjusting timeout for all ProcessGroups to 0:01:40
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-regional/step2-before_clip.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-regional/step2-before_adam.pt", "parameters": 36}
+{"correctness_snapshot": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-regional/step2-after_adam.pt", "parameters": 36}
+[titan] 2026-10-03 05:28:29,371 - root - INFO - Training completed
+[titan] 2026-10-03 05:28:29,371 - root - INFO - Sleeping 2 seconds for other ranks to complete
+[titan] 2026-10-03 05:28:31,371 - root - INFO - Training completed
+{
+  "output": "/scratch/specforge-torchtitan-20261003/first-update-tiny16-c2-regional.json",
+  "optimizer_step_seconds_mean": 0.154223270714283,
+  "optimizer_step_seconds_median": 0.154223270714283,
+  "optimizer_step_seconds_p95": 0.154223270714283,
+  "input_context_tokens_per_second": 3319.8621558775076
+}

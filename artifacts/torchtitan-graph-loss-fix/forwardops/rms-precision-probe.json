@@ -1,0 +1,173 @@
+[
+  {
+    "hidden_size": 2560,
+    "input_shape": [
+      1,
+      8192,
+      2560
+    ],
+    "bf16_compiled_vs_eager": {
+      "bitwise": false,
+      "different": 60,
+      "numel": 20971520,
+      "max_abs": 0.015625,
+      "relative_l2": 9.628877384031236e-06
+    },
+    "bf16_eager_vs_rounded_fp64": {
+      "bitwise": false,
+      "different": 99,
+      "numel": 20971520,
+      "max_abs": 0.015625,
+      "relative_l2": 1.1239149191808225e-05
+    },
+    "bf16_compiled_vs_rounded_fp64": {
+      "bitwise": false,
+      "different": 121,
+      "numel": 20971520,
+      "max_abs": 0.015625,
+      "relative_l2": 1.3959952122262774e-05
+    },
+    "variance_compiled_vs_eager": {
+      "bitwise": false,
+      "different": 3374,
+      "numel": 8192,
+      "max_abs": 2.384185791015625e-07,
+      "relative_l2": 6.899725336820485e-08
+    },
+    "variance_eager_vs_fp64": {
+      "bitwise": false,
+      "different": 8192,
+      "numel": 8192,
+      "max_abs": 1.8468378892855242e-07,
+      "relative_l2": 5.1674002477323e-08
+    },
+    "variance_compiled_vs_fp64": {
+      "bitwise": false,
+      "different": 8192,
+      "numel": 8192,
+      "max_abs": 1.8330344753181294e-07,
+      "relative_l2": 5.187046220952434e-08
+    },
+    "post_compiled_vs_eager_with_same_variance": {
+      "bitwise": true,
+      "different": 0,
+      "numel": 20971520,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "eager_post_of_compiled_variance_vs_compiled_norm": {
+      "bitwise": true,
+      "different": 0,
+      "numel": 20971520,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "fp32_compiled_vs_eager": {
+      "bitwise": false,
+      "different": 4670234,
+      "numel": 20971520,
+      "max_abs": 9.5367431640625e-07,
+      "relative_l2": 4.794163718606929e-08
+    },
+    "fp32_eager_vs_fp64": {
+      "bitwise": false,
+      "different": 20971519,
+      "numel": 20971520,
+      "max_abs": 7.397759897997958e-07,
+      "relative_l2": 5.1212830988153224e-08
+    },
+    "fp32_compiled_vs_fp64": {
+      "bitwise": false,
+      "different": 20971519,
+      "numel": 20971520,
+      "max_abs": 7.265236074971426e-07,
+      "relative_l2": 5.173534321435049e-08
+    }
+  },
+  {
+    "hidden_size": 128,
+    "input_shape": [
+      1,
+      2048,
+      32,
+      128
+    ],
+    "bf16_compiled_vs_eager": {
+      "bitwise": false,
+      "different": 13,
+      "numel": 8388608,
+      "max_abs": 0.015625,
+      "relative_l2": 7.63870284565542e-06
+    },
+    "bf16_eager_vs_rounded_fp64": {
+      "bitwise": false,
+      "different": 46,
+      "numel": 8388608,
+      "max_abs": 0.015625,
+      "relative_l2": 1.4286493378058362e-05
+    },
+    "bf16_compiled_vs_rounded_fp64": {
+      "bitwise": false,
+      "different": 49,
+      "numel": 8388608,
+      "max_abs": 0.015625,
+      "relative_l2": 1.3061190210892509e-05
+    },
+    "variance_compiled_vs_eager": {
+      "bitwise": false,
+      "different": 21437,
+      "numel": 65536,
+      "max_abs": 2.384185791015625e-07,
+      "relative_l2": 5.2279219636687874e-08
+    },
+    "variance_eager_vs_fp64": {
+      "bitwise": false,
+      "different": 65524,
+      "numel": 65536,
+      "max_abs": 1.6213743947446346e-07,
+      "relative_l2": 4.215055082685076e-08
+    },
+    "variance_compiled_vs_fp64": {
+      "bitwise": false,
+      "different": 65521,
+      "numel": 65536,
+      "max_abs": 1.8908758647739887e-07,
+      "relative_l2": 4.224577014909111e-08
+    },
+    "post_compiled_vs_eager_with_same_variance": {
+      "bitwise": true,
+      "different": 0,
+      "numel": 8388608,
+      "max_abs": 0.0,
+      "relative_l2": 0.0
+    },
+    "eager_post_of_compiled_variance_vs_compiled_norm": {
+      "bitwise": false,
+      "different": 16,
+      "numel": 8388608,
+      "max_abs": 0.015625,
+      "relative_l2": 7.928986980628534e-06
+    },
+    "fp32_compiled_vs_eager": {
+      "bitwise": false,
+      "different": 19800,
+      "numel": 8388608,
+      "max_abs": 4.76837158203125e-07,
+      "relative_l2": 4.861546518625703e-09
+    },
+    "fp32_eager_vs_fp64": {
+      "bitwise": false,
+      "different": 8388607,
+      "numel": 8388608,
+      "max_abs": 7.007745983500513e-07,
+      "relative_l2": 5.008250590288034e-08
+    },
+    "fp32_compiled_vs_fp64": {
+      "bitwise": false,
+      "different": 8388607,
+      "numel": 8388608,
+      "max_abs": 7.007745983500513e-07,
+      "relative_l2": 5.007049793786305e-08
+    }
+  }
+]

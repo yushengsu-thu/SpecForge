@@ -1,0 +1,451 @@
+{
+  "torch": "2.13.0+cu130",
+  "cases": [
+    {
+      "hidden": 256,
+      "rows": 512,
+      "initial_identity": true,
+      "comparisons": {
+        "eager_aten": {
+          "against_fused": {
+            "forward": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.0625,
+              "relative_l2": 0.0026390149067492476,
+              "bitwise": false,
+              "different_elements": 6527,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.25,
+              "relative_l2": 0.002625667171822384,
+              "bitwise": false,
+              "different_elements": 218,
+              "elements": 512
+            }
+          },
+          "against_fp64": {
+            "forward": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.05663871765136719,
+              "relative_l2": 0.0023766395997613823,
+              "bitwise": false,
+              "different_elements": 15871,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.21482306718826294,
+              "relative_l2": 0.0023827572687002544,
+              "bitwise": false,
+              "different_elements": 512,
+              "elements": 512
+            }
+          }
+        },
+        "compiled_aten": {
+          "against_fused": {
+            "forward": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 512
+            }
+          },
+          "against_fp64": {
+            "forward": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.04387092590332031,
+              "relative_l2": 0.0016730809459941215,
+              "bitwise": false,
+              "different_elements": 15865,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.21482306718826294,
+              "relative_l2": 0.0016471277544351584,
+              "bitwise": false,
+              "different_elements": 512,
+              "elements": 512
+            }
+          }
+        },
+        "compiled_fused": {
+          "against_fused": {
+            "forward": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 512
+            }
+          },
+          "against_fp64": {
+            "forward": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.04387092590332031,
+              "relative_l2": 0.0016730809459941215,
+              "bitwise": false,
+              "different_elements": 15865,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.21482306718826294,
+              "relative_l2": 0.0016471277544351584,
+              "bitwise": false,
+              "different_elements": 512,
+              "elements": 512
+            }
+          }
+        }
+      },
+      "fused_against_fp64": {
+        "forward": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "bitwise": true,
+          "different_elements": 0,
+          "elements": 131072
+        },
+        "grad_x": {
+          "max_abs": 0.0,
+          "relative_l2": 0.0,
+          "bitwise": true,
+          "different_elements": 0,
+          "elements": 131072
+        },
+        "grad_delta": {
+          "max_abs": 0.04387092590332031,
+          "relative_l2": 0.0016730809459941215,
+          "bitwise": false,
+          "different_elements": 15865,
+          "elements": 16384
+        },
+        "grad_base": {
+          "max_abs": 0.21482306718826294,
+          "relative_l2": 0.0016471277544351584,
+          "bitwise": false,
+          "different_elements": 512,
+          "elements": 512
+        }
+      }
+    },
+    {
+      "hidden": 256,
+      "rows": 512,
+      "initial_identity": false,
+      "comparisons": {
+        "eager_aten": {
+          "against_fused": {
+            "forward": {
+              "max_abs": 0.001953125,
+              "relative_l2": 0.0033775098223068254,
+              "bitwise": false,
+              "different_elements": 53264,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.001953125,
+              "relative_l2": 0.0033944299222277447,
+              "bitwise": false,
+              "different_elements": 53104,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.0625,
+              "relative_l2": 0.0026390149067492476,
+              "bitwise": false,
+              "different_elements": 6527,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.25,
+              "relative_l2": 0.002625667171822384,
+              "bitwise": false,
+              "different_elements": 218,
+              "elements": 512
+            }
+          },
+          "against_fp64": {
+            "forward": {
+              "max_abs": 0.0018546618521213531,
+              "relative_l2": 0.002981143692161548,
+              "bitwise": false,
+              "different_elements": 130584,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0015206336975097656,
+              "relative_l2": 0.002973284001752174,
+              "bitwise": false,
+              "different_elements": 130546,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.05663871765136719,
+              "relative_l2": 0.0023766395997613823,
+              "bitwise": false,
+              "different_elements": 15871,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.21482306718826294,
+              "relative_l2": 0.0023827572687002544,
+              "bitwise": false,
+              "different_elements": 512,
+              "elements": 512
+            }
+          }
+        },
+        "compiled_aten": {
+          "against_fused": {
+            "forward": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 512
+            }
+          },
+          "against_fp64": {
+            "forward": {
+              "max_abs": 0.000896453857421875,
+              "relative_l2": 0.0016554128291593293,
+              "bitwise": false,
+              "different_elements": 130042,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0009405612945556641,
+              "relative_l2": 0.0016722513882075278,
+              "bitwise": false,
+              "different_elements": 130020,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.04387092590332031,
+              "relative_l2": 0.0016730809459941215,
+              "bitwise": false,
+              "different_elements": 15865,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.21482306718826294,
+              "relative_l2": 0.0016471277544351584,
+              "bitwise": false,
+              "different_elements": 512,
+              "elements": 512
+            }
+          }
+        },
+        "compiled_fused": {
+          "against_fused": {
+            "forward": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.0,
+              "relative_l2": 0.0,
+              "bitwise": true,
+              "different_elements": 0,
+              "elements": 512
+            }
+          },
+          "against_fp64": {
+            "forward": {
+              "max_abs": 0.000896453857421875,
+              "relative_l2": 0.0016554128291593293,
+              "bitwise": false,
+              "different_elements": 130042,
+              "elements": 131072
+            },
+            "grad_x": {
+              "max_abs": 0.0009405612945556641,
+              "relative_l2": 0.0016722513882075278,
+              "bitwise": false,
+              "different_elements": 130020,
+              "elements": 131072
+            },
+            "grad_delta": {
+              "max_abs": 0.04387092590332031,
+              "relative_l2": 0.0016730809459941215,
+              "bitwise": false,
+              "different_elements": 15865,
+              "elements": 16384
+            },
+            "grad_base": {
+              "max_abs": 0.21482306718826294,
+              "relative_l2": 0.0016471277544351584,
+              "bitwise": false,
+              "different_elements": 512,
+              "elements": 512
+            }
+          }
+        }
+      },
+      "fused_against_fp64": {
+        "forward": {
+          "max_abs": 0.000896453857421875,
+          "relative_l2": 0.0016554128291593293,
+          "bitwise": false,
+          "different_elements": 130042,
+          "elements": 131072
+        },
+        "grad_x": {
+          "max_abs": 0.0009405612945556641,
+          "relative_l2": 0.0016722513882075278,
+          "bitwise": false,
+          "different_elements": 130020,
+          "elements": 131072
+        },
+        "grad_delta": {
+          "max_abs": 0.04387092590332031,
+          "relative_l2": 0.0016730809459941215,
+          "bitwise": false,
+          "different_elements": 15865,
+          "elements": 16384
+        },
+        "grad_base": {
+          "max_abs": 0.21482306718826294,
+          "relative_l2": 0.0016471277544351584,
+          "bitwise": false,
+          "different_elements": 512,
+          "elements": 512
+        }
+      }
+    }
+  ]
+}

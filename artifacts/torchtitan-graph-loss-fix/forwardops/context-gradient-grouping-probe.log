@@ -1,0 +1,67 @@
+/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/autograd/graph.py:1072: UserWarning: Attempting to run cuBLAS, but there was no current CUDA context! Attempting to set the primary context... (Triggered internally at /__w/pytorch/pytorch/aten/src/ATen/cuda/CublasHandlePool.cpp:410.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/scratch/specforge-torchtitan-20261003/context_gradient_grouping_probe.py:20: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  return dict(bitwise=bool(torch.equal(found,wanted)),different=int(torch.count_nonzero(d)),numel=d.numel(),max_abs=float(d.abs().max()),relative_l2=float(d.norm()/wanted.double().norm()))
+{
+  "native_block_vs_eager": [
+    {
+      "bitwise": false,
+      "different": 157,
+      "numel": 512,
+      "max_abs": 0.125,
+      "relative_l2": 0.0027167874731950964
+    },
+    {
+      "bitwise": false,
+      "different": 144,
+      "numel": 512,
+      "max_abs": 0.125,
+      "relative_l2": 0.002493399723237859
+    },
+    {
+      "bitwise": false,
+      "different": 219,
+      "numel": 512,
+      "max_abs": 0.25,
+      "relative_l2": 0.0036649250339224368
+    }
+  ],
+  "full_joint_vs_eager": [
+    {
+      "bitwise": false,
+      "different": 157,
+      "numel": 512,
+      "max_abs": 0.125,
+      "relative_l2": 0.0027167874731950964
+    },
+    {
+      "bitwise": false,
+      "different": 144,
+      "numel": 512,
+      "max_abs": 0.125,
+      "relative_l2": 0.002493399723237859
+    },
+    {
+      "bitwise": false,
+      "different": 221,
+      "numel": 512,
+      "max_abs": 0.25,
+      "relative_l2": 0.003530576303359189
+    }
+  ],
+  "manual_grouped_vs_native": {
+    "bitwise": false,
+    "different": 153,
+    "numel": 512,
+    "max_abs": 0.125,
+    "relative_l2": 0.002727366669442501
+  },
+  "manual_grouped_vs_eager": {
+    "bitwise": false,
+    "different": 156,
+    "numel": 512,
+    "max_abs": 0.25,
+    "relative_l2": 0.0029127990149061893
+  }
+}

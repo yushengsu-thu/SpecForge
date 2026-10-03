@@ -1,0 +1,27 @@
+{
+  "python": "3.12.3",
+  "packages": {
+    "torch": "2.14.0",
+    "triton": "3.8.0",
+    "torchtitan": "0.3.0"
+  },
+  "source_sha256": {
+    "/scratch/specforge-torchtitan-20261003/selector_index_repeat_probe.py": "6aac199c17c190412ecb989529754498031fc2613b08ab4a51da73703407304f",
+    "/scratch/specforge-torchtitan-20261003/audit_graph_lifecycle.py": "eac047bb347744d2f869f3967a0fb2623ddf253476b78b28069dff918ecbe12d",
+    "/scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/_inductor/lowering.py": "c2ea8692e9948b82175cf8fc3ad9fa67e98b04c9b9e1fba5ae2ac77902d18e0c"
+  },
+  "extracted_checkpoint_sha256": {
+    "cut-step-1.pt": "937d0b14aa2df40eed9d5d3131041ef26eed4dc27c31d36cf5aee7527bdda70c",
+    "eval-step-1.pt": "5ee35579b54968ba7df40975e136c3129ddc3316377c86c1fb4fe114dd70cb58",
+    "eval-step-2.pt": "cecb2c1104bb4f667cc65000c8e881a13790ae4c8cae57acc43bd3018c28c856",
+    "eval-step-3.pt": "e024d4dd352e28dbc85d9c9a7f22b0fb1d3b4eea7dbd843a84ab1f9d5831ec4d",
+    "full-repeat-step-1.pt": "a7d9b3f11a3e08eada76c95f30f704a596f48b6f42f95482efd8e35d73af2251",
+    "full-repeat-step-2.pt": "d2f4eddaef101e2de4587c041714b05fa36561d9abf871ebb7c1caeccaa15327",
+    "full-repeat-step-3.pt": "e866c4fb3349eef1379f1d5bda51b98da49d5a28a4e765c64c59da9c799a53a3",
+    "full-step-1.pt": "b0b3e4951b4027dcae8736fabea9aafc5701a8cb8eb586882c6616dd99653433",
+    "full-step-2.pt": "46212d849347e5a5212de8e976957aee24cf1a2ffce8def80eadff42bae80f20",
+    "full-step-3.pt": "296db4f276130954765f7b9a6b83fc27b6c990caee94281b698e1d34ffc38665",
+    "resume-step-2.pt": "14540a32a828bd1e0aa5ef70d2f0878f344abb1988d91ca59b72773cf6caad5c",
+    "resume-step-3.pt": "89c37b6a686dc0680f56818ed09c2c9e788bd53e98ad7a856e35d0a64887b974"
+  }
+}

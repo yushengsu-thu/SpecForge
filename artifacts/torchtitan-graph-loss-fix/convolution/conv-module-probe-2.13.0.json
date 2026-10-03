@@ -1,0 +1,74 @@
+[
+  {
+    "dtype": "torch.float32",
+    "triton_operators": 0,
+    "errors": {
+      "prepared": {
+        "bitwise": true,
+        "relative_l2": 0.0,
+        "max_abs": 0.0
+      },
+      "finished": {
+        "bitwise": true,
+        "relative_l2": 0.0,
+        "max_abs": 0.0
+      },
+      "grad_inputs": {
+        "bitwise": false,
+        "relative_l2": 6.928851727493379e-08,
+        "max_abs": 7.62939453125e-06
+      },
+      "grad_mixer": {
+        "bitwise": true,
+        "relative_l2": 0.0,
+        "max_abs": 0.0
+      },
+      "grad_base_kernel": {
+        "bitwise": false,
+        "relative_l2": 9.054764418218684e-08,
+        "max_abs": 2.288818359375e-05
+      },
+      "grad_kernel_projection": {
+        "bitwise": false,
+        "relative_l2": 9.548751571610433e-08,
+        "max_abs": 0.0001220703125
+      }
+    }
+  },
+  {
+    "dtype": "torch.bfloat16",
+    "triton_operators": 0,
+    "errors": {
+      "prepared": {
+        "bitwise": true,
+        "relative_l2": 0.0,
+        "max_abs": 0.0
+      },
+      "finished": {
+        "bitwise": true,
+        "relative_l2": 0.0,
+        "max_abs": 0.0
+      },
+      "grad_inputs": {
+        "bitwise": false,
+        "relative_l2": 0.0034722568801975493,
+        "max_abs": 0.5
+      },
+      "grad_mixer": {
+        "bitwise": true,
+        "relative_l2": 0.0,
+        "max_abs": 0.0
+      },
+      "grad_base_kernel": {
+        "bitwise": false,
+        "relative_l2": 0.0024698616909859562,
+        "max_abs": 0.5625
+      },
+      "grad_kernel_projection": {
+        "bitwise": false,
+        "relative_l2": 0.002968739462632873,
+        "max_abs": 4.0
+      }
+    }
+  }
+]

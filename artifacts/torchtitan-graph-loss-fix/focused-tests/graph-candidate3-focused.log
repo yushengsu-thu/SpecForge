@@ -1,0 +1,54 @@
+............................................................. [ 67%]
+.ssssssss.................... [100%]
+=============================== warnings summary ===============================
+specforge/modeling/draft/llama3_eagle.py:33
+  /scratch/specforge-torchtitan-20261003/graph-candidate3-focused/specforge/modeling/draft/llama3_eagle.py:33: UserWarning: flash_attn is not found, falling back to flex_attention. Please install flash_attn if you want to use the flash attention backend.
+    warnings.warn(
+
+tests/test_runtime/test_cli_config_build.py::TestCliConfigBuild::test_config_build_matches_programmatic_and_trains
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/fsdp/fully_sharded_data_parallel.py:478: UserWarning: FSDP is switching to use `NO_SHARD` instead of ShardingStrategy.SHARD_GRAD_OP since the world size is 1.
+    _init_core_state(
+
+tests/test_runtime/test_cli_config_build.py::TestCliConfigBuild::test_config_build_matches_programmatic_and_trains
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/optim/lr_scheduler.py:1426: UserWarning: To get the last learning rate computed by the scheduler, please use `get_last_lr()`.
+    _warn_get_lr_called_within_step(self)
+
+tests/test_runtime/test_cli_config_build.py::TestCliConfigBuild::test_config_build_matches_programmatic_and_trains
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/nn/attention/flex_attention.py:2596: UserWarning: flex_attention called without torch.compile() - this will use an unfused implementation that materializes the full scores matrix instead of generating a fused kernel.
+  
+  SOLUTION: Use torch.compile(flex_attention)(...)
+  
+  If you want to debug your score_mod/mask_mod, you can set:
+  torch.nn.attention.flex_attention._FLEX_ATTENTION_DISABLE_COMPILE_DEBUG = True
+  
+  This will allow you to use print statements or breakpoints. Note: This doesn't work with the backwards pass and may produce incorrect results.
+    _warn_once(
+
+tests/test_runtime/test_cli_config_build.py::TestCliConfigBuild::test_config_build_matches_programmatic_and_trains
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/fsdp/fully_sharded_data_parallel.py:821: FutureWarning: FSDP.state_dict_type() and FSDP.set_state_dict_type() are being deprecated. Please use APIs, get_state_dict() and set_state_dict(), which can support different parallelisms, FSDP1, FSDP2, DDP. API doc: https://pytorch.org/docs/stable/distributed.checkpoint.html#torch.distributed.checkpoint.state_dict.get_state_dict .Tutorial: https://pytorch.org/tutorials/recipes/distributed_checkpoint_recipe.html .
+    prev_state_dict_settings = FullyShardedDataParallel.set_state_dict_type(
+
+tests/test_runtime/test_cli_config_build.py::TestCliConfigBuild::test_config_build_matches_programmatic_and_trains
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/utils/_contextlib.py:124: UserWarning: When using ``NO_SHARD`` for ``ShardingStrategy``, full_state_dict will be returned.
+    return func(*args, **kwargs)
+
+tests/test_runtime/test_cli_config_build.py::TestCliConfigBuild::test_config_build_matches_programmatic_and_trains
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/fsdp/fully_sharded_data_parallel.py:828: FutureWarning: FSDP.state_dict_type() and FSDP.set_state_dict_type() are being deprecated. Please use APIs, get_state_dict() and set_state_dict(), which can support different parallelisms, FSDP1, FSDP2, DDP. API doc: https://pytorch.org/docs/stable/distributed.checkpoint.html#torch.distributed.checkpoint.state_dict.get_state_dict .Tutorial: https://pytorch.org/tutorials/recipes/distributed_checkpoint_recipe.html .
+    FullyShardedDataParallel.set_state_dict_type(
+
+tests/test_runtime/test_cli_config_build.py::TestCliConfigBuild::test_config_build_matches_programmatic_and_trains
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+    return func(*args, **kwargs)
+
+tests/test_modeling/test_dflash2_fused_conv.py::DFlash2FusedConvParityTest::test_compile_preserves_fused_prepare_finish_and_gradients
+  /scratch/specforge-torchtitan-20261003/venv/lib/python3.12/site-packages/torch/_dynamo/variables/functions.py:2762: UserWarning: Dynamo detected a call to a `functools.lru_cache`-wrapped function at 'dflash2.py:177'. Dynamo ignores the cache wrapper and directly traces the wrapped function. Silent incorrectness is only a *potential* risk, not something we have observed. Enable TORCH_LOGS=+dynamo for a DEBUG stack trace.
+  
+  This call originates from:
+    File "/scratch/specforge-torchtitan-20261003/graph-candidate3-focused/specforge/modeling/draft/dflash2.py", line 177, in _fused_convolution
+      fused = _load_fused_grouped_conv()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  
+    torch._dynamo.utils.warn_once(msg)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+82 passed, 8 skipped, 9 warnings, 306 subtests passed in 44.07s
