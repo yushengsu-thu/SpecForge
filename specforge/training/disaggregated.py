@@ -438,6 +438,7 @@ def _build_offline(
 ):
     from specforge.training.assembly import (
         TrainingRun,
+        _backend_options,
         _dataloader_num_workers,
         _profiling_options,
     )
@@ -540,6 +541,8 @@ def _build_offline(
         optimizer_factory=optimizer_factory(cfg),
         training_backend=cfg.training.backend,
         fsdp_sharding=cfg.training.fsdp_sharding,
+        backend_options=_backend_options(cfg),
+        static_shapes=cfg.training.static_shapes,
         run_id=cfg.run_id,
         output_dir=cfg.output_dir,
         ttt_length=cfg.training.ttt_length,
@@ -604,6 +607,7 @@ def _build_online(
 ):
     from specforge.training.assembly import (
         TrainingRun,
+        _backend_options,
         _dataloader_num_workers,
         _load_input_tools,
         _profiling_options,
@@ -821,6 +825,9 @@ def _build_online(
         optimizer_factory=optimizer_factory(cfg),
         training_backend=cfg.training.backend,
         fsdp_sharding=cfg.training.fsdp_sharding,
+        backend_options=_backend_options(cfg),
+        static_shapes=cfg.training.static_shapes,
+        max_len=cfg.data.max_length,
         run_id=cfg.run_id,
         output_dir=cfg.output_dir,
         batch_size=cfg.training.batch_size,
