@@ -126,6 +126,10 @@ def write_features(algo, feat_dir, n, seq, shapes, rank, world, variable_mask=Fa
 
 def main():
     args = parse_args()
+    args.bucket_lengths = None
+    if args.shape_buckets:
+        args.bucket_lengths = sorted({int(b) for b in args.shape_buckets.split(",")} | {int(args.seq_len)})
+        args.static_shapes = True  # buckets are static shapes with a few lengths; the anchor count stays fixed
     if args.draft_config is None:
         args.draft_config = _default_draft_config(args.algo)
     os.environ.setdefault("SPECFORGE_DEVICE", "cuda")
@@ -217,10 +221,7 @@ def main():
             if missing or "backend_options" not in sig:
                 raise SystemExit(f"this checkout cannot run options {requested}: missing {missing}")
             kwargs["backend_options"] = BackendOptions(**{k: v for k, v in requested.items() if k in fields})
-        buckets = None
-        if args.shape_buckets:
-            buckets = sorted({int(b) for b in args.shape_buckets.split(",")} | {int(args.seq_len)})
-            args.static_shapes = True
+        buckets = args.bucket_lengths
         if args.static_shapes:
             if "static_shapes" not in sig:
                 raise SystemExit("this checkout has no static_shapes")
