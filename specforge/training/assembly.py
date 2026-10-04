@@ -536,6 +536,11 @@ def _profiling_options(cfg: Config):
     )
 
 
+def _backend_options(cfg: Config) -> BackendOptions:
+    """``training.*`` -> typed backend options, shared by every launch path."""
+    return BackendOptions(shard_frozen_tables=cfg.training.shard_frozen_tables)
+
+
 def _common_launch_kwargs(
     cfg: Config,
     bundle: ModelBundle,
@@ -556,7 +561,7 @@ def _common_launch_kwargs(
         optimizer_factory=_optimizer_factory(cfg),
         training_backend=t.backend,
         fsdp_sharding=t.fsdp_sharding,
-        backend_options=BackendOptions(shard_frozen_tables=t.shard_frozen_tables),
+        backend_options=_backend_options(cfg),
         run_id=cfg.run_id,
         output_dir=cfg.output_dir,
         batch_size=t.batch_size,
