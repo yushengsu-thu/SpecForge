@@ -62,7 +62,8 @@ def parse_args():
     p.add_argument("--static-shapes", action="store_true", help="training.static_shapes: pad every batch to --seq-len and keep num_anchors anchors per sample")
     p.add_argument("--compile-dynamic", action="store_true", help="BackendOptions.compile_dynamic=True when the checkout has it")
     p.add_argument("--variable-mask", action="store_true", help="mask a random prefix (20-80%%) of every sample so the valid-anchor count varies per micro-batch, like real conversations")
-    p.add_argument("--variable-length", action="store_true", help="give every sample a random length (25-100%% of --seq-len) so pad-to-longest batches change shape, like real conversations")
+    p.add_argument("--variable-length", action="store_true", help="give every sample a random length (--length-range of --seq-len) so pad-to-longest batches change shape, like real conversations")
+    p.add_argument("--length-range", default="0.25,1.0", help="lo,hi fractions of --seq-len for --variable-length (uniform)")
     p.add_argument("--shape-buckets", default=None, help="comma-separated training.static_shape_buckets (multiples of 128, <= --seq-len); implies --static-shapes semantics for padding")
     p.add_argument("--save-interval", type=int, default=0)
     p.add_argument("--seed", type=int, default=0)
@@ -82,7 +83,7 @@ def _default_draft_config(algo):
     }[algo]
 
 
-def write_features(algo, feat_dir, n, seq, shapes, rank, world, variable_mask=False, variable_length=False):
+def write_features(algo, feat_dir, n, seq, shapes, rank, world, variable_mask=False, variable_length=False, length_range=(0.25, 1.0)):
     """Rank-sharded generation of synthetic offline feature files."""
     os.makedirs(feat_dir, exist_ok=True)
     done_marker = os.path.join(feat_dir, "DONE")
@@ -95,7 +96,8 @@ def write_features(algo, feat_dir, n, seq, shapes, rank, world, variable_mask=Fa
             continue
         full = seq
         if variable_length:
-            seq = int(torch.randint(max(32, full // 4), full + 1, (1,), generator=g))
+            lo = max(32, int(full * length_range[0])); hi = max(lo, int(full * length_range[1]))
+            seq = int(torch.randint(lo, hi + 1, (1,), generator=g))
         input_ids = torch.randint(0, shapes["vocab"], (seq,), generator=g)
         loss_mask = torch.ones(seq, dtype=torch.long)
         if variable_mask:
@@ -165,9 +167,10 @@ def main():
                     raise SystemExit("this checkout has no static_anchor_count")
                 model.static_anchor_count = True
             head = None
-        suffix = ("-varmask" if args.variable_mask else "") + ("-varlen" if args.variable_length else "")
+        lr = tuple(float(x) for x in args.length_range.split(","))
+        suffix = ("-varmask" if args.variable_mask else "") + ((f"-varlen{int(lr[0]*100)}" if lr != (0.25, 1.0) else "-varlen") if args.variable_length else "")
         feat_dir = os.path.join(args.data_root, f"{args.algo}-seq{args.seq_len}-n{args.samples}{suffix}")
-        write_features(args.algo, feat_dir, args.samples, args.seq_len, shapes, rank, world, variable_mask=args.variable_mask, variable_length=args.variable_length)
+        write_features(args.algo, feat_dir, args.samples, args.seq_len, shapes, rank, world, variable_mask=args.variable_mask, variable_length=args.variable_length, length_range=lr)
 
         def optimizer_factory(module):
             return BF16Optimizer(module, lr=1e-4, max_grad_norm=0.5, warmup_ratio=0.0, total_steps=10_000)
