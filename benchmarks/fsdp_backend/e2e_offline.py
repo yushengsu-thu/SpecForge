@@ -59,6 +59,7 @@ def parse_args():
     p.add_argument("--fp8-linear", action="store_true")
     p.add_argument("--shard-frozen-tables", action="store_true")
     p.add_argument("--checkpoint-async", action="store_true")
+    p.add_argument("--static-shapes", action="store_true", help="training.static_shapes: pad every batch to --seq-len and keep num_anchors anchors per sample")
     p.add_argument("--compile-dynamic", action="store_true", help="BackendOptions.compile_dynamic=True when the checkout has it")
     p.add_argument("--variable-mask", action="store_true", help="mask a random prefix (20-80%%) of every sample so the valid-anchor count varies per micro-batch, like real conversations")
     p.add_argument("--save-interval", type=int, default=0)
@@ -150,6 +151,10 @@ def main():
             model, head, shapes = build_eagle3(args, device, workdir, rank)
         else:
             model, shapes = build_dflash_family(args, device, args.algo)
+            if args.static_shapes:
+                if not hasattr(model, "static_anchor_count"):
+                    raise SystemExit("this checkout has no static_anchor_count")
+                model.static_anchor_count = True
             head = None
         suffix = "-varmask" if args.variable_mask else ""
         feat_dir = os.path.join(args.data_root, f"{args.algo}-seq{args.seq_len}-n{args.samples}{suffix}")
@@ -207,6 +212,10 @@ def main():
             if missing or "backend_options" not in sig:
                 raise SystemExit(f"this checkout cannot run options {requested}: missing {missing}")
             kwargs["backend_options"] = BackendOptions(**{k: v for k, v in requested.items() if k in fields})
+        if args.static_shapes:
+            if "static_shapes" not in sig:
+                raise SystemExit("this checkout has no static_shapes")
+            kwargs["static_shapes"] = True
         if args.checkpoint_async:
             if "checkpoint_async" not in sig:
                 raise SystemExit("this checkout has no checkpoint_async")
