@@ -59,6 +59,8 @@ def parse_args():
     p.add_argument("--fp8-linear", action="store_true")
     p.add_argument("--shard-frozen-tables", action="store_true")
     p.add_argument("--checkpoint-async", action="store_true")
+    p.add_argument("--compile-dynamic", action="store_true", help="BackendOptions.compile_dynamic=True when the checkout has it")
+    p.add_argument("--variable-mask", action="store_true", help="mask a random prefix (20-80%%) of every sample so the valid-anchor count varies per micro-batch, like real conversations")
     p.add_argument("--save-interval", type=int, default=0)
     p.add_argument("--seed", type=int, default=0)
     return p.parse_args()
@@ -77,7 +79,7 @@ def _default_draft_config(algo):
     }[algo]
 
 
-def write_features(algo, feat_dir, n, seq, shapes, rank, world):
+def write_features(algo, feat_dir, n, seq, shapes, rank, world, variable_mask=False):
     """Rank-sharded generation of synthetic offline feature files."""
     os.makedirs(feat_dir, exist_ok=True)
     done_marker = os.path.join(feat_dir, "DONE")
@@ -90,6 +92,9 @@ def write_features(algo, feat_dir, n, seq, shapes, rank, world):
             continue
         input_ids = torch.randint(0, shapes["vocab"], (seq,), generator=g)
         loss_mask = torch.ones(seq, dtype=torch.long)
+        if variable_mask:
+            prefix = int(torch.randint(int(0.2 * seq), int(0.8 * seq), (1,), generator=g))
+            loss_mask[:prefix] = 0
         if algo == "eagle3":
             sample = {
                 "input_ids": input_ids,
@@ -146,8 +151,9 @@ def main():
         else:
             model, shapes = build_dflash_family(args, device, args.algo)
             head = None
-        feat_dir = os.path.join(args.data_root, f"{args.algo}-seq{args.seq_len}-n{args.samples}")
-        write_features(args.algo, feat_dir, args.samples, args.seq_len, shapes, rank, world)
+        suffix = "-varmask" if args.variable_mask else ""
+        feat_dir = os.path.join(args.data_root, f"{args.algo}-seq{args.seq_len}-n{args.samples}{suffix}")
+        write_features(args.algo, feat_dir, args.samples, args.seq_len, shapes, rank, world, variable_mask=args.variable_mask)
 
         def optimizer_factory(module):
             return BF16Optimizer(module, lr=1e-4, max_grad_norm=0.5, warmup_ratio=0.0, total_steps=10_000)
@@ -189,6 +195,7 @@ def main():
         sig = inspect.signature(build_offline_runtime).parameters
         requested = {
             "compile_blocks": bool(args.compile_blocks),
+            "compile_dynamic": bool(args.compile_dynamic),
             "fp8_linear": bool(args.fp8_linear),
             "shard_frozen_tables": bool(args.shard_frozen_tables),
         }
