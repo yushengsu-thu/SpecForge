@@ -62,6 +62,8 @@ def parse_args():
     p.add_argument("--static-shapes", action="store_true", help="training.static_shapes: pad every batch to --seq-len and keep num_anchors anchors per sample")
     p.add_argument("--compile-dynamic", action="store_true", help="BackendOptions.compile_dynamic=True when the checkout has it")
     p.add_argument("--variable-mask", action="store_true", help="mask a random prefix (20-80%%) of every sample so the valid-anchor count varies per micro-batch, like real conversations")
+    p.add_argument("--variable-length", action="store_true", help="give every sample a random length (25-100%% of --seq-len) so pad-to-longest batches change shape, like real conversations")
+    p.add_argument("--shape-buckets", default=None, help="comma-separated training.static_shape_buckets (multiples of 128, <= --seq-len); implies --static-shapes semantics for padding")
     p.add_argument("--save-interval", type=int, default=0)
     p.add_argument("--seed", type=int, default=0)
     return p.parse_args()
@@ -80,7 +82,7 @@ def _default_draft_config(algo):
     }[algo]
 
 
-def write_features(algo, feat_dir, n, seq, shapes, rank, world, variable_mask=False):
+def write_features(algo, feat_dir, n, seq, shapes, rank, world, variable_mask=False, variable_length=False):
     """Rank-sharded generation of synthetic offline feature files."""
     os.makedirs(feat_dir, exist_ok=True)
     done_marker = os.path.join(feat_dir, "DONE")
@@ -91,6 +93,9 @@ def write_features(algo, feat_dir, n, seq, shapes, rank, world, variable_mask=Fa
         path = os.path.join(feat_dir, f"{i:05d}.ckpt")
         if os.path.exists(path):
             continue
+        full = seq
+        if variable_length:
+            seq = int(torch.randint(max(32, full // 4), full + 1, (1,), generator=g))
         input_ids = torch.randint(0, shapes["vocab"], (seq,), generator=g)
         loss_mask = torch.ones(seq, dtype=torch.long)
         if variable_mask:
@@ -156,9 +161,9 @@ def main():
                     raise SystemExit("this checkout has no static_anchor_count")
                 model.static_anchor_count = True
             head = None
-        suffix = "-varmask" if args.variable_mask else ""
+        suffix = ("-varmask" if args.variable_mask else "") + ("-varlen" if args.variable_length else "")
         feat_dir = os.path.join(args.data_root, f"{args.algo}-seq{args.seq_len}-n{args.samples}{suffix}")
-        write_features(args.algo, feat_dir, args.samples, args.seq_len, shapes, rank, world, variable_mask=args.variable_mask)
+        write_features(args.algo, feat_dir, args.samples, args.seq_len, shapes, rank, world, variable_mask=args.variable_mask, variable_length=args.variable_length)
 
         def optimizer_factory(module):
             return BF16Optimizer(module, lr=1e-4, max_grad_norm=0.5, warmup_ratio=0.0, total_steps=10_000)
@@ -212,10 +217,24 @@ def main():
             if missing or "backend_options" not in sig:
                 raise SystemExit(f"this checkout cannot run options {requested}: missing {missing}")
             kwargs["backend_options"] = BackendOptions(**{k: v for k, v in requested.items() if k in fields})
+        buckets = None
+        if args.shape_buckets:
+            buckets = sorted({int(b) for b in args.shape_buckets.split(",")} | {int(args.seq_len)})
+            args.static_shapes = True
         if args.static_shapes:
             if "static_shapes" not in sig:
                 raise SystemExit("this checkout has no static_shapes")
             kwargs["static_shapes"] = True
+        if buckets:
+            if "static_shape_buckets" not in sig:
+                raise SystemExit("this checkout has no static_shape_buckets")
+            kwargs["static_shape_buckets"] = buckets
+            if args.compile_blocks:
+                from specforge.training.backend import BackendOptions
+
+                if "compile_shape_buckets" not in BackendOptions.__dataclass_fields__:
+                    raise SystemExit("this checkout has no compile_shape_buckets")
+                kwargs["backend_options"] = BackendOptions(**{**{k: v for k, v in requested.items() if k in BackendOptions.__dataclass_fields__}, "compile_shape_buckets": len(buckets)})
         if args.checkpoint_async:
             if "checkpoint_async" not in sig:
                 raise SystemExit("this checkout has no checkpoint_async")
