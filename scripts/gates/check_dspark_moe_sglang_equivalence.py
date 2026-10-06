@@ -192,14 +192,17 @@ def main():
         # Small config, with a non-trivial selection bias.
         ref, sg = build_pair(preset, 8, 2, 64, 128, device, dtype, 0.3, serving)
         if device == "cuda":
-            ok &= compare(ref, sg, 1, 128, device, dtype, f"{preset}/small/grouped_mm")
-            ok &= compare(ref, sg, 37, 128, device, dtype, f"{preset}/small/grouped_mm")
-        # Loop path (force by moving to CPU) vs reference on CPU.
-        ref_cpu, sg_cpu = ref.to("cpu"), sg.to("cpu")
-        ref_cpu.experts.grouped_mm = False
-        ok &= compare(
-            ref_cpu, sg_cpu, 23, 128, "cpu", dtype, f"{preset}/small/loop-cpu"
-        )
+            tag = f"{preset}/small/{args.backend}"
+            ok &= compare(ref, sg, 1, 128, device, dtype, tag)
+            ok &= compare(ref, sg, 37, 128, device, dtype, tag)
+        if args.backend == "grouped_mm":
+            # Loop path (force by moving to CPU) vs reference on CPU; the fused
+            # kernel is CUDA-only.
+            ref_cpu, sg_cpu = ref.to("cpu"), sg.to("cpu")
+            ref_cpu.experts.grouped_mm = False
+            ok &= compare(
+                ref_cpu, sg_cpu, 23, 128, "cpu", dtype, f"{preset}/small/loop-cpu"
+            )
         # Real sizes: DSV4-Flash arm (64 x 2048 top-6) and Qwen3.8-27B arm (16 x 4352 top-4).
         e, k, inter, hidden = (
             (64, 6, 2048, 4096) if preset == "deepseek_v4" else (16, 4, 4352, 5120)
