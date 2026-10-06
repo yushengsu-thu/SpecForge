@@ -322,6 +322,31 @@ def stack_expert_weights(
     return passthrough
 
 
+def merge_gate_up(
+    weights: Iterable[Tuple[str, torch.Tensor]],
+) -> List[Tuple[str, torch.Tensor]]:
+    """Turn stacked ``experts.w1`` / ``experts.w3`` pairs into ``experts.w13``.
+
+    The fused MoE kernel reads gate and up projections from one ``[E, 2N, K]``
+    tensor (gate rows first, not interleaved). Entries without a partner pass
+    through unchanged, so a dense draft or a half-loaded export is reported
+    by the strict check rather than silently merged.
+    """
+    pending: Dict[str, Dict[str, torch.Tensor]] = {}
+    out: List[Tuple[str, torch.Tensor]] = []
+    for name, tensor in weights:
+        if name.endswith(".w1") or name.endswith(".w3"):
+            pending.setdefault(name[:-3], {})[name[-2:]] = tensor
+        else:
+            out.append((name, tensor))
+    for base, parts in pending.items():
+        if "w1" in parts and "w3" in parts:
+            out.append((f"{base}.w13", torch.cat([parts["w1"], parts["w3"]], dim=1)))
+        else:
+            out.extend((f"{base}.{k}", v) for k, v in parts.items())
+    return out
+
+
 def verify_moe_weights(
     model: nn.Module, provided_names: Set[str], class_name: str
 ) -> None:

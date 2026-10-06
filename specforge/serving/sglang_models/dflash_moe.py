@@ -50,7 +50,7 @@ class DFlashMoEDecoderLayer(DFlashDecoderLayer):
         # The base layer built a dense MLP the export does not carry; swap it
         # for the MoE FFN before any weights are loaded.
         del self.mlp
-        self.mlp = DraftMoEFFN(config)
+        self.mlp = build_draft_moe_ffn(config)
 
 
 class _MoEDraftMixin:
@@ -66,12 +66,19 @@ class _MoEDraftMixin:
             )
         super().__init__(config, *args, **kwargs)
         ffn = self.layers[0].mlp
-        logger.info("MoE draft (%s): %s", type(self).__name__, ffn.describe())
+        logger.info(
+            "MoE draft (%s, backend=%s): %s",
+            type(self).__name__,
+            "fused" if isinstance(ffn, FusedDraftMoEFFN) else "grouped_mm",
+            ffn.describe(),
+        )
 
     def load_weights(self, weights: Iterable[Tuple[str, torch.Tensor]]):
         # Per-expert checkpoint tensors -> stacked module parameters, then the
         # base loader; then refuse an FFN that only partially matched.
         stacked = stack_expert_weights(weights)
+        if isinstance(self.layers[0].mlp, FusedDraftMoEFFN):
+            stacked = merge_gate_up(stacked)
         provided = {name.removeprefix("model.") for name, _ in stacked}
         super().load_weights(iter(stacked))
         verify_moe_weights(self, provided, type(self).__name__)

@@ -46,12 +46,44 @@ class _Cfg:
         self.__dict__.update(kw)
 
 
-def _serving_module(use_patch: bool):
+def _serving_module(use_patch: bool, backend: str = "grouped_mm"):
     if use_patch:
         from sglang.srt.models import dspark_moe as mod
-    else:
-        from specforge.serving.sglang_models import moe_ffn as mod
-    return mod.DraftMoEFFN, mod.stack_expert_weights
+
+        return mod.DraftMoEFFN, mod.stack_expert_weights
+    from specforge.serving.sglang_models import moe_ffn as mod
+
+    if backend == "grouped_mm":
+        return mod.DraftMoEFFN, mod.stack_expert_weights
+    # The fused kernel needs SGLang's runtime context and a TP group, which a
+    # server has and a standalone process must publish itself.
+    from sglang.srt.distributed import (
+        init_distributed_environment,
+        initialize_model_parallel,
+    )
+    from sglang.srt.runtime_context import publish
+    from sglang.srt.server_args import ServerArgs
+
+    from specforge.serving.sglang_models.dflash_moe import FusedDraftMoEFFN
+
+    publish(
+        ServerArgs(model_path="dummy", attention_backend="triton"), role="scheduler"
+    )
+    init_distributed_environment(
+        world_size=1,
+        rank=0,
+        distributed_init_method="tcp://127.0.0.1:29599",
+        local_rank=0,
+        backend="nccl",
+    )
+    initialize_model_parallel(
+        tensor_model_parallel_size=1, pipeline_model_parallel_size=1
+    )
+
+    def stack(weights):
+        return mod.merge_gate_up(mod.stack_expert_weights(weights))
+
+    return FusedDraftMoEFFN, stack
 
 
 def build_pair(preset, e, k, inter, hidden, device, dtype, bias_scale, serving):
@@ -142,9 +174,16 @@ def compare(ref, sg, tokens, hidden, device, dtype, label):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sglang-patch", action="store_true")
+    ap.add_argument(
+        "--backend",
+        choices=("grouped_mm", "fused"),
+        default="grouped_mm",
+        help="fused = SGLang's fused MoE kernel through "
+        "specforge.serving.sglang_models.dflash_moe (CUDA + SGLang runtime)",
+    )
     ap.add_argument("--presets", nargs="+", default=sorted(PRESETS))
     args = ap.parse_args()
-    serving = _serving_module(args.sglang_patch)
+    serving = _serving_module(args.sglang_patch, args.backend)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16
     ok = True

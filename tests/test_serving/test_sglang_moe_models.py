@@ -15,6 +15,7 @@ from torch import nn
 from specforge.modeling.draft.moe import MoEConfig, MoELayer, to_checkpoint_state_dict
 from specforge.serving.sglang_models.moe_ffn import (
     DraftMoEFFN,
+    merge_gate_up,
     routed_expert_count,
     stack_expert_weights,
     verify_moe_weights,
@@ -153,6 +154,26 @@ class TestServingMoEFFN(unittest.TestCase):
         self.assertEqual(tuple(stacked["layers.0.mlp.experts.w2"].shape), (2, 2, 3))
         self.assertEqual(float(stacked["layers.0.mlp.experts.w2"][1].sum()), 6.0)
         self.assertIn("layers.0.mlp.gate.weight", stacked)
+
+    def test_merge_gate_up_builds_the_fused_layout(self):
+        w1 = torch.arange(2 * 3 * 4, dtype=torch.float32).view(2, 3, 4)
+        w3 = -w1
+        merged = dict(
+            merge_gate_up(
+                [
+                    ("layers.0.mlp.experts.w1", w1),
+                    ("layers.0.mlp.experts.w3", w3),
+                    ("layers.0.mlp.experts.w2", torch.zeros(2, 4, 3)),
+                    ("layers.1.mlp.experts.w1", w1),  # no partner: left as is
+                ]
+            )
+        )
+        self.assertEqual(tuple(merged["layers.0.mlp.experts.w13"].shape), (2, 6, 4))
+        torch.testing.assert_close(merged["layers.0.mlp.experts.w13"][:, :3], w1)
+        torch.testing.assert_close(merged["layers.0.mlp.experts.w13"][:, 3:], w3)
+        self.assertIn("layers.0.mlp.experts.w2", merged)
+        self.assertIn("layers.1.mlp.experts.w1", merged)
+        self.assertNotIn("layers.1.mlp.experts.w13", merged)
 
     def test_verify_rejects_mismatched_ffn_entries(self):
         class Layer(nn.Module):
