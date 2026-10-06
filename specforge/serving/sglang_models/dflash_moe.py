@@ -38,6 +38,7 @@ from .moe_ffn import (
     merge_gate_up,
     routed_expert_count,
     stack_expert_weights,
+    to_native_names,
     verify_moe_weights,
 )
 
@@ -170,7 +171,7 @@ class _MoEDraftMixin:
     def load_weights(self, weights: Iterable[Tuple[str, torch.Tensor]]):
         # Per-expert checkpoint tensors -> stacked module parameters, then the
         # base loader; then refuse an FFN that only partially matched.
-        stacked = stack_expert_weights(weights)
+        stacked = stack_expert_weights(to_native_names(weights))
         if isinstance(self.layers[0].mlp, FusedDraftMoEFFN):
             stacked = merge_gate_up(stacked)
         provided = {name.removeprefix("model.") for name, _ in stacked}
@@ -190,4 +191,15 @@ class Qwen3MoEDSparkModel(_MoEDraftMixin, Qwen3DSparkModel):
     """DSpark draft with Qwen3-style attention and an MoE FFN."""
 
 
-EntryClass = [DFlashMoEDraftModel, DFlash2MoEDraftModel, Qwen3MoEDSparkModel]
+class Qwen3MoeDSparkModel(Qwen3MoEDSparkModel):
+    """Alias: the architecture name SpecForge's ``kan/moe-3-qwen38`` exports
+    write (Qwen3.8-27B DSpark MoE drafter, ``qwen3_5_moe`` preset, Qwen
+    checkpoint naming, folded router centering in ``gate.bias``)."""
+
+
+EntryClass = [
+    DFlashMoEDraftModel,
+    DFlash2MoEDraftModel,
+    Qwen3MoEDSparkModel,
+    Qwen3MoeDSparkModel,
+]

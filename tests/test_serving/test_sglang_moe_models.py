@@ -18,6 +18,7 @@ from specforge.serving.sglang_models.moe_ffn import (
     merge_gate_up,
     routed_expert_count,
     stack_expert_weights,
+    to_native_names,
     verify_moe_weights,
 )
 
@@ -154,6 +155,106 @@ class TestServingMoEFFN(unittest.TestCase):
         self.assertEqual(tuple(stacked["layers.0.mlp.experts.w2"].shape), (2, 2, 3))
         self.assertEqual(float(stacked["layers.0.mlp.experts.w2"][1].sum()), 6.0)
         self.assertIn("layers.0.mlp.gate.weight", stacked)
+
+    def test_qwen3_5_moe_recipe_matches_a_plain_reference(self):
+        # Kan's Qwen3.8-27B DSpark MoE export: softmax over (x W^T + folded
+        # centering bias), top-k renormalised, no scaling, sigmoid-gated shared
+        # expert, Qwen checkpoint naming.
+        torch.manual_seed(1)
+        e, k, inter, hidden, shared = 8, 3, 16, 32, 24
+        cfg = _Cfg(
+            hidden_size=hidden,
+            num_experts=e,
+            num_experts_per_tok=k,
+            moe_intermediate_size=inter,
+            shared_expert_intermediate_size=shared,
+            n_shared_experts=1,
+            moe_preset="qwen3_5_moe",
+            scoring_func="softmax",
+            norm_topk_prob=True,
+            routed_scaling_factor=1.0,
+            moe_router_bias=True,
+        )
+        ffn = DraftMoEFFN(cfg).float().eval()
+        self.assertEqual(ffn.gate.bias_mode, "logit")
+        self.assertEqual(ffn.shared_expert_gate, "sigmoid")
+        # Qwen-named checkpoint entries, as the export writes them.
+        w = {
+            "layers.0.mlp.gate.weight": torch.randn(e, hidden) * 0.2,
+            "layers.0.mlp.gate.bias": torch.randn(e),
+            "layers.0.mlp.shared_expert.gate_proj.weight": torch.randn(shared, hidden)
+            * 0.1,
+            "layers.0.mlp.shared_expert.up_proj.weight": torch.randn(shared, hidden)
+            * 0.1,
+            "layers.0.mlp.shared_expert.down_proj.weight": torch.randn(hidden, shared)
+            * 0.1,
+            "layers.0.mlp.shared_expert_gate.weight": torch.randn(1, hidden) * 0.1,
+        }
+        for i in range(e):
+            w[f"layers.0.mlp.experts.{i}.gate_proj.weight"] = (
+                torch.randn(inter, hidden) * 0.1
+            )
+            w[f"layers.0.mlp.experts.{i}.up_proj.weight"] = (
+                torch.randn(inter, hidden) * 0.1
+            )
+            w[f"layers.0.mlp.experts.{i}.down_proj.weight"] = (
+                torch.randn(hidden, inter) * 0.1
+            )
+        stacked = dict(stack_expert_weights(to_native_names(w.items())))
+        params = dict(ffn.named_parameters())
+        self.assertEqual(
+            {n.removeprefix("layers.0.mlp.") for n in stacked}, set(params)
+        )
+        with torch.no_grad():
+            for name, tensor in stacked.items():
+                params[name.removeprefix("layers.0.mlp.")].copy_(tensor)
+        x = torch.randn(11, hidden)
+        with torch.no_grad():
+            y = ffn(x)
+            # Plain reference.
+            logits = x @ w["layers.0.mlp.gate.weight"].T + w["layers.0.mlp.gate.bias"]
+            probs = logits.softmax(-1)
+            top_w, top_i = probs.topk(k, dim=-1)
+            top_w = top_w / top_w.sum(-1, keepdim=True)
+            ref = torch.zeros_like(x)
+            for t in range(x.shape[0]):
+                for j in range(k):
+                    i = int(top_i[t, j])
+                    h = torch.nn.functional.silu(
+                        w[f"layers.0.mlp.experts.{i}.gate_proj.weight"] @ x[t]
+                    ) * (w[f"layers.0.mlp.experts.{i}.up_proj.weight"] @ x[t])
+                    ref[t] += top_w[t, j] * (
+                        w[f"layers.0.mlp.experts.{i}.down_proj.weight"] @ h
+                    )
+            hs = torch.nn.functional.silu(
+                x @ w["layers.0.mlp.shared_expert.gate_proj.weight"].T
+            ) * (x @ w["layers.0.mlp.shared_expert.up_proj.weight"].T)
+            ys = hs @ w["layers.0.mlp.shared_expert.down_proj.weight"].T
+            ref += torch.sigmoid(x @ w["layers.0.mlp.shared_expert_gate.weight"].T) * ys
+        torch.testing.assert_close(y, ref, atol=1e-4, rtol=1e-4)
+
+    def test_to_native_names_maps_qwen_layout(self):
+        out = dict(
+            to_native_names(
+                [
+                    ("layers.2.mlp.experts.5.up_proj.weight", torch.zeros(1)),
+                    ("layers.2.mlp.shared_expert.down_proj.weight", torch.zeros(1)),
+                    ("layers.2.mlp.shared_expert_gate.weight", torch.zeros(1)),
+                    ("layers.2.mlp.gate.weight", torch.zeros(1)),
+                    ("layers.2.self_attn.q_proj.weight", torch.zeros(1)),
+                ]
+            )
+        )
+        self.assertEqual(
+            set(out),
+            {
+                "layers.2.mlp.experts.5.w3.weight",
+                "layers.2.mlp.shared_experts.w2.weight",
+                "layers.2.mlp.shared_experts.gate.weight",
+                "layers.2.mlp.gate.weight",
+                "layers.2.self_attn.q_proj.weight",
+            },
+        )
 
     def test_merge_gate_up_builds_the_fused_layout(self):
         w1 = torch.arange(2 * 3 * 4, dtype=torch.float32).view(2, 3, 4)
