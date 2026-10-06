@@ -129,20 +129,29 @@ per-expert naming (`layers.N.mlp.experts.{i}.w{1,2,3}.weight`,
 Serving the MoE arm needs an MoE-capable draft class on the SGLang side:
 the stock `Qwen3DSparkModel` has a dense MLP and silently drops every expert
 weight (the server starts, but the drafter is random and acceptance length
-sits at ~1.0). Until that class is upstream, apply
-`patches/sglang/v0.5.18/dspark-moe-draft.patch` on top of the spec-capture
-patch (`cd <sglang checkout or site-packages parent> && git apply
-<SpecForge>/patches/sglang/v0.5.18/dspark-moe-draft.patch`). It adds
-`sglang/srt/models/dspark_moe.py` (`Qwen3MoEDSparkModel`: the DSpark decoder
-with the dense MLP replaced by the DeepSeek-V4 routing above, experts loaded
-as stacked grouped-GEMM weights) and makes the DFlash-family loaders reject a
-checkpoint whose weights do not match the class, instead of serving
-uninitialised modules. `scripts/gates/normalize_dflash_export.py` writes
-`architectures: ["Qwen3MoEDSparkModel"]` for an export with
-`n_routed_experts > 0` and refuses MoE DFlash/DFlash2 exports, which have no
-serving class yet. `scripts/gates/check_dspark_moe_sglang_equivalence.py`
-checks the serving FFN against SpecForge's `MoELayer` bit-for-bit on the real
-64-expert sizes (grouped_mm and loop paths).
+sits at ~1.0). `specforge.serving.sglang_models` provides
+`Qwen3MoEDSparkModel` (and `DFlashMoEDraftModel` / `DFlash2MoEDraftModel`
+for the other DFlash-family drafts): the stock decoder with the dense MLP
+replaced by the routing recipe above, experts loaded as stacked grouped-GEMM
+weights, and a strict check that the checkpoint's FFN entries match the
+class. Register it on the serving host through SGLang's external-package
+hook, no patch needed:
+
+```bash
+SGLANG_EXTERNAL_MODEL_PACKAGE=specforge.serving.sglang_models \
+python -m sglang.launch_server --model-path <target> \
+  --speculative-algorithm DSPARK --speculative-draft-model-path <export> \
+  --speculative-dflash-block-size 7 ...
+```
+
+`scripts/gates/normalize_dflash_export.py` writes the matching
+`architectures` name for an export with `n_routed_experts > 0`.
+`patches/sglang/v0.5.18/dspark-moe-draft.patch` is the same loader as an
+in-tree patch for SGLang v0.5.18 (which predates the external-package hook's
+DFlash2 support), plus strict loading for the stock dense classes.
+`scripts/gates/check_dspark_moe_sglang_equivalence.py` checks the serving FFN
+against SpecForge's `MoELayer` bit-for-bit on the real 64-expert sizes
+(grouped_mm and loop paths).
 
 ## Fresh attempts
 

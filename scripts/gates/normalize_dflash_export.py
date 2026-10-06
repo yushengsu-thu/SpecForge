@@ -21,8 +21,12 @@ _DFLASH2_FIELDS = (
     "selector_rank",
     "selector_top_k",
 )
-# SGLang draft class that serves a DSpark export whose FFN is a DeepSeek-style
-# MoE (``moe_preset`` drafts); the dense classes silently ignore expert weights.
+# Draft classes that serve an export whose FFN is a sparse MoE (``moe_preset``
+# drafts). They live in ``specforge.serving.sglang_models`` and are registered
+# through SGLang's ``SGLANG_EXTERNAL_MODEL_PACKAGE``; SGLang's own dense
+# classes would silently drop every expert weight.
+_MOE_DFLASH_ARCHITECTURE = "DFlashMoEDraftModel"
+_MOE_DFLASH2_ARCHITECTURE = "DFlash2MoEDraftModel"
 _MOE_DSPARK_ARCHITECTURE = "Qwen3MoEDSparkModel"
 
 
@@ -34,18 +38,12 @@ def _is_moe_export(config: Dict[str, Any]) -> bool:
     return _positive_integer(config.get("n_routed_experts"))
 
 
-def _reject_moe_for_dense_architecture(config: Dict[str, Any], arch: str) -> None:
-    if _is_moe_export(config):
-        raise ValueError(
-            f"export carries n_routed_experts={config['n_routed_experts']} but "
-            f"SGLang's {arch} has a dense MLP and no MoE-capable variant; its "
-            "loader would drop the expert weights. Only DSpark MoE exports "
-            f"({_MOE_DSPARK_ARCHITECTURE}) can be served."
-        )
+def _serving_architecture(config: Dict[str, Any], dense: str, moe: str) -> str:
+    """The MoE-capable class for an export with routed experts, else the dense one."""
+    return moe if _is_moe_export(config) else dense
 
 
 def _normalize_dflash2(config: Dict[str, Any], method_config: Dict[str, Any]) -> None:
-    _reject_moe_for_dense_architecture(config, _DFLASH2_ARCHITECTURE)
     for key in _DFLASH2_FIELDS:
         value = method_config.get(key)
         if not _positive_integer(value):
@@ -53,7 +51,9 @@ def _normalize_dflash2(config: Dict[str, Any], method_config: Dict[str, Any]) ->
                 f"DFlash2 export requires a positive integer dflash_config.{key}, "
                 f"got {value!r}"
             )
-    config["architectures"] = [_DFLASH2_ARCHITECTURE]
+    config["architectures"] = [
+        _serving_architecture(config, _DFLASH2_ARCHITECTURE, _MOE_DFLASH2_ARCHITECTURE)
+    ]
 
 
 def _normalize_dspark(config: Dict[str, Any], method_config: Dict[str, Any]) -> None:
@@ -104,7 +104,7 @@ def _normalize_dspark(config: Dict[str, Any], method_config: Dict[str, Any]) -> 
     # An MoE-FFN export must name an MoE-capable draft class: SGLang's dense
     # Qwen3DSparkModel would drop every expert weight and serve random MLPs.
     config["architectures"] = [
-        _MOE_DSPARK_ARCHITECTURE if _is_moe_export(config) else "Qwen3DSparkModel"
+        _serving_architecture(config, "Qwen3DSparkModel", _MOE_DSPARK_ARCHITECTURE)
     ]
 
 
@@ -153,8 +153,9 @@ def normalize_export(config_path: str, expected_block_size: int) -> Dict[str, An
     elif _DFLASH2_ARCHITECTURE in (config.get("architectures") or []):
         _normalize_dflash2(config, method_config)
     else:
-        _reject_moe_for_dense_architecture(config, "DFlashDraftModel")
-        config["architectures"] = ["DFlashDraftModel"]
+        config["architectures"] = [
+            _serving_architecture(config, "DFlashDraftModel", _MOE_DFLASH_ARCHITECTURE)
+        ]
     config.pop("auto_map", None)
     with path.open("w", encoding="utf-8") as handle:
         json.dump(config, handle, indent=2)

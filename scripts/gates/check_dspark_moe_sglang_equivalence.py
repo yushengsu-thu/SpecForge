@@ -1,21 +1,44 @@
 #!/usr/bin/env python3
-"""Equivalence test: SGLang's DraftMoEFFN vs SpecForge's MoELayer (Kan's code).
+"""Equivalence gate: serving ``DraftMoEFFN`` vs SpecForge's ``MoELayer``.
 
-Builds SpecForge's MoE FFN with random weights (real DSV4-preset sizes and a small
-config), converts its state to the official checkpoint naming, loads it into the
-SGLang draft FFN through the same stacking logic the serving loader uses, and
-compares outputs on random inputs for both dispatch paths. Needs an SGLang with
-``patches/sglang/v0.5.18/dspark-moe-draft.patch`` applied (it imports
-``sglang.srt.models.dspark_moe``); the grouped_mm cases need a CUDA device:
+Builds SpecForge's MoE FFN with random weights (a small config and the real
+DeepSeek-V4-Flash sizes, for the ``deepseek_v4`` and ``qwen3`` presets),
+converts its state to the official checkpoint naming, loads it into the
+serving FFN through the same expert-stacking logic the SGLang loader uses, and
+compares routing (identical top-k, same combine weights) and outputs on random
+inputs for both dispatch paths.
+
+The serving FFN is ``specforge.serving.sglang_models.moe_ffn`` (plain
+PyTorch), so this runs anywhere SpecForge imports; the grouped_mm cases need a
+CUDA device and are skipped on CPU. ``--sglang-patch`` compares against the
+``sglang.srt.models.dspark_moe`` module of the v0.5.18 patch instead.
 
     python scripts/gates/check_dspark_moe_sglang_equivalence.py
 """
+
+import argparse
 import sys
 
 import torch
-from sglang.srt.models.dspark_moe import DraftMoEFFN, stack_expert_weights
 
 from specforge.modeling.draft.moe import MoEConfig, MoELayer, to_checkpoint_state_dict
+
+PRESETS = {
+    "deepseek_v4": dict(
+        scoring_func="sqrtsoftplus",
+        norm_topk_prob=True,
+        routed_scaling_factor=1.5,
+        n_shared_experts=1,
+        swiglu_limit=10.0,
+    ),
+    "qwen3": dict(
+        scoring_func="softmax",
+        norm_topk_prob=True,
+        routed_scaling_factor=1.0,
+        n_shared_experts=0,
+        swiglu_limit=0.0,
+    ),
+}
 
 
 class _Cfg:
@@ -23,23 +46,29 @@ class _Cfg:
         self.__dict__.update(kw)
 
 
-def build_pair(e, k, inter, hidden, device, dtype, shared=1, bias_scale=0.0):
+def _serving_module(use_patch: bool):
+    if use_patch:
+        from sglang.srt.models import dspark_moe as mod
+    else:
+        from specforge.serving.sglang_models import moe_ffn as mod
+    return mod.DraftMoEFFN, mod.stack_expert_weights
+
+
+def build_pair(preset, e, k, inter, hidden, device, dtype, bias_scale, serving):
+    DraftMoEFFN, stack_expert_weights = serving
+    recipe = PRESETS[preset]
     moe_cfg = MoEConfig(
-        preset="deepseek_v4",
+        preset=preset,
         n_routed_experts=e,
         num_experts_per_tok=k,
         moe_intermediate_size=inter,
-        n_shared_experts=shared,
-        scoring_func="sqrtsoftplus",
-        norm_topk_prob=True,
-        routed_scaling_factor=1.5,
-        swiglu_limit=10.0,
         router="topk",
         balance="noaux_tc",
         experts_backend="grouped",
         shared_expert="swiglu",
         shared_expert_gate="none",
         dispatch="grouped_mm",
+        **recipe,
     )
     ref = MoELayer(moe_cfg, hidden)
     ref.reset_parameters(0.02)
@@ -53,25 +82,24 @@ def build_pair(e, k, inter, hidden, device, dtype, shared=1, bias_scale=0.0):
         {k_: v.detach() for k_, v in ref.state_dict().items()}
     )
     keys = sorted(state)
-    assert f"experts.0.w1.weight" in keys and "gate.bias" in keys, keys[:5]
-    if shared:
+    assert "experts.0.w1.weight" in keys and "gate.bias" in keys, keys[:5]
+    if recipe["n_shared_experts"]:
         assert "shared_experts.w1.weight" in keys
+    else:
+        assert not any(key.startswith("shared_experts.") for key in keys), keys
 
+    # What MoEConfig.serving_fields() writes into the export's config.json.
     sg_cfg = _Cfg(
         hidden_size=hidden,
         n_routed_experts=e,
         num_experts_per_tok=k,
         moe_intermediate_size=inter,
-        n_shared_experts=shared,
-        scoring_func="sqrtsoftplus",
-        norm_topk_prob=True,
-        routed_scaling_factor=1.5,
         n_group=1,
         topk_group=1,
         topk_method="noaux_tc",
-        swiglu_limit=10.0,
         hidden_act="silu",
-        moe_preset="deepseek_v4",
+        moe_preset=preset,
+        **recipe,
     )
     with torch.device(device):
         sg = DraftMoEFFN(sg_cfg).to(dtype=dtype)
@@ -112,23 +140,45 @@ def compare(ref, sg, tokens, hidden, device, dtype, label):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--sglang-patch", action="store_true")
+    ap.add_argument("--presets", nargs="+", default=sorted(PRESETS))
+    args = ap.parse_args()
+    serving = _serving_module(args.sglang_patch)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16
     ok = True
     torch.manual_seed(0)
-    # Small config, with a non-trivial selection bias.
-    ref, sg = build_pair(8, 2, 64, 128, device, dtype, shared=1, bias_scale=0.3)
-    ok &= compare(ref, sg, 1, 128, device, dtype, "small/grouped_mm")
-    ok &= compare(ref, sg, 37, 128, device, dtype, "small/grouped_mm")
-    # Loop path (force by moving to CPU) vs reference on CPU.
-    ref_cpu, sg_cpu = ref.to("cpu"), sg.to("cpu")
-    ref_cpu.experts.grouped_mm = False
-    ok &= compare(ref_cpu, sg_cpu, 23, 128, "cpu", dtype, "small/loop-cpu")
-    # Real DSV4-preset sizes.
-    ref, sg = build_pair(64, 6, 2048, 4096, device, dtype, shared=1, bias_scale=1.0)
-    ok &= compare(ref, sg, 8, 4096, device, dtype, "dsv4/grouped_mm")
-    ok &= compare(ref, sg, 256, 4096, device, dtype, "dsv4/grouped_mm")
+    for preset in args.presets:
+        # Small config, with a non-trivial selection bias.
+        ref, sg = build_pair(preset, 8, 2, 64, 128, device, dtype, 0.3, serving)
+        if device == "cuda":
+            ok &= compare(ref, sg, 1, 128, device, dtype, f"{preset}/small/grouped_mm")
+            ok &= compare(ref, sg, 37, 128, device, dtype, f"{preset}/small/grouped_mm")
+        # Loop path (force by moving to CPU) vs reference on CPU.
+        ref_cpu, sg_cpu = ref.to("cpu"), sg.to("cpu")
+        ref_cpu.experts.grouped_mm = False
+        ok &= compare(
+            ref_cpu, sg_cpu, 23, 128, "cpu", dtype, f"{preset}/small/loop-cpu"
+        )
+        # Real sizes: DSV4-Flash arm (64 x 2048 top-6) and Qwen3.8-27B arm (16 x 4352 top-4).
+        e, k, inter, hidden = (
+            (64, 6, 2048, 4096) if preset == "deepseek_v4" else (16, 4, 4352, 5120)
+        )
+        if device == "cuda":
+            ref, sg = build_pair(
+                preset, e, k, inter, hidden, device, dtype, 1.0, serving
+            )
+            ok &= compare(
+                ref, sg, 8, hidden, device, dtype, f"{preset}/real/grouped_mm"
+            )
+            ok &= compare(
+                ref, sg, 256, hidden, device, dtype, f"{preset}/real/grouped_mm"
+            )
+        else:
+            print(f"[{preset}/real] skipped on CPU")
     # Stacking must reject a truncated export.
+    _, stack_expert_weights = serving
     try:
         stack_expert_weights(
             [

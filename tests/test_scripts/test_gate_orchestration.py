@@ -308,28 +308,39 @@ class TestNormalizeDFlashExport(unittest.TestCase):
             self.assertEqual(normalized["architectures"], ["Qwen3MoEDSparkModel"])
             self.assertEqual(normalized["n_routed_experts"], 64)
 
-    def test_rejects_moe_exports_without_a_moe_serving_class(self):
+    def test_moe_dflash_exports_name_the_moe_serving_classes(self):
         # DFlash and DFlash2 exports both carry projector_type "dflash"; the
-        # architecture name tells them apart. Neither has an MoE serving class.
-        for architectures in (None, ["DFlash2DraftModel"]):
-            with (
-                self.subTest(architectures=architectures),
-                tempfile.TemporaryDirectory() as tmp,
-            ):
+        # architecture name tells them apart. MoE exports switch to the
+        # MoE-capable classes of specforge.serving.sglang_models.
+        cases = (
+            (None, "DFlashMoEDraftModel", {}),
+            (
+                ["DFlash2DraftModel"],
+                "DFlash2MoEDraftModel",
+                {
+                    "conv_group_size": 16,
+                    "conv_kernel_size": 2,
+                    "selector_rank": 256,
+                    "selector_top_k": 16,
+                },
+            ),
+        )
+        for architectures, expected, extra in cases:
+            with self.subTest(expected=expected), tempfile.TemporaryDirectory() as tmp:
                 path = Path(tmp) / "config.json"
                 config = {
                     "block_size": 16,
                     "n_routed_experts": 16,
-                    "dflash_config": {"projector_type": "dflash"},
+                    "dflash_config": {"projector_type": "dflash", **extra},
                 }
                 if architectures:
                     config["architectures"] = architectures
                 path.write_text(json.dumps(config), encoding="utf-8")
 
-                with self.assertRaisesRegex(ValueError, "n_routed_experts=16"):
-                    self.module.normalize_export(str(path), 16)
+                normalized = self.module.normalize_export(str(path), 16)
 
-                self.assertEqual(json.loads(path.read_text()), config)
+                self.assertEqual(normalized["architectures"], [expected])
+                self.assertEqual(normalized["n_routed_experts"], 16)
 
 
 if __name__ == "__main__":
