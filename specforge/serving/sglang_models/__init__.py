@@ -20,6 +20,11 @@ Modules:
   replaced by ``moe_ffn.DraftMoEFFN``, loading the official per-expert
   checkpoint naming and refusing checkpoints that do not match the class.
 
+- ``moe_configs``: tuned fused-MoE Triton kernel configs for the checked-in
+  MoE drafters (``SGLANG_MOE_CONFIG_DIR``, see its README).
+
 ``scripts/gates/normalize_dflash_export.py`` writes these architecture names
-into an MoE export's ``config.json``.
+into an MoE export's ``config.json``. ``SPECFORGE_DRAFT_MOE_BACKEND`` selects
+how the MoE FFN runs: ``fused`` (SGLang's fused MoE kernel, default) or
+``grouped_mm`` (the plain-PyTorch reference).
 """
