@@ -16,6 +16,12 @@ Written against SGLang v0.5.19+ (``DFlashDecoderLayer(config, layer_id,
 attention_conv, mlp_conv, quant_config, prefix)``); the constructor passes the
 base layer's arguments through, so older signatures without the convolution
 arguments also work.
+
+``SPECFORGE_DRAFT_MOE_BACKEND`` picks how the FFN runs (see :func:`moe_backend`):
+``fused`` (default: :class:`FusedDraftMoEFFN`, SGLang's fused MoE Triton kernel
+driven by SpecForge's own router), ``sglang`` (:class:`SglangMoEFFN`, SGLang's
+``TopK`` + ``FusedMoE`` modules and linear layers, the path a native SGLang
+Qwen-MoE block runs) or ``grouped_mm`` (the plain-PyTorch reference).
 """
 
 from __future__ import annotations
@@ -23,7 +29,8 @@ from __future__ import annotations
 import dataclasses
 import logging
 import os
-from typing import Iterable, Tuple
+import re
+from typing import Dict, Iterable, List, Set, Tuple
 
 import torch
 from sglang.srt.models.dflash import (
@@ -41,13 +48,16 @@ from .moe_ffn import (
     shared_expert_as_experts,
     stack_expert_weights,
     to_native_names,
+    to_sglang_module_entries,
     verify_moe_weights,
 )
 
 logger = logging.getLogger(__name__)
 
-#: ``SPECFORGE_DRAFT_MOE_BACKEND``: ``fused`` (SGLang's fused MoE Triton kernel,
-#: default) or ``grouped_mm`` (the plain-PyTorch reference in ``moe_ffn``).
+#: ``SPECFORGE_DRAFT_MOE_BACKEND``: ``fused`` (SGLang's fused MoE Triton kernel
+#: behind SpecForge's router, default), ``sglang`` (SGLang's own ``TopK`` +
+#: ``FusedMoE`` modules, Qwen recipe only) or ``grouped_mm`` (the plain-PyTorch
+#: reference in ``moe_ffn``).
 MOE_BACKEND_ENV = "SPECFORGE_DRAFT_MOE_BACKEND"
 #: ``SPECFORGE_DRAFT_MOE_EXPERT_DTYPE``: ``bf16`` (default) or ``fp8``. With
 #: ``fp8`` the fused backend quantises the routed experts to float8 e4m3 with
@@ -76,6 +86,18 @@ try:
 except Exception as _err:  # pragma: no cover - depends on the SGLang build
     _FUSED_AVAILABLE = False
     _FUSED_IMPORT_ERROR = _err
+
+try:
+    from sglang.srt.layers.activation import SiluAndMul
+    from sglang.srt.layers.linear import MergedColumnParallelLinear, RowParallelLinear
+    from sglang.srt.layers.moe.fused_moe_triton.layer import FusedMoE
+    from sglang.srt.layers.moe.topk import TopK
+
+    _SGLANG_MODULES_AVAILABLE = True
+    _SGLANG_MODULES_IMPORT_ERROR: Exception | None = None
+except Exception as _err:  # pragma: no cover - depends on the SGLang build
+    _SGLANG_MODULES_AVAILABLE = False
+    _SGLANG_MODULES_IMPORT_ERROR = _err
 
 
 class FusedDraftMoEFFN(DraftMoEFFN):
@@ -230,11 +252,169 @@ class FusedDraftMoEFFN(DraftMoEFFN):
         return y.view(shape)
 
 
+class SglangSharedExpert(nn.Module):
+    """SwiGLU shared expert on SGLang's linear layers: ``gate_up_proj``
+    ``[2S, H]`` (gate rows then up rows, a ``MergedColumnParallelLinear``),
+    fused ``SiluAndMul`` and ``down_proj`` ``[H, S]``, optionally gated per
+    token by ``sigmoid(gate(x))``. What ``Qwen2MoeSparseMoeBlock``'s
+    ``shared_expert`` / ``shared_expert_gate`` run in SGLang."""
+
+    def __init__(
+        self, hidden_size: int, intermediate_size: int, gated: bool, prefix: str = ""
+    ) -> None:
+        super().__init__()
+        self.gate_up_proj = MergedColumnParallelLinear(
+            hidden_size,
+            [intermediate_size] * 2,
+            bias=False,
+            quant_config=None,
+            prefix=f"{prefix}.gate_up_proj",
+        )
+        self.down_proj = RowParallelLinear(
+            intermediate_size,
+            hidden_size,
+            bias=False,
+            quant_config=None,
+            reduce_results=False,
+            prefix=f"{prefix}.down_proj",
+        )
+        self.act_fn = SiluAndMul()
+        self.gate = nn.Linear(hidden_size, 1, bias=False) if gated else None
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        h, _ = self.gate_up_proj(x)
+        y, _ = self.down_proj(self.act_fn(h))
+        if self.gate is not None:
+            y = torch.sigmoid(self.gate(x).float()).to(y.dtype) * y
+        return y
+
+
+class SglangMoEFFN(DraftMoEFFN):
+    """``DraftMoEFFN`` rebuilt from SGLang's own MoE modules.
+
+    This is the path a native SGLang Qwen-MoE block runs
+    (``Qwen2MoeSparseMoeBlock``: ``TopK`` + ``FusedMoE`` + a separate
+    sigmoid-gated shared MLP), i.e. what an SGLang-side ``FusedMoE`` loader for
+    the same export executes. The routed-expert GEMMs are the same fused Triton
+    kernel and tuned per-shape config as :class:`FusedDraftMoEFFN`; the
+    difference is that top-k selection, the shared expert's SwiGLU and the
+    weighted combine run in SGLang's fused kernels, which halves the number of
+    launches per layer (18 vs 40 at 7 tokens for the Qwen3.8-27B DSpark MoE
+    shape).
+
+    Supports the Qwen recipe only (``qwen3_5_moe``, or ``qwen3`` without a
+    selection bias): softmax scoring, renormalised top-k, scale 1, no expert
+    groups, no SwiGLU clamp. The router logits (fp32, with the folded router
+    centering ``gate.bias`` added) come from :class:`DraftMoEGate` exactly as in
+    the reference, so routing stays identical to training; only SGLang's
+    ``TopK`` kernel does the selection and renormalisation. The draft is
+    replicated (TP1), so checkpoint tensors are copied straight into the
+    modules (:meth:`load_native_tensors`) instead of going through SGLang's
+    sharded weight loaders.
+    """
+
+    def __init__(self, config, layer_id: int = 0) -> None:
+        super().__init__(config)
+        if not _SGLANG_MODULES_AVAILABLE:
+            raise RuntimeError(
+                f"{MOE_BACKEND_ENV}=sglang needs SGLang's MoE modules "
+                f"({_SGLANG_MODULES_IMPORT_ERROR})"
+            )
+        unsupported = []
+        if self.scoring_func != "softmax":
+            unsupported.append(f"scoring_func={self.scoring_func}")
+        if self.gate.bias_mode == "selection":
+            unsupported.append("topk_method=noaux_tc (selection bias)")
+        if self.n_group != 1 or self.topk_group != 1:
+            unsupported.append("expert groups")
+        if self.swiglu_limit != 0.0:
+            unsupported.append(f"swiglu_limit={self.swiglu_limit}")
+        if self.routed_scaling_factor != 1.0:
+            unsupported.append(f"routed_scaling_factor={self.routed_scaling_factor}")
+        if unsupported:
+            raise ValueError(
+                f"{MOE_BACKEND_ENV}=sglang supports the Qwen MoE recipe only "
+                f"(softmax, renormalised top-k, no selection bias); this draft "
+                f"needs: {', '.join(unsupported)}. Use {MOE_BACKEND_ENV}=fused."
+            )
+        e, d, i = self.n_experts, self.hidden_size, self.intermediate_size
+        prefix = f"layers.{layer_id}.mlp"
+        del self.experts
+        self.router = TopK(
+            top_k=self.topk, renormalize=self.norm_topk_prob, layer_id=layer_id
+        )
+        self.experts = FusedMoE(
+            num_experts=e,
+            hidden_size=d,
+            intermediate_size=i,
+            layer_id=layer_id,
+            top_k=self.topk,
+            params_dtype=torch.get_default_dtype(),
+            quant_config=None,
+            prefix=f"{prefix}.experts",
+            inplace=False,
+        )
+        if self.shared_experts is not None:
+            gated = self.shared_experts.gate is not None
+            width = self.shared_experts.w1.out_features
+            del self.shared_experts
+            self.shared_experts = SglangSharedExpert(
+                d, width, gated, prefix=f"{prefix}.shared_experts"
+            )
+
+    def route(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Same contract as :meth:`DraftMoEFFN.route`, computed by SGLang's
+        ``TopK`` kernel on the reference router logits."""
+        out = self.router(x, self.gate(x))
+        indices = out.topk_ids.long()
+        flat = indices.flatten()
+        counts = torch.zeros(
+            self.n_experts, dtype=torch.long, device=x.device
+        ).scatter_add_(0, flat, torch.ones_like(flat))
+        return out.topk_weights.float(), indices, counts
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        shape = x.shape
+        x = x.reshape(-1, self.hidden_size)
+        shared = self.shared_experts(x) if self.shared_experts is not None else None
+        y = self.experts(x, self.router(x, self.gate(x)))
+        if isinstance(y, tuple):  # some SGLang builds return (out, bias)
+            y = y[0]
+        if shared is not None:
+            y = y + shared
+        return y.view(shape)
+
+    def load_native_tensors(self, entries: Dict[str, torch.Tensor]) -> Set[str]:
+        """Copy one layer's checkpoint entries (names relative to the FFN, after
+        :func:`stack_expert_weights` and :func:`merge_gate_up`) into the SGLang
+        modules; returns the parameter names (relative to the FFN) that were
+        filled, for the strict checkpoint check."""
+        mapped = to_sglang_module_entries(entries)
+        params = dict(self.named_parameters())
+        unknown = sorted(set(mapped) - set(params))
+        if unknown:
+            raise ValueError(
+                f"checkpoint FFN entries do not map to {type(self).__name__} "
+                f"parameters: {unknown[:8]}; module has {sorted(params)[:8]} ..."
+            )
+        with torch.no_grad():
+            for name, tensor in mapped.items():
+                param = params[name]
+                if tuple(param.shape) != tuple(tensor.shape):
+                    raise ValueError(
+                        f"{name}: checkpoint shape {tuple(tensor.shape)} does not "
+                        f"match the parameter shape {tuple(param.shape)}"
+                    )
+                param.copy_(tensor.to(param.dtype))
+        return set(mapped)
+
+
 def moe_backend() -> str:
     backend = os.environ.get(MOE_BACKEND_ENV, "fused").strip().lower()
-    if backend not in ("fused", "grouped_mm"):
+    if backend not in ("fused", "grouped_mm", "sglang"):
         raise ValueError(
-            f"{MOE_BACKEND_ENV} must be 'fused' or 'grouped_mm', got {backend!r}"
+            f"{MOE_BACKEND_ENV} must be 'fused', 'sglang' or 'grouped_mm', "
+            f"got {backend!r}"
         )
     if backend == "fused" and not _FUSED_AVAILABLE:
         logger.warning(
@@ -242,12 +422,30 @@ def moe_backend() -> str:
             _FUSED_IMPORT_ERROR,
         )
         backend = "grouped_mm"
+    if backend == "sglang" and not _SGLANG_MODULES_AVAILABLE:
+        raise RuntimeError(
+            f"{MOE_BACKEND_ENV}=sglang needs SGLang's MoE modules "
+            f"({_SGLANG_MODULES_IMPORT_ERROR})"
+        )
     return backend
 
 
-def build_draft_moe_ffn(config) -> DraftMoEFFN:
+def backend_name(ffn: nn.Module) -> str:
+    if isinstance(ffn, SglangMoEFFN):
+        return "sglang"
+    if isinstance(ffn, FusedDraftMoEFFN):
+        return "fused"
+    return "grouped_mm"
+
+
+def build_draft_moe_ffn(config, layer_id: int = 0) -> DraftMoEFFN:
     """The layer FFN for the selected backend (see :data:`MOE_BACKEND_ENV`)."""
-    return FusedDraftMoEFFN(config) if moe_backend() == "fused" else DraftMoEFFN(config)
+    backend = moe_backend()
+    if backend == "sglang":
+        return SglangMoEFFN(config, layer_id)
+    if backend == "fused":
+        return FusedDraftMoEFFN(config)
+    return DraftMoEFFN(config)
 
 
 class DFlashMoEDecoderLayer(DFlashDecoderLayer):
@@ -257,8 +455,9 @@ class DFlashMoEDecoderLayer(DFlashDecoderLayer):
         super().__init__(config, *args, **kwargs)
         # The base layer built a dense MLP the export does not carry; swap it
         # for the MoE FFN before any weights are loaded.
+        layer_id = kwargs.get("layer_id", args[0] if args else 0)
         del self.mlp
-        self.mlp = build_draft_moe_ffn(config)
+        self.mlp = build_draft_moe_ffn(config, int(layer_id))
 
 
 class _MoEDraftMixin:
@@ -277,17 +476,50 @@ class _MoEDraftMixin:
         logger.info(
             "MoE draft (%s, backend=%s): %s",
             type(self).__name__,
-            "fused" if isinstance(ffn, FusedDraftMoEFFN) else "grouped_mm",
+            backend_name(ffn),
             ffn.describe(),
         )
+
+    _LAYER_FFN_KEY = re.compile(r"^(?:model\.)?layers\.(?P<idx>\d+)\.mlp\.(?P<key>.+)$")
+
+    def _load_sglang_ffn_tensors(
+        self, stacked: List[Tuple[str, torch.Tensor]]
+    ) -> Tuple[List[Tuple[str, torch.Tensor]], Set[str]]:
+        """``sglang`` backend: SGLang's ``FusedMoE`` and linear parameters carry
+        weight loaders with their own (sharded) signatures, so each layer's FFN
+        entries are copied straight into the modules (replicated TP1 draft).
+        Returns the entries left for the base loader and the FFN parameter
+        names that were filled."""
+        rest: List[Tuple[str, torch.Tensor]] = []
+        per_layer: Dict[int, Dict[str, torch.Tensor]] = {}
+        for name, tensor in stacked:
+            m = self._LAYER_FFN_KEY.match(name)
+            if m is None:
+                rest.append((name, tensor))
+                continue
+            per_layer.setdefault(int(m["idx"]), {})[m["key"]] = tensor
+        provided: Set[str] = set()
+        for idx, entries in per_layer.items():
+            if idx >= len(self.layers):
+                raise ValueError(
+                    f"checkpoint has FFN weights for layer {idx} but the draft "
+                    f"has {len(self.layers)} layers"
+                )
+            for key in self.layers[idx].mlp.load_native_tensors(entries):
+                provided.add(f"layers.{idx}.mlp.{key}")
+        return rest, provided
 
     def load_weights(self, weights: Iterable[Tuple[str, torch.Tensor]]):
         # Per-expert checkpoint tensors -> stacked module parameters, then the
         # base loader; then refuse an FFN that only partially matched.
         stacked = stack_expert_weights(to_native_names(weights))
-        if isinstance(self.layers[0].mlp, FusedDraftMoEFFN):
+        ffn = self.layers[0].mlp
+        if isinstance(ffn, (FusedDraftMoEFFN, SglangMoEFFN)):
             stacked = merge_gate_up(stacked)
-        provided = {name.removeprefix("model.") for name, _ in stacked}
+        provided: Set[str] = set()
+        if isinstance(ffn, SglangMoEFFN):
+            stacked, provided = self._load_sglang_ffn_tensors(stacked)
+        provided |= {name.removeprefix("model.") for name, _ in stacked}
         super().load_weights(iter(stacked))
         verify_moe_weights(self, provided, type(self).__name__)
         if os.environ.get(MOE_FUSE_SHARED_ENV, "0").strip() == "1":

@@ -6,7 +6,13 @@ DeepSeek-V4-Flash sizes, for the ``deepseek_v4`` and ``qwen3`` presets),
 converts its state to the official checkpoint naming, loads it into the
 serving FFN through the same expert-stacking logic the SGLang loader uses, and
 compares routing (identical top-k, same combine weights) and outputs on random
-inputs for both dispatch paths.
+inputs for both dispatch paths. ``--backend fused`` / ``--backend sglang`` run
+the same checks against the two SGLang-kernel backends of
+``specforge.serving.sglang_models.dflash_moe`` and add the Qwen3.8-27B DSpark
+MoE recipe (``qwen3_5_moe``: 512 experts of width 512, top-10, sigmoid-gated
+shared expert, folded router centering) at its real size, with the plain
+``DraftMoEFFN`` (validated against the trainer in ``tests/test_serving``) as
+the reference.
 
 The serving FFN is ``specforge.serving.sglang_models.moe_ffn`` (plain
 PyTorch), so this runs anywhere SpecForge imports; the grouped_mm cases need a
@@ -64,7 +70,10 @@ def _serving_module(use_patch: bool, backend: str = "grouped_mm"):
     from sglang.srt.runtime_context import publish
     from sglang.srt.server_args import ServerArgs
 
-    from specforge.serving.sglang_models.dflash_moe import FusedDraftMoEFFN
+    from specforge.serving.sglang_models.dflash_moe import (
+        FusedDraftMoEFFN,
+        SglangMoEFFN,
+    )
 
     publish(
         ServerArgs(model_path="dummy", attention_backend="triton"), role="scheduler"
@@ -83,7 +92,98 @@ def _serving_module(use_patch: bool, backend: str = "grouped_mm"):
     def stack(weights):
         return mod.merge_gate_up(mod.stack_expert_weights(weights))
 
-    return FusedDraftMoEFFN, stack
+    return (SglangMoEFFN if backend == "sglang" else FusedDraftMoEFFN), stack
+
+
+def _load_ffn(ffn, stacked):
+    """Copy stacked checkpoint entries (names relative to the FFN) into a
+    serving FFN of any backend."""
+    if hasattr(ffn, "load_native_tensors"):
+        ffn.load_native_tensors(stacked)
+        return
+    params = dict(ffn.named_parameters())
+    assert set(stacked) == set(params), (
+        sorted(set(stacked) - set(params)),
+        sorted(set(params) - set(stacked)),
+    )
+    with torch.no_grad():
+        for name, tensor in stacked.items():
+            params[name].copy_(tensor.to(params[name].dtype))
+
+
+def build_qwen35_pair(e, k, inter, hidden, shared, device, dtype, serving_cls):
+    """Kan's Qwen3.8-27B DSpark MoE recipe (``qwen3_5_moe``): softmax over
+    ``x W^T + gate.bias`` (folded router centering), top-k renormalised, no
+    scaling, sigmoid-gated shared expert, Qwen checkpoint naming. Reference =
+    the plain-PyTorch ``DraftMoEFFN``; serving = ``serving_cls`` on the same
+    random checkpoint."""
+    from specforge.serving.sglang_models import moe_ffn as mod
+
+    cfg = _Cfg(
+        hidden_size=hidden,
+        num_experts=e,
+        num_experts_per_tok=k,
+        moe_intermediate_size=inter,
+        shared_expert_intermediate_size=shared,
+        n_shared_experts=1,
+        moe_preset="qwen3_5_moe",
+        scoring_func="softmax",
+        norm_topk_prob=True,
+        routed_scaling_factor=1.0,
+        moe_router_bias=True,
+        n_group=1,
+        topk_group=1,
+        topk_method="greedy",
+        hidden_act="silu",
+        swiglu_limit=0.0,
+    )
+    gen = torch.Generator().manual_seed(0)
+
+    def rn(*shape, scale):
+        return (torch.randn(*shape, generator=gen) * scale).to(dtype)
+
+    w = {
+        "gate.weight": rn(e, hidden, scale=0.02),
+        "gate.bias": rn(e, scale=0.5).float(),
+        "shared_expert.gate_proj.weight": rn(shared, hidden, scale=0.02),
+        "shared_expert.up_proj.weight": rn(shared, hidden, scale=0.02),
+        "shared_expert.down_proj.weight": rn(hidden, shared, scale=0.02),
+        "shared_expert_gate.weight": rn(1, hidden, scale=0.02),
+    }
+    for i in range(e):
+        w[f"experts.{i}.gate_proj.weight"] = rn(inter, hidden, scale=0.02)
+        w[f"experts.{i}.up_proj.weight"] = rn(inter, hidden, scale=0.02)
+        w[f"experts.{i}.down_proj.weight"] = rn(hidden, inter, scale=0.02)
+    stacked = dict(mod.stack_expert_weights(mod.to_native_names(w.items())))
+    with torch.device(device):
+        ref = mod.DraftMoEFFN(cfg).to(dtype=dtype)
+        sg = serving_cls(cfg).to(dtype=dtype)
+    for m in (ref, sg):
+        m.gate.bias.data = m.gate.bias.data.float()
+    _load_ffn(ref, stacked)
+    _load_ffn(sg, dict(mod.merge_gate_up(list(stacked.items()))))
+    return ref.eval(), sg.eval()
+
+
+def compare_ffn(ref, sg, tokens, hidden, device, dtype, label):
+    """Like :func:`compare` for two serving FFNs (both expose ``route``)."""
+    x = torch.randn(tokens, hidden, device=device, dtype=dtype)
+    with torch.no_grad():
+        y_ref, y_sg = ref(x), sg(x)
+        w_ref, i_ref, _ = ref.route(x)
+        w_sg, i_sg, _ = sg.route(x)
+    same_idx = torch.equal(i_ref.sort(-1).values, i_sg.sort(-1).values)
+    w_diff = (w_ref.sort(-1).values - w_sg.sort(-1).values).abs().max().item()
+    diff = (y_ref.float() - y_sg.float()).abs()
+    scale = y_ref.float().abs().mean().item()
+    print(
+        f"[{label}] tokens={tokens} same_topk={same_idx} max|dw|={w_diff:.2e} "
+        f"max|dy|={diff.max().item():.3e} mean|dy|={diff.mean().item():.3e} "
+        f"mean|y|={scale:.3e}"
+    )
+    return (
+        same_idx and w_diff < 1e-5 and diff.max().item() <= 2e-2 * max(scale, 1e-3) * 10
+    )
 
 
 def build_pair(
@@ -202,10 +302,11 @@ def main():
     ap.add_argument("--sglang-patch", action="store_true")
     ap.add_argument(
         "--backend",
-        choices=("grouped_mm", "fused"),
+        choices=("grouped_mm", "fused", "sglang"),
         default="grouped_mm",
         help="fused = SGLang's fused MoE kernel through "
-        "specforge.serving.sglang_models.dflash_moe (CUDA + SGLang runtime)",
+        "specforge.serving.sglang_models.dflash_moe (CUDA + SGLang runtime); "
+        "sglang = SGLang's TopK + FusedMoE modules (Qwen recipe only)",
     )
     ap.add_argument(
         "--fp8",
@@ -228,6 +329,13 @@ def main():
     dtype = torch.bfloat16
     ok = True
     torch.manual_seed(0)
+    if args.backend == "sglang":
+        # SGLang's TopK has no selection bias; the trainer presets below all
+        # use noaux_tc, so only the Qwen recipe case applies.
+        print(
+            "[deepseek_v4, qwen3] skipped: --backend sglang supports the Qwen recipe only"
+        )
+        args.presets = []
     for preset in args.presets:
         # Small config, with a non-trivial selection bias.
         ref, sg = build_pair(
@@ -302,6 +410,20 @@ def main():
             )
         else:
             print(f"[{preset}/real] skipped on CPU")
+    if args.backend in ("fused", "sglang") and device == "cuda":
+        serving_cls, _ = serving
+        tag = f"qwen3_5_moe/{args.backend}"
+        ref, sg = build_qwen35_pair(8, 3, 64, 128, 128, device, dtype, serving_cls)
+        ok &= compare_ffn(ref, sg, 1, 128, device, dtype, f"{tag}/small")
+        ok &= compare_ffn(ref, sg, 37, 128, device, dtype, f"{tag}/small")
+        del ref, sg
+        # Kan's Qwen3.8-27B DSpark MoE drafter: 512 x 512 top-10, shared 2048.
+        ref, sg = build_qwen35_pair(
+            512, 10, 512, 5120, 2048, device, dtype, serving_cls
+        )
+        for tokens in (7, 56, 448):
+            ok &= compare_ffn(ref, sg, tokens, 5120, device, dtype, f"{tag}/real")
+        del ref, sg
     # Stacking must reject a truncated export.
     _, stack_expert_weights = serving
     try:

@@ -25,6 +25,8 @@ Modules:
 
 ``scripts/gates/normalize_dflash_export.py`` writes these architecture names
 into an MoE export's ``config.json``. ``SPECFORGE_DRAFT_MOE_BACKEND`` selects
-how the MoE FFN runs: ``fused`` (SGLang's fused MoE kernel, default) or
+how the MoE FFN runs: ``fused`` (SGLang's fused MoE kernel behind SpecForge's
+router, default), ``sglang`` (SGLang's own ``TopK`` + ``FusedMoE`` modules,
+the path a native SGLang Qwen-MoE block runs; Qwen recipe only) or
 ``grouped_mm`` (the plain-PyTorch reference).
 """

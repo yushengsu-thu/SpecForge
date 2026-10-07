@@ -21,6 +21,7 @@ from specforge.serving.sglang_models.moe_ffn import (
     shared_expert_as_experts,
     stack_expert_weights,
     to_native_names,
+    to_sglang_module_entries,
     verify_moe_weights,
 )
 
@@ -298,6 +299,47 @@ class TestServingMoEFFN(unittest.TestCase):
         self.assertIn("layers.0.mlp.experts.w2", merged)
         self.assertIn("layers.1.mlp.experts.w1", merged)
         self.assertNotIn("layers.1.mlp.experts.w13", merged)
+
+    def test_sglang_module_entries_rename_experts_and_merge_shared(self):
+        w1 = torch.arange(24, dtype=torch.float32).view(4, 6)  # shared gate [S, H]
+        w3 = -w1
+        w2 = torch.ones(6, 4)  # shared down [H, S]
+        entries = {
+            "gate.weight": torch.zeros(2, 6),
+            "gate.bias": torch.zeros(2),
+            "experts.w13": torch.zeros(2, 4, 6),
+            "experts.w2": torch.zeros(2, 6, 2),
+            "shared_experts.w1.weight": w1,
+            "shared_experts.w3.weight": w3,
+            "shared_experts.w2.weight": w2,
+            "shared_experts.gate.weight": torch.zeros(1, 6),
+        }
+        mapped = to_sglang_module_entries(entries)
+        self.assertEqual(
+            set(mapped),
+            {
+                "gate.weight",
+                "gate.bias",
+                "experts.w13_weight",
+                "experts.w2_weight",
+                "shared_experts.gate_up_proj.weight",
+                "shared_experts.down_proj.weight",
+                "shared_experts.gate.weight",
+            },
+        )
+        gate_up = mapped["shared_experts.gate_up_proj.weight"]
+        self.assertEqual(tuple(gate_up.shape), (8, 6))
+        torch.testing.assert_close(gate_up[:4], w1)
+        torch.testing.assert_close(gate_up[4:], w3)
+        self.assertIs(mapped["shared_experts.down_proj.weight"], w2)
+        self.assertIs(mapped["experts.w13_weight"], entries["experts.w13"])
+        # A dense-shared-free layer passes through untouched.
+        self.assertEqual(
+            set(to_sglang_module_entries({"gate.weight": w1, "experts.w13": w1})),
+            {"gate.weight", "experts.w13_weight"},
+        )
+        with self.assertRaisesRegex(ValueError, "incomplete"):
+            to_sglang_module_entries({"shared_experts.w1.weight": w1})
 
     def test_verify_rejects_mismatched_ffn_entries(self):
         class Layer(nn.Module):

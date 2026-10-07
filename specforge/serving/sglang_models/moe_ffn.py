@@ -469,6 +469,49 @@ def merge_gate_up(
     return out
 
 
+def to_sglang_module_entries(
+    entries: Dict[str, torch.Tensor],
+) -> Dict[str, torch.Tensor]:
+    """Rename one layer's stacked FFN entries to the parameter names of the
+    ``sglang`` backend (``dflash_moe.SglangMoEFFN``, built from SGLang's own
+    ``FusedMoE`` and linear layers).
+
+    Keys are relative to the FFN after :func:`stack_expert_weights` and
+    :func:`merge_gate_up`: ``experts.w13`` -> ``experts.w13_weight``,
+    ``experts.w2`` -> ``experts.w2_weight``; the shared expert's
+    ``shared_experts.w1.weight`` / ``w3.weight`` become one
+    ``shared_experts.gate_up_proj.weight`` (gate rows then up rows, the
+    ``MergedColumnParallelLinear`` layout) and ``w2.weight`` becomes
+    ``shared_experts.down_proj.weight``. Everything else (``gate.weight``,
+    ``gate.bias``, ``shared_experts.gate.weight``) passes through unchanged.
+    """
+    out: Dict[str, torch.Tensor] = {}
+    shared: Dict[str, torch.Tensor] = {}
+    for name, tensor in entries.items():
+        if name == "experts.w13":
+            out["experts.w13_weight"] = tensor
+        elif name == "experts.w2":
+            out["experts.w2_weight"] = tensor
+        elif name in (
+            "shared_experts.w1.weight",
+            "shared_experts.w2.weight",
+            "shared_experts.w3.weight",
+        ):
+            shared[name.split(".")[1]] = tensor
+        else:
+            out[name] = tensor
+    if shared:
+        if set(shared) != {"w1", "w2", "w3"}:
+            raise ValueError(
+                f"shared expert entries are incomplete: have {sorted(shared)}"
+            )
+        out["shared_experts.gate_up_proj.weight"] = torch.cat(
+            [shared["w1"], shared["w3"]], dim=0
+        )
+        out["shared_experts.down_proj.weight"] = shared["w2"]
+    return out
+
+
 def verify_moe_weights(
     model: nn.Module, provided_names: Set[str], class_name: str
 ) -> None:
