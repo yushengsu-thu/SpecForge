@@ -52,7 +52,9 @@ class _Cfg:
         self.__dict__.update(kw)
 
 
-def _serving_module(use_patch: bool, backend: str = "grouped_mm"):
+def _serving_module(
+    use_patch: bool, backend: str = "grouped_mm", moe_runner_backend: str = "triton"
+):
     if use_patch:
         from sglang.srt.models import dspark_moe as mod
 
@@ -76,8 +78,18 @@ def _serving_module(use_patch: bool, backend: str = "grouped_mm"):
     )
 
     publish(
-        ServerArgs(model_path="dummy", attention_backend="triton"), role="scheduler"
+        ServerArgs(
+            model_path="dummy",
+            attention_backend="triton",
+            moe_runner_backend=moe_runner_backend,
+        ),
+        role="scheduler",
     )
+    # Seeds the MoE runtime flags (runner backend, ...) from the published
+    # args, as the scheduler does; without it the runner stays "auto".
+    from sglang.srt.layers.moe.utils import initialize_moe_config
+
+    initialize_moe_config()
     init_distributed_environment(
         world_size=1,
         rank=0,
@@ -177,8 +189,9 @@ def build_qwen35_pair(
     _load_ffn(sg, dict(mod.merge_gate_up(list(stacked.items()))))
     if fp8 and hasattr(sg, "quantize_experts_fp8"):
         sg.quantize_experts_fp8()
-    elif fp8:
-        # What SGLang's model loader does after load_weights.
+    elif hasattr(sg.experts, "quant_method"):
+        # What SGLang's model loader does after load_weights (fp8 re-wrap,
+        # TRT-LLM weight shuffling, ...).
         sg.experts.quant_method.process_weights_after_loading(sg.experts)
     return ref.eval(), sg.eval()
 
@@ -344,13 +357,22 @@ def main():
         help="with --backend fused: fold the shared expert into the kernel's "
         "expert tensors (SPECFORGE_DRAFT_MOE_FUSE_SHARED=1 path)",
     )
+    ap.add_argument(
+        "--moe-runner-backend",
+        default="triton",
+        choices=("triton", "flashinfer_trtllm"),
+        help="SGLang MoE runner for the sglang backend's FusedMoE (flashinfer_trtllm "
+        "= the TRT-LLM MoE kernels on Blackwell, which route inside the kernel)",
+    )
     ap.add_argument("--presets", nargs="+", default=sorted(PRESETS))
     args = ap.parse_args()
     if args.fuse_shared and args.backend != "fused":
         ap.error("--fuse-shared requires --backend fused")
     if args.fp8 and args.backend == "grouped_mm":
         ap.error("--fp8 requires --backend fused or sglang")
-    serving = _serving_module(args.sglang_patch, args.backend)
+    if args.moe_runner_backend != "triton" and args.backend != "sglang":
+        ap.error("--moe-runner-backend applies to --backend sglang only")
+    serving = _serving_module(args.sglang_patch, args.backend, args.moe_runner_backend)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16
     ok = True
@@ -438,7 +460,10 @@ def main():
             print(f"[{preset}/real] skipped on CPU")
     if args.backend in ("fused", "sglang") and device == "cuda":
         serving_cls, _ = serving
-        tag = f"qwen3_5_moe/{args.backend}{'-fp8' if args.fp8 else ''}"
+        tag = (
+            f"qwen3_5_moe/{args.backend}{'-fp8' if args.fp8 else ''}"
+            f"{'-' + args.moe_runner_backend if args.moe_runner_backend != 'triton' else ''}"
+        )
         ref, sg = build_qwen35_pair(
             8, 3, 64, 128, 128, device, dtype, serving_cls, args.fp8
         )

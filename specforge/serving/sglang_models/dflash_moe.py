@@ -92,6 +92,7 @@ try:
     from sglang.srt.layers.linear import MergedColumnParallelLinear, RowParallelLinear
     from sglang.srt.layers.moe.fused_moe_triton.layer import FusedMoE
     from sglang.srt.layers.moe.topk import TopK
+    from sglang.srt.layers.moe.utils import RoutingMethodType
     from sglang.srt.layers.quantization.w8a8_fp8 import W8A8Fp8Config
 
     _SGLANG_MODULES_AVAILABLE = True
@@ -367,6 +368,13 @@ class SglangMoEFFN(DraftMoEFFN):
             ),
             prefix=f"{prefix}.experts",
             inplace=False,
+            # Only read by runner backends that route inside the kernel
+            # (flashinfer TRT-LLM on Blackwell): softmax -> top-k -> renormalise,
+            # the Qwen recipe; the Triton runner uses TopK's output instead.
+            routing_method_type=RoutingMethodType.RenormalizeNaive,
+            # w13 holds the gate rows then the up rows (merge_gate_up), not
+            # interleaved pairs; runner backends that care (TRT-LLM) read this.
+            gate_up_interleaved=False,
         )
         if self.shared_experts is not None:
             gated = self.shared_experts.gate is not None
@@ -380,6 +388,10 @@ class SglangMoEFFN(DraftMoEFFN):
         """Same contract as :meth:`DraftMoEFFN.route`, computed by SGLang's
         ``TopK`` kernel on the reference router logits."""
         out = self.router(x, self.gate(x))
+        if getattr(out, "topk_ids", None) is None:
+            # Runner backends that route inside the kernel (flashinfer TRT-LLM)
+            # bypass TopK; report the reference routing instead.
+            return super().route(x)
         indices = out.topk_ids.long()
         flat = indices.flatten()
         counts = torch.zeros(
@@ -398,12 +410,61 @@ class SglangMoEFFN(DraftMoEFFN):
             y = y + shared
         return y.view(shape)
 
+    @staticmethod
+    def _copy_padded_expert(
+        name: str, param: torch.Tensor, tensor: torch.Tensor
+    ) -> bool:
+        """Some runner backends (flashinfer TRT-LLM) pad the expert width to a
+        multiple of 128: ``w13_weight`` is ``[E, 2N', K]`` with the gate rows
+        at ``[0:N]`` and the up rows at ``[N':N'+N]``, ``w2_weight`` is
+        ``[E, K, N']``. Copy the checkpoint's ``N`` columns/rows into place and
+        zero the padding; returns False for any other mismatch."""
+        if param.dtype != tensor.dtype and param.dtype not in (
+            torch.bfloat16,
+            torch.float16,
+            torch.float32,
+        ):
+            return False
+        if (
+            name == "experts.w13_weight"
+            and param.dim() == 3
+            and param.shape[0] == tensor.shape[0]
+            and param.shape[2] == tensor.shape[2]
+            and param.shape[1] > tensor.shape[1]
+        ):
+            n, n_pad = tensor.shape[1] // 2, param.shape[1] // 2
+            param.zero_()
+            param[:, :n].copy_(tensor[:, :n].to(param.dtype))
+            param[:, n_pad : n_pad + n].copy_(tensor[:, n:].to(param.dtype))
+            return True
+        if (
+            name == "experts.w2_weight"
+            and param.dim() == 3
+            and param.shape[:2] == tensor.shape[:2]
+            and param.shape[2] > tensor.shape[2]
+        ):
+            param.zero_()
+            param[:, :, : tensor.shape[2]].copy_(tensor.to(param.dtype))
+            return True
+        return False
+
     def load_native_tensors(self, entries: Dict[str, torch.Tensor]) -> Set[str]:
         """Copy one layer's checkpoint entries (names relative to the FFN, after
         :func:`stack_expert_weights` and :func:`merge_gate_up`) into the SGLang
         modules; returns the parameter names (relative to the FFN) that were
         filled, for the strict checkpoint check."""
         mapped = to_sglang_module_entries(entries)
+        if "experts.w13_weight" in mapped and getattr(
+            self.experts, "use_flashinfer_trtllm_moe", False
+        ):
+            # The flashinfer TRT-LLM runner's bf16 weight preparation
+            # (reorder_rows_for_gated_act_gemm + shuffle) expects w13 as
+            # [up rows; gate rows]; merge_gate_up gives [gate; up], so swap the
+            # halves. Verified by the equivalence gate on GB300 (without the
+            # swap the routed output is off by ~60%).
+            w13 = mapped["experts.w13_weight"]
+            n = w13.shape[1] // 2
+            mapped["experts.w13_weight"] = torch.cat([w13[:, n:], w13[:, :n]], dim=1)
         params = dict(self.named_parameters())
         unknown = sorted(set(mapped) - set(params))
         if unknown:
@@ -416,6 +477,9 @@ class SglangMoEFFN(DraftMoEFFN):
             for name, tensor in mapped.items():
                 param = params[name]
                 if tuple(param.shape) != tuple(tensor.shape):
+                    if self._copy_padded_expert(name, param, tensor):
+                        provided.add(name)
+                        continue
                     raise ValueError(
                         f"{name}: checkpoint shape {tuple(tensor.shape)} does not "
                         f"match the parameter shape {tuple(param.shape)}"
