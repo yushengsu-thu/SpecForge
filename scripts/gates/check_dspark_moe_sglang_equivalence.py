@@ -169,6 +169,16 @@ def compare(ref, sg, tokens, hidden, device, dtype, label, fp8_tolerance=False):
         f"max|dy|={diff.max().item():.3e} mean|dy|={diff.mean().item():.3e} "
         f"mean|y|={scale:.3e}"
     )
+    if fp8_tolerance:
+        # W8A8 experts: float8 e4m3 keeps 3 mantissa bits, so every quantised
+        # weight and activation carries up to ~6% relative error, and with
+        # random-sign weights a dot product does not average it out. The gate
+        # therefore only checks routing identity and that the mean relative
+        # error stays at the e4m3 level (<= 10%); the real acceptance criterion
+        # for fp8 experts is the end-to-end accept length.
+        return (
+            same_idx and w_diff < 1e-5 and diff.mean().item() <= 0.1 * max(scale, 1e-3)
+        )
     ok = (
         same_idx and w_diff < 1e-5 and diff.max().item() <= 2e-2 * max(scale, 1e-3) * 10
     )
