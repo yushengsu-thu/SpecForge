@@ -1,0 +1,89 @@
+# CONTINUATION of the 2-layer Qwen3.8 MoE run for TWO more epochs (2 x 4,958 = 9,916 steps at global batch 256),
+# weights-only warm start from the finished 1-epoch checkpoint (mirrors Kan phase B: optimizer, lr warmup and data
+# position restart; prompt_seed 42 kept as in his -cont2ep-from-1ep-v3 recipe). External disaggregated mode: reuses the
+# four capture servers (:30000-30003) and the Mooncake master started by the 1-epoch run, because seccomp on this devbox
+# blocks kill() so they cannot be restarted. Trainer must be launched with CUDA_VISIBLE_DEVICES=4,5,6,7.
+# Paths are repository-relative here; the actual run used /scratch/models/Qwen3.8-27B, /scratch/data, /scratch/cache
+# and /scratch/outputs on devbox specforge-qwen-h200 (see docs/runbooks/qwen38-27b-dspark-moe-2layer-h200.md).
+model:
+  target_model_path: Qwen/Qwen3.8-27B
+  draft_model_config: configs/qwen3.8-27b-dspark-moe-v2-2layer.json
+  target_backend: sglang
+  trust_remote_code: true
+  embedding_key: model.language_model.embed_tokens.weight
+  lm_head_key: lm_head.weight
+  load_target_embedding: true
+  torch_dtype: bfloat16
+  mask_token_id: 248070
+  sglang_attention_backend: triton
+  sglang_mem_fraction_static: 0.85
+  sglang_disable_radix_cache: true
+  sglang_context_length: 8199
+  sglang_max_running_requests: 2
+  sglang_max_total_tokens: 32768
+  draft_checkpoint_path: outputs/qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-1ep-h200/qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-1ep-h200-step4958
+data:
+  train_data_path: cache/dataset/qwen38_regen_mixture_v1_train.jsonl
+  max_length: 8192
+  chat_template: qwen3.5
+  cache_dir: cache/qwen3.8-27b-regen-mixture-v1
+  build_dataset_num_proc: 64
+  dataloader_num_workers: 8
+training:
+  strategy: dspark
+  num_epochs: 2
+  batch_size: 4
+  accumulation_steps: 16
+  fsdp_sharding: FULL_SHARD
+  optimizer_cpu_offload: true
+  learning_rate: 0.0005
+  lr_scheduler: constant
+  warmup_ratio: 0.04
+  max_grad_norm: 1.0
+  attention_backend: flex_attention
+  num_anchors: 512
+  loss_decay_gamma: 4.0
+  objective_chunk_blocks: 128
+  dspark_ce_loss_alpha: 0.1
+  dspark_l1_loss_alpha: 0.9
+  dspark_confidence_head_alpha: 1.0
+  save_interval: 500
+  max_checkpoints: 3
+  log_interval: 10
+  dist_timeout: 15
+  seed: 42
+  prompt_seed: 42
+tracking:
+  report_to: none
+runtime:
+  producer_lease: 8
+  producer_concurrency: 8
+  in_flight_high_watermark: 768
+  in_flight_low_watermark: 512
+  resident_high_watermark_bytes: 322122547200
+  resident_low_watermark_bytes: 214748364800
+  feature_store_max_resident_bytes: 408021893120
+run_id: qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-cont2ep-from-1ep-h200
+output_dir: outputs/qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-cont2ep-from-1ep-h200
+deployment:
+  mode: disaggregated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 4
+  disaggregated:
+    control_dir: outputs/qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-cont2ep-from-1ep-h200/control
+    consumer_state_dir: outputs/qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-cont2ep-from-1ep-h200/consumer-state
+    backend: mooncake
+    client_buffer_size: 1073741824
+    store_id: qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-cont2ep-from-1ep-h200
+    server_urls:
+    - http://127.0.0.1:30000
+    - http://127.0.0.1:30001
+    - http://127.0.0.1:30002
+    - http://127.0.0.1:30003
+    mooncake_metadata_server: http://127.0.0.1:35880/metadata
+    mooncake_master_server_addr: 127.0.0.1:35551
+    mooncake_local_hostname: 127.0.0.1
+    mooncake_protocol: tcp
+    idle_timeout_s: 7200
+    peer_wait_timeout_s: 7200

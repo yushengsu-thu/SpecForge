@@ -1,0 +1,79 @@
+diff --git a/python/sglang/launch_server.py b/python/sglang/launch_server.py
+index 5e47dd2..a066480 100644
+--- a/python/sglang/launch_server.py
++++ b/python/sglang/launch_server.py
+@@ -64,6 +64,10 @@ if __name__ == "__main__":
+ 
+     load_plugins()
+ 
++    from sglang.srt.stop_file import start_stop_file_watchdog
++
++    start_stop_file_watchdog()
++
+     server_args = prepare_server_args(sys.argv[1:])
+ 
+     try:
+diff --git a/python/sglang/srt/managers/detokenizer_manager.py b/python/sglang/srt/managers/detokenizer_manager.py
+index 2a506f8..24b74f6 100644
+--- a/python/sglang/srt/managers/detokenizer_manager.py
++++ b/python/sglang/srt/managers/detokenizer_manager.py
+@@ -518,6 +518,9 @@ def run_detokenizer_process(
+     port_args: PortArgs,
+     detokenizer_manager_class=DetokenizerManager,
+ ):
++    from sglang.srt.stop_file import start_stop_file_watchdog
++
++    start_stop_file_watchdog()
+     kill_itself_when_parent_died()
+     setproctitle.setproctitle("sglang::detokenizer")
+     configure_logger(server_args)
+diff --git a/python/sglang/srt/managers/scheduler.py b/python/sglang/srt/managers/scheduler.py
+index 7dc5be8..1b0b0b9 100644
+--- a/python/sglang/srt/managers/scheduler.py
++++ b/python/sglang/srt/managers/scheduler.py
+@@ -5009,6 +5009,9 @@ def run_scheduler_process(
+     display_dp_rank: Optional[int] = None,
+     display_moe_ep_rank: Optional[int] = None,
+ ):
++    from sglang.srt.stop_file import start_stop_file_watchdog
++
++    start_stop_file_watchdog()
+     # Load plugins so hooks can override Scheduler and its dependencies.
+     load_plugins()
+     # Publish before anything in this process reads configuration.
+diff --git a/python/sglang/srt/stop_file.py b/python/sglang/srt/stop_file.py
+new file mode 100644
+index 0000000..2216131
+--- /dev/null
++++ b/python/sglang/srt/stop_file.py
+@@ -0,0 +1,30 @@
++"""Opt-in self-termination for a server process that cannot be signalled.
++
++Some sandboxes (seccomp policies that deny ``kill``) leave a launched server
++unstoppable from the outside. When ``SGLANG_STOP_FILE`` is set, the server's
++main process polls that path and exits with ``os._exit(0)`` once the file
++exists; its scheduler/detokenizer children die with it through
++``PR_SET_PDEATHSIG`` (see ``kill_itself_when_parent_died``), which frees the
++GPU without any signal being sent across processes.
++"""
++
++from __future__ import annotations
++
++import os
++import threading
++import time
++
++
++def start_stop_file_watchdog(poll_seconds: float = 2.0) -> bool:
++    path = os.environ.get("SGLANG_STOP_FILE")
++    if not path:
++        return False
++
++    def _watch() -> None:
++        while True:
++            time.sleep(poll_seconds)
++            if os.path.exists(path):
++                os._exit(0)
++
++    threading.Thread(target=_watch, name="sglang-stop-file", daemon=True).start()
++    return True
