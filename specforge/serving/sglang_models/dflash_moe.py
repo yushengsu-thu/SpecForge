@@ -20,6 +20,7 @@ arguments also work.
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import os
 from typing import Iterable, Tuple
@@ -59,6 +60,11 @@ MOE_EXPERT_DTYPE_ENV = "SPECFORGE_DRAFT_MOE_EXPERT_DTYPE"
 #: weight = the sigmoid gate, or 1), removing its separate GEMMs. Exact up to
 #: summation order. Off by default.
 MOE_FUSE_SHARED_ENV = "SPECFORGE_DRAFT_MOE_FUSE_SHARED"
+#: ``SPECFORGE_DRAFT_MOE_FUSE_SHARED_MAX_TOKENS``: the folded shared expert is
+#: used for steps of at most this many tokens (small batches, where the extra
+#: kernel launches dominate); larger steps keep the separate shared GEMMs,
+#: which are more efficient there. Default 64.
+MOE_FUSE_SHARED_MAX_TOKENS_ENV = "SPECFORGE_DRAFT_MOE_FUSE_SHARED_MAX_TOKENS"
 
 try:
     from sglang.srt.layers.moe.moe_runner.base import MoeRunnerConfig
@@ -147,12 +153,20 @@ class FusedDraftMoEFFN(DraftMoEFFN):
         del self.experts.w2
         self.experts.w13 = nn.Parameter(w13, requires_grad=False)
         self.experts.w2 = nn.Parameter(w2, requires_grad=False)
+        # The separate shared expert stays for large steps (see forward).
         self._shared_gate = self.shared_experts.gate  # Linear [1, H] or None
-        self.shared_experts = None
         self._fused_shared = m
-        self._runner_config.top_k = self.topk + m
-        self._runner_config.num_experts = self.n_experts + m
-        self._runner_config.num_local_experts = self.n_experts + m
+        self._fuse_shared_max_tokens = int(
+            os.environ.get(MOE_FUSE_SHARED_MAX_TOKENS_ENV, "64")
+        )
+        # One runner config per path: the kernel sizes its token alignment
+        # from top_k, so the folded path advertises top_k + m.
+        self._runner_config_folded = dataclasses.replace(
+            self._runner_config,
+            top_k=self.topk + m,
+            num_experts=self.n_experts + m,
+            num_local_experts=self.n_experts + m,
+        )
         torch.cuda.empty_cache()
 
     def quantize_experts_fp8(self) -> None:
@@ -179,10 +193,12 @@ class FusedDraftMoEFFN(DraftMoEFFN):
         x = x.reshape(-1, self.hidden_size)
         weights, indices, _ = self.route(x)
         m = getattr(self, "_fused_shared", 0)
-        if m:
+        tokens = x.shape[0]
+        fold = bool(m) and tokens <= self._fuse_shared_max_tokens
+        runner_config = self._runner_config_folded if fold else self._runner_config
+        if fold:
             # Every token also visits the m shared-expert pieces, weighted by
             # the per-token sigmoid gate (or 1 when the shared expert is ungated).
-            tokens = x.shape[0]
             extra_ids = torch.arange(
                 self.n_experts, self.n_experts + m, device=x.device, dtype=indices.dtype
             ).expand(tokens, m)
@@ -206,10 +222,10 @@ class FusedDraftMoEFFN(DraftMoEFFN):
             self.experts.w13,
             self.experts.w2,
             StandardTopKOutput(weights, indices.to(torch.int32), None),
-            self._runner_config,
+            runner_config,
             **kwargs,
         )
-        if self.shared_experts is not None:
+        if self.shared_experts is not None and not fold:
             y = y + self.shared_experts(x)
         return y.view(shape)
 
