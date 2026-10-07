@@ -86,7 +86,9 @@ def _serving_module(use_patch: bool, backend: str = "grouped_mm"):
     return FusedDraftMoEFFN, stack
 
 
-def build_pair(preset, e, k, inter, hidden, device, dtype, bias_scale, serving):
+def build_pair(
+    preset, e, k, inter, hidden, device, dtype, bias_scale, serving, fp8=False
+):
     DraftMoEFFN, stack_expert_weights = serving
     recipe = PRESETS[preset]
     moe_cfg = MoEConfig(
@@ -145,6 +147,8 @@ def build_pair(preset, e, k, inter, hidden, device, dtype, bias_scale, serving):
     with torch.no_grad():
         for name, tensor in stacked.items():
             sg_params[name].copy_(tensor.to(sg_params[name].dtype))
+    if fp8:
+        sg.quantize_experts_fp8()
     return ref.eval(), sg.eval()
 
 
@@ -181,8 +185,16 @@ def main():
         help="fused = SGLang's fused MoE kernel through "
         "specforge.serving.sglang_models.dflash_moe (CUDA + SGLang runtime)",
     )
+    ap.add_argument(
+        "--fp8",
+        action="store_true",
+        help="with --backend fused: quantise the routed experts to fp8 e4m3 "
+        "(per-channel) after loading, i.e. the SPECFORGE_DRAFT_MOE_EXPERT_DTYPE=fp8 path",
+    )
     ap.add_argument("--presets", nargs="+", default=sorted(PRESETS))
     args = ap.parse_args()
+    if args.fp8 and args.backend != "fused":
+        ap.error("--fp8 requires --backend fused")
     serving = _serving_module(args.sglang_patch, args.backend)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16
@@ -190,9 +202,11 @@ def main():
     torch.manual_seed(0)
     for preset in args.presets:
         # Small config, with a non-trivial selection bias.
-        ref, sg = build_pair(preset, 8, 2, 64, 128, device, dtype, 0.3, serving)
+        ref, sg = build_pair(
+            preset, 8, 2, 64, 128, device, dtype, 0.3, serving, args.fp8
+        )
         if device == "cuda":
-            tag = f"{preset}/small/{args.backend}"
+            tag = f"{preset}/small/{args.backend}{'-fp8' if args.fp8 else ''}"
             ok &= compare(ref, sg, 1, 128, device, dtype, tag)
             ok &= compare(ref, sg, 37, 128, device, dtype, tag)
         if args.backend == "grouped_mm":

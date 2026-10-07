@@ -47,6 +47,12 @@ logger = logging.getLogger(__name__)
 #: ``SPECFORGE_DRAFT_MOE_BACKEND``: ``fused`` (SGLang's fused MoE Triton kernel,
 #: default) or ``grouped_mm`` (the plain-PyTorch reference in ``moe_ffn``).
 MOE_BACKEND_ENV = "SPECFORGE_DRAFT_MOE_BACKEND"
+#: ``SPECFORGE_DRAFT_MOE_EXPERT_DTYPE``: ``bf16`` (default) or ``fp8``. With
+#: ``fp8`` the fused backend quantises the routed experts to float8 e4m3 with
+#: one scale per output channel right after loading and runs the kernel's
+#: W8A8 path (activations quantised per token on the fly). Halves the expert
+#: bytes each draft step reads; the export stays bf16.
+MOE_EXPERT_DTYPE_ENV = "SPECFORGE_DRAFT_MOE_EXPERT_DTYPE"
 
 try:
     from sglang.srt.layers.moe.moe_runner.base import MoeRunnerConfig
@@ -101,16 +107,59 @@ class FusedDraftMoEFFN(DraftMoEFFN):
             swiglu_limit=self.swiglu_limit if self.swiglu_limit > 0 else None,
         )
 
+    _FP8_MAX = 448.0  # float8_e4m3fn
+
+    @staticmethod
+    def _quantize_per_channel(w: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """``w [E, N, K]`` (bf16) -> (e4m3 ``[E, N, K]``, fp32 scale ``[E, N]``) with
+        one absmax scale per expert output channel, the layout the fused kernel
+        reads for ``per_channel_quant=True``."""
+        scale = (
+            w.float().abs().amax(dim=-1).clamp_min(1e-12) / FusedDraftMoEFFN._FP8_MAX
+        )
+        q = (w.float() / scale.unsqueeze(-1)).clamp(
+            -FusedDraftMoEFFN._FP8_MAX, FusedDraftMoEFFN._FP8_MAX
+        )
+        return q.to(torch.float8_e4m3fn), scale.contiguous()
+
+    def quantize_experts_fp8(self) -> None:
+        """Replace the bf16 routed experts by fp8 weights plus per-channel scales.
+
+        Called after the checkpoint is loaded and verified; the shared expert
+        and the router stay bf16/fp32.
+        """
+        if getattr(self, "_fp8", False):
+            return
+        w13, s13 = self._quantize_per_channel(self.experts.w13.data)
+        w2, s2 = self._quantize_per_channel(self.experts.w2.data)
+        del self.experts.w13
+        del self.experts.w2
+        self.experts.register_buffer("w13", w13)
+        self.experts.register_buffer("w2", w2)
+        self.experts.register_buffer("w13_scale", s13)
+        self.experts.register_buffer("w2_scale", s2)
+        self._fp8 = True
+        torch.cuda.empty_cache()
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         shape = x.shape
         x = x.reshape(-1, self.hidden_size)
         weights, indices, _ = self.route(x)
+        kwargs = {}
+        if getattr(self, "_fp8", False):
+            kwargs = dict(
+                use_fp8_w8a8=True,
+                per_channel_quant=True,
+                w1_scale=self.experts.w13_scale,
+                w2_scale=self.experts.w2_scale,
+            )
         y = fused_experts(
             x,
             self.experts.w13,
             self.experts.w2,
             StandardTopKOutput(weights, indices.to(torch.int32), None),
             self._runner_config,
+            **kwargs,
         )
         if self.shared_experts is not None:
             y = y + self.shared_experts(x)
@@ -177,6 +226,25 @@ class _MoEDraftMixin:
         provided = {name.removeprefix("model.") for name, _ in stacked}
         super().load_weights(iter(stacked))
         verify_moe_weights(self, provided, type(self).__name__)
+        dtype = os.environ.get(MOE_EXPERT_DTYPE_ENV, "bf16").strip().lower()
+        if dtype == "fp8":
+            if not isinstance(self.layers[0].mlp, FusedDraftMoEFFN):
+                raise ValueError(
+                    f"{MOE_EXPERT_DTYPE_ENV}=fp8 needs the fused backend "
+                    f"({MOE_BACKEND_ENV}=fused)"
+                )
+            before = torch.cuda.memory_allocated()
+            for layer in self.layers:
+                layer.mlp.quantize_experts_fp8()
+            logger.info(
+                "MoE draft experts quantised to fp8 e4m3 (per-channel scales); "
+                "freed %.1f GB",
+                (before - torch.cuda.memory_allocated()) / 1e9,
+            )
+        elif dtype != "bf16":
+            raise ValueError(
+                f"{MOE_EXPERT_DTYPE_ENV} must be bf16 or fp8, got {dtype!r}"
+            )
 
 
 class DFlashMoEDraftModel(_MoEDraftMixin, DFlashDraftModel):
