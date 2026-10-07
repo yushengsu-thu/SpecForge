@@ -152,7 +152,7 @@ def build_pair(
     return ref.eval(), sg.eval()
 
 
-def compare(ref, sg, tokens, hidden, device, dtype, label):
+def compare(ref, sg, tokens, hidden, device, dtype, label, fp8_tolerance=False):
     x = torch.randn(tokens, hidden, device=device, dtype=dtype)
     with torch.no_grad():
         y_ref = ref(x)
@@ -207,15 +207,22 @@ def main():
         )
         if device == "cuda":
             tag = f"{preset}/small/{args.backend}{'-fp8' if args.fp8 else ''}"
-            ok &= compare(ref, sg, 1, 128, device, dtype, tag)
-            ok &= compare(ref, sg, 37, 128, device, dtype, tag)
+            ok &= compare(ref, sg, 1, 128, device, dtype, tag, fp8_tolerance=args.fp8)
+            ok &= compare(ref, sg, 37, 128, device, dtype, tag, fp8_tolerance=args.fp8)
         if args.backend == "grouped_mm":
             # Loop path (force by moving to CPU) vs reference on CPU; the fused
             # kernel is CUDA-only.
             ref_cpu, sg_cpu = ref.to("cpu"), sg.to("cpu")
             ref_cpu.experts.grouped_mm = False
             ok &= compare(
-                ref_cpu, sg_cpu, 23, 128, "cpu", dtype, f"{preset}/small/loop-cpu"
+                ref_cpu,
+                sg_cpu,
+                23,
+                128,
+                "cpu",
+                dtype,
+                f"{preset}/small/loop-cpu",
+                fp8_tolerance=args.fp8,
             )
         # Real sizes: DSV4-Flash arm (64 x 2048 top-6) and Qwen3.8-27B arm (16 x 4352 top-4).
         e, k, inter, hidden = (
@@ -223,13 +230,27 @@ def main():
         )
         if device == "cuda":
             ref, sg = build_pair(
-                preset, e, k, inter, hidden, device, dtype, 1.0, serving
+                preset, e, k, inter, hidden, device, dtype, 1.0, serving, args.fp8
             )
             ok &= compare(
-                ref, sg, 8, hidden, device, dtype, f"{preset}/real/grouped_mm"
+                ref,
+                sg,
+                8,
+                hidden,
+                device,
+                dtype,
+                f"{preset}/real/grouped_mm",
+                fp8_tolerance=args.fp8,
             )
             ok &= compare(
-                ref, sg, 256, hidden, device, dtype, f"{preset}/real/grouped_mm"
+                ref,
+                sg,
+                256,
+                hidden,
+                device,
+                dtype,
+                f"{preset}/real/grouped_mm",
+                fp8_tolerance=args.fp8,
             )
         else:
             print(f"[{preset}/real] skipped on CPU")
