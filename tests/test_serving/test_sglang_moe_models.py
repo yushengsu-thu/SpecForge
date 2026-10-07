@@ -15,8 +15,10 @@ from torch import nn
 from specforge.modeling.draft.moe import MoEConfig, MoELayer, to_checkpoint_state_dict
 from specforge.serving.sglang_models.moe_ffn import (
     DraftMoEFFN,
+    DraftSharedExpert,
     merge_gate_up,
     routed_expert_count,
+    shared_expert_as_experts,
     stack_expert_weights,
     to_native_names,
     verify_moe_weights,
@@ -255,6 +257,27 @@ class TestServingMoEFFN(unittest.TestCase):
                 "layers.2.self_attn.q_proj.weight",
             },
         )
+
+    def test_shared_expert_splits_into_exact_kernel_experts(self):
+        torch.manual_seed(2)
+        hidden, width, chunk = 24, 32, 8  # 4 pieces
+        shared = DraftSharedExpert(hidden, width, 0.0, gated=True).float()
+        for p in shared.parameters():
+            p.data.normal_(0, 0.3)
+        w13, w2 = shared_expert_as_experts(shared, chunk)
+        self.assertEqual(tuple(w13.shape), (4, 2 * chunk, hidden))
+        self.assertEqual(tuple(w2.shape), (4, hidden, chunk))
+        x = torch.randn(5, hidden)
+        with torch.no_grad():
+            ref = shared(x)
+            gate = torch.sigmoid(shared.gate(x))
+            out = torch.zeros_like(x)
+            for c in range(4):
+                g, u = (x @ w13[c].T).chunk(2, -1)
+                out += gate * ((torch.nn.functional.silu(g) * u) @ w2[c].T)
+        torch.testing.assert_close(out, ref, atol=1e-5, rtol=1e-5)
+        with self.assertRaisesRegex(ValueError, "not a multiple"):
+            shared_expert_as_experts(shared, 7)
 
     def test_merge_gate_up_builds_the_fused_layout(self):
         w1 = torch.arange(2 * 3 * 4, dtype=torch.float32).view(2, 3, 4)

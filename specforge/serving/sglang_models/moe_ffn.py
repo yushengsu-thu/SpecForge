@@ -386,6 +386,33 @@ def to_native_names(
     return out
 
 
+def shared_expert_as_experts(
+    shared: "DraftSharedExpert", chunk: int
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Split a SwiGLU shared expert of width ``S`` into ``S // chunk`` experts of
+    width ``chunk`` in the fused kernel's layout: ``w13 [m, 2*chunk, H]`` (gate
+    rows then up rows) and ``w2 [m, H, chunk]``.
+
+    SwiGLU is elementwise over the intermediate dimension, so
+    ``w2 @ (silu(w1 x) * (w3 x)) == sum_c w2[:, c] @ (silu(w1[c] x) * (w3[c] x))``
+    over the chunks: routing every token to all ``m`` pieces with the same
+    combine weight reproduces the shared expert exactly (up to summation
+    order). The per-token sigmoid gate, if any, becomes that combine weight.
+    """
+    w1, w2, w3 = shared.w1.weight, shared.w2.weight, shared.w3.weight
+    width = w1.shape[0]
+    if chunk <= 0 or width % chunk:
+        raise ValueError(
+            f"shared expert width {width} is not a multiple of the expert width {chunk}"
+        )
+    m = width // chunk
+    w13 = torch.cat(
+        [w1.view(m, chunk, -1), w3.view(m, chunk, -1)], dim=1
+    ).contiguous()  # [m, 2*chunk, H]
+    w2m = w2.view(-1, m, chunk).permute(1, 0, 2).contiguous()  # [m, H, chunk]
+    return w13, w2m
+
+
 _PER_EXPERT_KEY = re.compile(
     r"^(?P<base>(?:.*\.)?experts)\.(?P<idx>\d+)\.(?P<w>w[123])\.weight$"
 )

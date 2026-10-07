@@ -37,6 +37,7 @@ from .moe_ffn import (
     DraftMoEFFN,
     merge_gate_up,
     routed_expert_count,
+    shared_expert_as_experts,
     stack_expert_weights,
     to_native_names,
     verify_moe_weights,
@@ -53,6 +54,11 @@ MOE_BACKEND_ENV = "SPECFORGE_DRAFT_MOE_BACKEND"
 #: W8A8 path (activations quantised per token on the fly). Halves the expert
 #: bytes each draft step reads; the export stays bf16.
 MOE_EXPERT_DTYPE_ENV = "SPECFORGE_DRAFT_MOE_EXPERT_DTYPE"
+#: ``SPECFORGE_DRAFT_MOE_FUSE_SHARED``: ``1`` folds the shared expert into the
+#: fused kernel as ``S // N`` extra experts every token routes to (combine
+#: weight = the sigmoid gate, or 1), removing its separate GEMMs. Exact up to
+#: summation order. Off by default.
+MOE_FUSE_SHARED_ENV = "SPECFORGE_DRAFT_MOE_FUSE_SHARED"
 
 try:
     from sglang.srt.layers.moe.moe_runner.base import MoeRunnerConfig
@@ -122,6 +128,33 @@ class FusedDraftMoEFFN(DraftMoEFFN):
         )
         return q.to(torch.float8_e4m3fn), scale.contiguous()
 
+    def fuse_shared_expert(self) -> None:
+        """Fold the shared expert into the routed-expert tensors (see
+        :func:`shared_expert_as_experts`). Must run before any fp8 quantisation."""
+        if self.shared_experts is None or getattr(self, "_fused_shared", 0):
+            return
+        if getattr(self, "_fp8", False):
+            raise RuntimeError(
+                "fuse_shared_expert must run before quantize_experts_fp8"
+            )
+        w13x, w2x = shared_expert_as_experts(
+            self.shared_experts, self.intermediate_size
+        )
+        m = w13x.shape[0]
+        w13 = torch.cat([self.experts.w13.data, w13x.to(self.experts.w13.dtype)], dim=0)
+        w2 = torch.cat([self.experts.w2.data, w2x.to(self.experts.w2.dtype)], dim=0)
+        del self.experts.w13
+        del self.experts.w2
+        self.experts.w13 = nn.Parameter(w13, requires_grad=False)
+        self.experts.w2 = nn.Parameter(w2, requires_grad=False)
+        self._shared_gate = self.shared_experts.gate  # Linear [1, H] or None
+        self.shared_experts = None
+        self._fused_shared = m
+        self._runner_config.top_k = self.topk + m
+        self._runner_config.num_experts = self.n_experts + m
+        self._runner_config.num_local_experts = self.n_experts + m
+        torch.cuda.empty_cache()
+
     def quantize_experts_fp8(self) -> None:
         """Replace the bf16 routed experts by fp8 weights plus per-channel scales.
 
@@ -145,6 +178,21 @@ class FusedDraftMoEFFN(DraftMoEFFN):
         shape = x.shape
         x = x.reshape(-1, self.hidden_size)
         weights, indices, _ = self.route(x)
+        m = getattr(self, "_fused_shared", 0)
+        if m:
+            # Every token also visits the m shared-expert pieces, weighted by
+            # the per-token sigmoid gate (or 1 when the shared expert is ungated).
+            tokens = x.shape[0]
+            extra_ids = torch.arange(
+                self.n_experts, self.n_experts + m, device=x.device, dtype=indices.dtype
+            ).expand(tokens, m)
+            gate = (
+                torch.sigmoid(self._shared_gate(x).float())
+                if self._shared_gate is not None
+                else torch.ones(tokens, 1, device=x.device, dtype=torch.float32)
+            )
+            indices = torch.cat([indices, extra_ids], dim=1)
+            weights = torch.cat([weights, gate.expand(tokens, m)], dim=1)
         kwargs = {}
         if getattr(self, "_fp8", False):
             kwargs = dict(
@@ -226,6 +274,20 @@ class _MoEDraftMixin:
         provided = {name.removeprefix("model.") for name, _ in stacked}
         super().load_weights(iter(stacked))
         verify_moe_weights(self, provided, type(self).__name__)
+        if os.environ.get(MOE_FUSE_SHARED_ENV, "0").strip() == "1":
+            if not isinstance(self.layers[0].mlp, FusedDraftMoEFFN):
+                raise ValueError(f"{MOE_FUSE_SHARED_ENV}=1 needs the fused backend")
+            for layer in self.layers:
+                layer.mlp.fuse_shared_expert()
+            m = getattr(self.layers[0].mlp, "_fused_shared", 0)
+            if m:
+                logger.info(
+                    "MoE draft: shared expert folded into the fused kernel as %d "
+                    "extra expert(s); kernel now sees E=%d, top-%d",
+                    m,
+                    self.layers[0].mlp.n_experts + m,
+                    self.layers[0].mlp.topk + m,
+                )
         dtype = os.environ.get(MOE_EXPERT_DTYPE_ENV, "bf16").strip().lower()
         if dtype == "fp8":
             if not isinstance(self.layers[0].mlp, FusedDraftMoEFFN):

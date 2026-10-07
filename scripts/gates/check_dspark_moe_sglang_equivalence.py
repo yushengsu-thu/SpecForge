@@ -87,7 +87,17 @@ def _serving_module(use_patch: bool, backend: str = "grouped_mm"):
 
 
 def build_pair(
-    preset, e, k, inter, hidden, device, dtype, bias_scale, serving, fp8=False
+    preset,
+    e,
+    k,
+    inter,
+    hidden,
+    device,
+    dtype,
+    bias_scale,
+    serving,
+    fp8=False,
+    fuse_shared=False,
 ):
     DraftMoEFFN, stack_expert_weights = serving
     recipe = PRESETS[preset]
@@ -147,6 +157,8 @@ def build_pair(
     with torch.no_grad():
         for name, tensor in stacked.items():
             sg_params[name].copy_(tensor.to(sg_params[name].dtype))
+    if fuse_shared:
+        sg.fuse_shared_expert()
     if fp8:
         sg.quantize_experts_fp8()
     return ref.eval(), sg.eval()
@@ -201,10 +213,16 @@ def main():
         help="with --backend fused: quantise the routed experts to fp8 e4m3 "
         "(per-channel) after loading, i.e. the SPECFORGE_DRAFT_MOE_EXPERT_DTYPE=fp8 path",
     )
+    ap.add_argument(
+        "--fuse-shared",
+        action="store_true",
+        help="with --backend fused: fold the shared expert into the kernel's "
+        "expert tensors (SPECFORGE_DRAFT_MOE_FUSE_SHARED=1 path)",
+    )
     ap.add_argument("--presets", nargs="+", default=sorted(PRESETS))
     args = ap.parse_args()
-    if args.fp8 and args.backend != "fused":
-        ap.error("--fp8 requires --backend fused")
+    if (args.fp8 or args.fuse_shared) and args.backend != "fused":
+        ap.error("--fp8 / --fuse-shared require --backend fused")
     serving = _serving_module(args.sglang_patch, args.backend)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16
@@ -213,10 +231,20 @@ def main():
     for preset in args.presets:
         # Small config, with a non-trivial selection bias.
         ref, sg = build_pair(
-            preset, 8, 2, 64, 128, device, dtype, 0.3, serving, args.fp8
+            preset,
+            8,
+            2,
+            64,
+            128,
+            device,
+            dtype,
+            0.3,
+            serving,
+            args.fp8,
+            args.fuse_shared,
         )
         if device == "cuda":
-            tag = f"{preset}/small/{args.backend}{'-fp8' if args.fp8 else ''}"
+            tag = f"{preset}/small/{args.backend}{'-fp8' if args.fp8 else ''}{'-fusedshared' if args.fuse_shared else ''}"
             ok &= compare(ref, sg, 1, 128, device, dtype, tag, fp8_tolerance=args.fp8)
             ok &= compare(ref, sg, 37, 128, device, dtype, tag, fp8_tolerance=args.fp8)
         if args.backend == "grouped_mm":
@@ -240,7 +268,17 @@ def main():
         )
         if device == "cuda":
             ref, sg = build_pair(
-                preset, e, k, inter, hidden, device, dtype, 1.0, serving, args.fp8
+                preset,
+                e,
+                k,
+                inter,
+                hidden,
+                device,
+                dtype,
+                1.0,
+                serving,
+                args.fp8,
+                args.fuse_shared,
             )
             ok &= compare(
                 ref,
