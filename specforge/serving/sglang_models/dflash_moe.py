@@ -92,6 +92,7 @@ try:
     from sglang.srt.layers.linear import MergedColumnParallelLinear, RowParallelLinear
     from sglang.srt.layers.moe.fused_moe_triton.layer import FusedMoE
     from sglang.srt.layers.moe.topk import TopK
+    from sglang.srt.layers.quantization.w8a8_fp8 import W8A8Fp8Config
 
     _SGLANG_MODULES_AVAILABLE = True
     _SGLANG_MODULES_IMPORT_ERROR: Exception | None = None
@@ -311,10 +312,21 @@ class SglangMoEFFN(DraftMoEFFN):
     replicated (TP1), so checkpoint tensors are copied straight into the
     modules (:meth:`load_native_tensors`) instead of going through SGLang's
     sharded weight loaders.
+
+    ``expert_dtype="fp8"`` (``SPECFORGE_DRAFT_MOE_EXPERT_DTYPE=fp8``) builds the
+    ``FusedMoE`` with SGLang's ``W8A8Fp8`` MoE method (float8 e4m3 expert
+    weights with one scale per output channel, activations quantised per token
+    on the fly) and quantises the bf16 checkpoint experts at load time; the
+    router and the shared expert stay bf16/fp32.
     """
 
-    def __init__(self, config, layer_id: int = 0) -> None:
+    def __init__(self, config, layer_id: int = 0, expert_dtype: str = "bf16") -> None:
         super().__init__(config)
+        if expert_dtype not in ("bf16", "fp8"):
+            raise ValueError(
+                f"{MOE_EXPERT_DTYPE_ENV} must be bf16 or fp8, got {expert_dtype!r}"
+            )
+        self._fp8 = expert_dtype == "fp8"
         if not _SGLANG_MODULES_AVAILABLE:
             raise RuntimeError(
                 f"{MOE_BACKEND_ENV}=sglang needs SGLang's MoE modules "
@@ -350,7 +362,9 @@ class SglangMoEFFN(DraftMoEFFN):
             layer_id=layer_id,
             top_k=self.topk,
             params_dtype=torch.get_default_dtype(),
-            quant_config=None,
+            quant_config=(
+                W8A8Fp8Config(is_checkpoint_fp8_serialized=True) if self._fp8 else None
+            ),
             prefix=f"{prefix}.experts",
             inplace=False,
         )
@@ -397,6 +411,7 @@ class SglangMoEFFN(DraftMoEFFN):
                 f"checkpoint FFN entries do not map to {type(self).__name__} "
                 f"parameters: {unknown[:8]}; module has {sorted(params)[:8]} ..."
             )
+        provided: Set[str] = set()
         with torch.no_grad():
             for name, tensor in mapped.items():
                 param = params[name]
@@ -405,8 +420,20 @@ class SglangMoEFFN(DraftMoEFFN):
                         f"{name}: checkpoint shape {tuple(tensor.shape)} does not "
                         f"match the parameter shape {tuple(param.shape)}"
                     )
-                param.copy_(tensor.to(param.dtype))
-        return set(mapped)
+                if self._fp8 and name in ("experts.w13_weight", "experts.w2_weight"):
+                    # bf16 checkpoint -> e4m3 weights + per-output-channel
+                    # scales, the layout SGLang's W8A8Fp8 MoE method serves.
+                    q, scale = FusedDraftMoEFFN._quantize_per_channel(
+                        tensor.to(param.device)
+                    )
+                    param.copy_(q)
+                    scale_param = params[f"{name}_scale"]
+                    scale_param.copy_(scale.unsqueeze(-1).to(scale_param.dtype))
+                    provided.add(f"{name}_scale")
+                else:
+                    param.copy_(tensor.to(param.dtype))
+                provided.add(name)
+        return provided
 
 
 def moe_backend() -> str:
@@ -442,7 +469,8 @@ def build_draft_moe_ffn(config, layer_id: int = 0) -> DraftMoEFFN:
     """The layer FFN for the selected backend (see :data:`MOE_BACKEND_ENV`)."""
     backend = moe_backend()
     if backend == "sglang":
-        return SglangMoEFFN(config, layer_id)
+        expert_dtype = os.environ.get(MOE_EXPERT_DTYPE_ENV, "bf16").strip().lower()
+        return SglangMoEFFN(config, layer_id, expert_dtype)
     if backend == "fused":
         return FusedDraftMoEFFN(config)
     return DraftMoEFFN(config)
@@ -537,11 +565,17 @@ class _MoEDraftMixin:
                     self.layers[0].mlp.topk + m,
                 )
         dtype = os.environ.get(MOE_EXPERT_DTYPE_ENV, "bf16").strip().lower()
-        if dtype == "fp8":
-            if not isinstance(self.layers[0].mlp, FusedDraftMoEFFN):
+        if dtype == "fp8" and isinstance(ffn, SglangMoEFFN):
+            # Quantised while loading (see SglangMoEFFN.load_native_tensors).
+            logger.info(
+                "MoE draft experts are fp8 e4m3 with per-channel scales (SGLang "
+                "W8A8Fp8 MoE method); router and shared expert stay bf16"
+            )
+        elif dtype == "fp8":
+            if not isinstance(ffn, FusedDraftMoEFFN):
                 raise ValueError(
-                    f"{MOE_EXPERT_DTYPE_ENV}=fp8 needs the fused backend "
-                    f"({MOE_BACKEND_ENV}=fused)"
+                    f"{MOE_EXPERT_DTYPE_ENV}=fp8 needs the fused or sglang backend "
+                    f"({MOE_BACKEND_ENV}=fused|sglang)"
                 )
             before = torch.cuda.memory_allocated()
             for layer in self.layers:

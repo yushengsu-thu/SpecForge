@@ -111,7 +111,9 @@ def _load_ffn(ffn, stacked):
             params[name].copy_(tensor.to(params[name].dtype))
 
 
-def build_qwen35_pair(e, k, inter, hidden, shared, device, dtype, serving_cls):
+def build_qwen35_pair(
+    e, k, inter, hidden, shared, device, dtype, serving_cls, fp8=False
+):
     """Kan's Qwen3.8-27B DSpark MoE recipe (``qwen3_5_moe``): softmax over
     ``x W^T + gate.bias`` (folded router centering), top-k renormalised, no
     scaling, sigmoid-gated shared expert, Qwen checkpoint naming. Reference =
@@ -157,15 +159,31 @@ def build_qwen35_pair(e, k, inter, hidden, shared, device, dtype, serving_cls):
     stacked = dict(mod.stack_expert_weights(mod.to_native_names(w.items())))
     with torch.device(device):
         ref = mod.DraftMoEFFN(cfg).to(dtype=dtype)
-        sg = serving_cls(cfg).to(dtype=dtype)
+        if serving_cls.__name__ == "SglangMoEFFN":
+            # Build under the model dtype instead of casting afterwards: a
+            # blanket .to(dtype) would also cast the fp8 expert parameters
+            # (and their fp32 scales) SGLang's W8A8 method created.
+            prev = torch.get_default_dtype()
+            torch.set_default_dtype(dtype)
+            try:
+                sg = serving_cls(cfg, 0, "fp8" if fp8 else "bf16")
+            finally:
+                torch.set_default_dtype(prev)
+        else:
+            sg = serving_cls(cfg).to(dtype=dtype)
     for m in (ref, sg):
         m.gate.bias.data = m.gate.bias.data.float()
     _load_ffn(ref, stacked)
     _load_ffn(sg, dict(mod.merge_gate_up(list(stacked.items()))))
+    if fp8 and hasattr(sg, "quantize_experts_fp8"):
+        sg.quantize_experts_fp8()
+    elif fp8:
+        # What SGLang's model loader does after load_weights.
+        sg.experts.quant_method.process_weights_after_loading(sg.experts)
     return ref.eval(), sg.eval()
 
 
-def compare_ffn(ref, sg, tokens, hidden, device, dtype, label):
+def compare_ffn(ref, sg, tokens, hidden, device, dtype, label, fp8_tolerance=False):
     """Like :func:`compare` for two serving FFNs (both expose ``route``)."""
     x = torch.randn(tokens, hidden, device=device, dtype=dtype)
     with torch.no_grad():
@@ -181,6 +199,12 @@ def compare_ffn(ref, sg, tokens, hidden, device, dtype, label):
         f"max|dy|={diff.max().item():.3e} mean|dy|={diff.mean().item():.3e} "
         f"mean|y|={scale:.3e}"
     )
+    if fp8_tolerance:
+        # e4m3 experts: routing identical, mean relative error at the e4m3
+        # level (<= 10%); the real criterion is the end-to-end accept length.
+        return (
+            same_idx and w_diff < 1e-5 and diff.mean().item() <= 0.1 * max(scale, 1e-3)
+        )
     return (
         same_idx and w_diff < 1e-5 and diff.max().item() <= 2e-2 * max(scale, 1e-3) * 10
     )
@@ -322,8 +346,10 @@ def main():
     )
     ap.add_argument("--presets", nargs="+", default=sorted(PRESETS))
     args = ap.parse_args()
-    if (args.fp8 or args.fuse_shared) and args.backend != "fused":
-        ap.error("--fp8 / --fuse-shared require --backend fused")
+    if args.fuse_shared and args.backend != "fused":
+        ap.error("--fuse-shared requires --backend fused")
+    if args.fp8 and args.backend == "grouped_mm":
+        ap.error("--fp8 requires --backend fused or sglang")
     serving = _serving_module(args.sglang_patch, args.backend)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16
@@ -412,17 +438,21 @@ def main():
             print(f"[{preset}/real] skipped on CPU")
     if args.backend in ("fused", "sglang") and device == "cuda":
         serving_cls, _ = serving
-        tag = f"qwen3_5_moe/{args.backend}"
-        ref, sg = build_qwen35_pair(8, 3, 64, 128, 128, device, dtype, serving_cls)
-        ok &= compare_ffn(ref, sg, 1, 128, device, dtype, f"{tag}/small")
-        ok &= compare_ffn(ref, sg, 37, 128, device, dtype, f"{tag}/small")
+        tag = f"qwen3_5_moe/{args.backend}{'-fp8' if args.fp8 else ''}"
+        ref, sg = build_qwen35_pair(
+            8, 3, 64, 128, 128, device, dtype, serving_cls, args.fp8
+        )
+        ok &= compare_ffn(ref, sg, 1, 128, device, dtype, f"{tag}/small", args.fp8)
+        ok &= compare_ffn(ref, sg, 37, 128, device, dtype, f"{tag}/small", args.fp8)
         del ref, sg
         # Kan's Qwen3.8-27B DSpark MoE drafter: 512 x 512 top-10, shared 2048.
         ref, sg = build_qwen35_pair(
-            512, 10, 512, 5120, 2048, device, dtype, serving_cls
+            512, 10, 512, 5120, 2048, device, dtype, serving_cls, args.fp8
         )
         for tokens in (7, 56, 448):
-            ok &= compare_ffn(ref, sg, tokens, 5120, device, dtype, f"{tag}/real")
+            ok &= compare_ffn(
+                ref, sg, tokens, 5120, device, dtype, f"{tag}/real", args.fp8
+            )
         del ref, sg
     # Stacking must reject a truncated export.
     _, stack_expert_weights = serving
