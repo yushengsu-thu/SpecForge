@@ -1,20 +1,20 @@
 # Qwen3.8-27B DSpark MoE drafter with HALF of Kan's experts: configs/qwen3.8-27b-dspark-moe-256exp.json is
 # qwen3.8-27b-dspark-moe-v2.json with n_routed_experts 512 -> 256 (5 layers, top-10, expert width 512, shared
 # expert 2048, aux 0.001, router centering all unchanged). Trained FROM SCRATCH for THREE epochs
-# (3 x 4,958 = 14,874 steps at global batch 256) on ONE 4x GB300 node: 3 TP1 capture servers (GPUs 0-2, NVFP4
-# target as in Kan's B200 runs) + 1 trainer rank (GPU 3), batch_size 4 x accumulation 64 x 1 rank = 256.
+# (3 x 4,958 = 14,874 steps at global batch 256) on ONE 4x GB300 node: 2 TP1 capture servers (GPUs 0-1, NVFP4
+# target as in Kan's B200 runs) + 2 FSDP trainer ranks (GPUs 2-3), batch_size 4 x accumulation 32 x 2 ranks = 256,
+# AdamW on the GPUs (optimizer_cpu_offload false; the fp32 master and moments are sharded over the two ranks).
 # Everything else is Kan's qwen3.8-27b-dspark-moe-regen-mixture-v1-1ep-v3 recipe (lr 5e-4 constant after 4%
-# warm-up, FULL_SHARD, seed/prompt_seed 42). save_interval 2479 = half an epoch, so the
-# epoch ends (steps 4958 / 9916 / 14874) are checkpointed. W&B entity and run id come from the launching shell
-# (WANDB_ENTITY, WANDB_RUN_ID, WANDB_RESUME=allow); the key from WANDB_API_KEY.
-# Host-memory budget for this box: the devbox container is OOM-killed by kubelet at 924 GB (no swap) and Kan's values
-# were sized for 2 TB hosts (two launches died that way: the 106 GB tokenized cache is loaded by trainer and producer,
-# each capture server keeps ~100 GB of host buffers). Mooncake 3 x 30 GB segments, feature store <= 80 GB resident
-# (watermarks 64/40 GB), in-flight 384/256 samples (the low watermark must be >= the 256-sample optimizer step), 4 prompts in flight per capture server, 4 loader workers.
-# Why the optimizer lives on the GPU here: with CPU offload the single trainer process grew past 240 GB of host RSS
-# (fp32 master + AdamW moments for 10.6B params, plus the 106 GB tokenized cache) on top of ~100 GB per capture
-# server, and kubelet killed the container at 924 GB three times. The 284 GB GB300 holds params, grads, fp32
-# master, moments and bs-2 activations instead.
+# warm-up, FULL_SHARD, seed/prompt_seed 42). save_interval 2479 = half an epoch, so the epoch ends (steps 4958 /
+# 9916 / 14874) are checkpointed. W&B entity and run id come from the launching shell (WANDB_ENTITY, WANDB_RUN_ID,
+# WANDB_RESUME=allow); the key from WANDB_API_KEY.
+# Why 2 + 2 and not Kan's 4 + 4 halved to 3 + 1: this devbox container is OOM-killed by kubelet at 924 GB of host
+# memory (no swap) and Kan's values were sized for 2 TB hosts; with 3 capture servers (~100 GB host RSS each) a
+# single CPU-offloaded trainer (fp32 master + AdamW moments for 10.6B params + the 106 GB tokenized cache) blew the
+# limit, and a single GPU-resident trainer did not fit 284 GB at micro-batch 2. Two capture servers and two FSDP
+# ranks give the same throughput (capture-bound, ~5.5 samples/s) with half the GPU memory per rank. Host budget:
+# Mooncake 2 x 30 GB segments, feature store <= 80 GB resident (watermarks 64/40 GB), in-flight 384/256 samples,
+# 4 prompts in flight per capture server, 4 loader workers.
 model:
   target_model_path: /scratch/dsv4/models/Qwen3.8-27B-NVFP4-BF16-LMHead
   draft_model_config: /scratch/dsv4/SpecForge/configs/qwen3.8-27b-dspark-moe-256exp.json
@@ -41,8 +41,8 @@ data:
 training:
   strategy: dspark
   num_epochs: 3
-  batch_size: 2
-  accumulation_steps: 128
+  batch_size: 4
+  accumulation_steps: 32
   fsdp_sharding: FULL_SHARD
   optimizer_cpu_offload: false
   learning_rate: 0.0005
@@ -81,7 +81,7 @@ deployment:
   mode: disaggregated
   trainer:
     nnodes: 1
-    nproc_per_node: 1
+    nproc_per_node: 2
   disaggregated:
     control_dir: /scratch/dsv4/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-gb300/control
     consumer_state_dir: /scratch/dsv4/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-gb300/consumer-state
@@ -89,6 +89,7 @@ deployment:
     client_buffer_size: 1073741824
     managed_local:
       trainer_cuda_visible_devices:
+      - '2'
       - '3'
       mooncake:
         protocol: tcp
@@ -103,8 +104,4 @@ deployment:
       - port: 30001
         cuda_visible_devices:
         - '1'
-        tp_size: 1
-      - port: 30002
-        cuda_visible_devices:
-        - '2'
         tp_size: 1
