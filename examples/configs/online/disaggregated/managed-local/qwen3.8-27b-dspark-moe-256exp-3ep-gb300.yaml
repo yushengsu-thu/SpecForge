@@ -4,13 +4,17 @@
 # (3 x 4,958 = 14,874 steps at global batch 256) on ONE 4x GB300 node: 3 TP1 capture servers (GPUs 0-2, NVFP4
 # target as in Kan's B200 runs) + 1 trainer rank (GPU 3), batch_size 4 x accumulation 64 x 1 rank = 256.
 # Everything else is Kan's qwen3.8-27b-dspark-moe-regen-mixture-v1-1ep-v3 recipe (lr 5e-4 constant after 4%
-# warm-up, FULL_SHARD + CPU-offloaded AdamW, seed/prompt_seed 42). save_interval 2479 = half an epoch, so the
+# warm-up, FULL_SHARD, seed/prompt_seed 42). save_interval 2479 = half an epoch, so the
 # epoch ends (steps 4958 / 9916 / 14874) are checkpointed. W&B entity and run id come from the launching shell
 # (WANDB_ENTITY, WANDB_RUN_ID, WANDB_RESUME=allow); the key from WANDB_API_KEY.
 # Host-memory budget for this box: the devbox container is OOM-killed by kubelet at 924 GB (no swap) and Kan's values
 # were sized for 2 TB hosts (two launches died that way: the 106 GB tokenized cache is loaded by trainer and producer,
 # each capture server keeps ~100 GB of host buffers). Mooncake 3 x 30 GB segments, feature store <= 80 GB resident
 # (watermarks 64/40 GB), in-flight 384/256 samples (the low watermark must be >= the 256-sample optimizer step), 4 prompts in flight per capture server, 4 loader workers.
+# Why the optimizer lives on the GPU here: with CPU offload the single trainer process grew past 240 GB of host RSS
+# (fp32 master + AdamW moments for 10.6B params, plus the 106 GB tokenized cache) on top of ~100 GB per capture
+# server, and kubelet killed the container at 924 GB three times. The 284 GB GB300 holds params, grads, fp32
+# master, moments and bs-2 activations instead.
 model:
   target_model_path: /scratch/dsv4/models/Qwen3.8-27B-NVFP4-BF16-LMHead
   draft_model_config: /scratch/dsv4/SpecForge/configs/qwen3.8-27b-dspark-moe-256exp.json
@@ -37,10 +41,10 @@ data:
 training:
   strategy: dspark
   num_epochs: 3
-  batch_size: 4
-  accumulation_steps: 64
+  batch_size: 2
+  accumulation_steps: 128
   fsdp_sharding: FULL_SHARD
-  optimizer_cpu_offload: true
+  optimizer_cpu_offload: false
   learning_rate: 0.0005
   lr_scheduler: constant
   warmup_ratio: 0.04
