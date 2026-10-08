@@ -1,0 +1,111 @@
+# Qwen3.8-27B DSpark MoE drafter with HALF of Kan's experts (configs/qwen3.8-27b-dspark-moe-256exp.json:
+# n_routed_experts 512 -> 256; 5 layers, top-10, expert width 512, shared expert 2048, aux 0.001, router centering
+# unchanged), trained FROM SCRATCH for THREE epochs (3 x 4,958 = 14,874 steps at global batch 256) on ONE 8x H200
+# node with Kan's 1ep-v3 layout: 4 TP1 capture servers (GPUs 0-3) + 4 FSDP trainer ranks (GPUs 4-7).
+# Differences from his B200 recipe: target served in bf16 (Qwen/Qwen3.8-27B; the NVFP4 build needs Blackwell) and
+# batch_size 2 x accumulation 32 instead of 4 x 16 (same global batch 256; 141 GB GPUs). Everything else is his:
+# lr 5e-4 constant after 4% warm-up, FULL_SHARD + CPU-offloaded AdamW, seed/prompt_seed 42, Mooncake 4 x 100 GB,
+# feature store 408 GB (2 TB host). save_interval 2479 = half an epoch, so the epoch ends (4958 / 9916 / 14874) are
+# checkpointed. W&B entity and run id come from the launching shell (WANDB_ENTITY, WANDB_RUN_ID, WANDB_RESUME=allow).
+# The 4x GB300 variant of this recipe (qwen3.8-27b-dspark-moe-256exp-3ep-gb300.yaml) is capture-bound at ~6.7
+# samples/s with its two capture servers; this 4 + 4 layout was measured at ~8.1-8.5 samples/s on the same corpus.
+model:
+  target_model_path: /scratch/models/Qwen3.8-27B
+  draft_model_config: /scratch/SpecForge-256exp/configs/qwen3.8-27b-dspark-moe-256exp.json
+  target_backend: sglang
+  trust_remote_code: true
+  embedding_key: model.language_model.embed_tokens.weight
+  lm_head_key: lm_head.weight
+  load_target_embedding: true
+  torch_dtype: bfloat16
+  mask_token_id: 248070
+  sglang_attention_backend: triton
+  sglang_mem_fraction_static: 0.85
+  sglang_disable_radix_cache: true
+  sglang_context_length: 8199
+  sglang_max_running_requests: 2
+  sglang_max_total_tokens: 32768
+data:
+  train_data_path: /scratch/data/qwen38_regen_mixture_v1_train.jsonl
+  max_length: 8192
+  chat_template: qwen3.5
+  cache_dir: /scratch/cache/qwen3.8-27b-regen-mixture-v1-256exp
+  build_dataset_num_proc: 64
+  dataloader_num_workers: 8
+training:
+  strategy: dspark
+  num_epochs: 3
+  batch_size: 2
+  accumulation_steps: 32
+  fsdp_sharding: FULL_SHARD
+  optimizer_cpu_offload: true
+  learning_rate: 0.0005
+  lr_scheduler: constant
+  warmup_ratio: 0.04
+  max_grad_norm: 1.0
+  attention_backend: flex_attention
+  num_anchors: 512
+  loss_decay_gamma: 4.0
+  objective_chunk_blocks: 128
+  dspark_ce_loss_alpha: 0.1
+  dspark_l1_loss_alpha: 0.9
+  dspark_confidence_head_alpha: 1.0
+  save_interval: 2479
+  max_checkpoints: 3
+  log_interval: 10
+  dist_timeout: 15
+  seed: 42
+  prompt_seed: 42
+tracking:
+  report_to: wandb
+  wandb_project: specforge-5layer-moe-0.5*experts
+  wandb_name: qwen3.8-27b-dspark-moe-256exp-3ep-h200
+  wandb_dir: /scratch/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-h200/wandb
+runtime:
+  producer_lease: 8
+  producer_concurrency: 8
+  in_flight_high_watermark: 768
+  in_flight_low_watermark: 512
+  resident_high_watermark_bytes: 322122547200
+  resident_low_watermark_bytes: 214748364800
+  feature_store_max_resident_bytes: 408021893120
+run_id: qwen3.8-27b-dspark-moe-256exp-3ep-h200
+output_dir: /scratch/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-h200
+deployment:
+  mode: disaggregated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 4
+  disaggregated:
+    control_dir: /scratch/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-h200/control
+    consumer_state_dir: /scratch/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-h200/consumer-state
+    backend: mooncake
+    client_buffer_size: 1073741824
+    managed_local:
+      trainer_cuda_visible_devices:
+      - '4'
+      - '5'
+      - '6'
+      - '7'
+      mooncake:
+        protocol: tcp
+        global_segment_size_bytes: 107374182400
+        local_buffer_size_bytes: 1073741824
+        default_kv_lease_ttl_ms: 300000
+      capture_servers:
+      - port: 30000
+        cuda_visible_devices:
+        - '0'
+        tp_size: 1
+      - port: 30001
+        cuda_visible_devices:
+        - '1'
+        tp_size: 1
+      - port: 30002
+        cuda_visible_devices:
+        - '2'
+        tp_size: 1
+      - port: 30003
+        cuda_visible_devices:
+        - '3'
+        tp_size: 1
