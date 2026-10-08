@@ -13,8 +13,10 @@
 # single CPU-offloaded trainer (fp32 master + AdamW moments for 10.6B params + the 106 GB tokenized cache) blew the
 # limit, and a single GPU-resident trainer did not fit 284 GB at micro-batch 2. Two capture servers and two FSDP
 # ranks give the same throughput (capture-bound, ~5.5 samples/s) with half the GPU memory per rank. Host budget:
-# Mooncake 2 x 30 GB segments, feature store <= 80 GB resident (watermarks 64/40 GB), in-flight 384/256 samples,
-# 4 prompts in flight per capture server, 4 loader workers.
+# Mooncake 2 x 100 GB segments (the segments live inside the capture-server processes and MUST cover the in-flight
+# samples: 384 x ~0.5 GB of captured hidden states; with 30 GB segments the store filled, puts failed and each server
+# hoarded captured tensors at ~2 GB/s until the container died), feature store <= 80 GB resident (watermarks
+# 64/40 GB), in-flight 384/256 samples, 4 prompts in flight per capture server, 4 loader workers.
 model:
   target_model_path: /scratch/dsv4/models/Qwen3.8-27B-NVFP4-BF16-LMHead
   draft_model_config: /scratch/dsv4/SpecForge/configs/qwen3.8-27b-dspark-moe-256exp.json
@@ -93,7 +95,7 @@ deployment:
       - '3'
       mooncake:
         protocol: tcp
-        global_segment_size_bytes: 32212254720
+        global_segment_size_bytes: 107374182400
         local_buffer_size_bytes: 1073741824
         default_kv_lease_ttl_ms: 300000
       capture_servers:
