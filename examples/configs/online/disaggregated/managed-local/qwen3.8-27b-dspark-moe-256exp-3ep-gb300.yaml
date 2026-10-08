@@ -7,9 +7,10 @@
 # warm-up, FULL_SHARD + CPU-offloaded AdamW, seed/prompt_seed 42). save_interval 2479 = half an epoch, so the
 # epoch ends (steps 4958 / 9916 / 14874) are checkpointed. W&B entity and run id come from the launching shell
 # (WANDB_ENTITY, WANDB_RUN_ID, WANDB_RESUME=allow); the key from WANDB_API_KEY.
-# Host-memory budget for this box (container limit 924 GB, no swap; Kan's values were sized for a 2 TB host and the
-# first launch died when everything was evicted at once): Mooncake 3 x 40 GB segments, feature store <= 120 GB
-# resident (watermarks 100/60 GB), in-flight 384/256 samples (1.5 / 1 optimizer steps of 256).
+# Host-memory budget for this box: the devbox container is OOM-killed by kubelet at 924 GB (no swap) and Kan's values
+# were sized for 2 TB hosts (two launches died that way: the 106 GB tokenized cache is loaded by trainer and producer,
+# each capture server keeps ~100 GB of host buffers). Mooncake 3 x 30 GB segments, feature store <= 80 GB resident
+# (watermarks 64/40 GB), in-flight 320/192 samples, 4 prompts in flight per capture server, 4 loader workers.
 model:
   target_model_path: /scratch/dsv4/models/Qwen3.8-27B-NVFP4-BF16-LMHead
   draft_model_config: /scratch/dsv4/SpecForge/configs/qwen3.8-27b-dspark-moe-256exp.json
@@ -32,7 +33,7 @@ data:
   chat_template: qwen3.5
   cache_dir: /scratch/dsv4/cache/qwen3.8-27b-regen-mixture-v1
   build_dataset_num_proc: 64
-  dataloader_num_workers: 8
+  dataloader_num_workers: 4
 training:
   strategy: dspark
   num_epochs: 3
@@ -63,13 +64,13 @@ tracking:
   wandb_name: qwen3.8-27b-dspark-moe-256exp-3ep-gb300
   wandb_dir: /scratch/dsv4/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-gb300/wandb
 runtime:
-  producer_lease: 8
-  producer_concurrency: 8
-  in_flight_high_watermark: 384
-  in_flight_low_watermark: 256
-  resident_high_watermark_bytes: 107374182400
-  resident_low_watermark_bytes: 64424509440
-  feature_store_max_resident_bytes: 128849018880
+  producer_lease: 4
+  producer_concurrency: 4
+  in_flight_high_watermark: 320
+  in_flight_low_watermark: 192
+  resident_high_watermark_bytes: 68719476736
+  resident_low_watermark_bytes: 42949672960
+  feature_store_max_resident_bytes: 85899345920
 run_id: qwen3.8-27b-dspark-moe-256exp-3ep-gb300
 output_dir: /scratch/dsv4/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-gb300
 deployment:
@@ -87,7 +88,7 @@ deployment:
       - '3'
       mooncake:
         protocol: tcp
-        global_segment_size_bytes: 42949672960
+        global_segment_size_bytes: 32212254720
         local_buffer_size_bytes: 1073741824
         default_kv_lease_ttl_ms: 300000
       capture_servers:
