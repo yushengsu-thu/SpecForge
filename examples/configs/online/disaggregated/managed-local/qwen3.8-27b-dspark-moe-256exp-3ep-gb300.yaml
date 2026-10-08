@@ -15,8 +15,10 @@
 # ranks give the same throughput (capture-bound, ~5.5 samples/s) with half the GPU memory per rank. Host budget:
 # Mooncake 2 x 100 GB segments (the segments live inside the capture-server processes and MUST cover the in-flight
 # samples: 384 x ~0.5 GB of captured hidden states; with 30 GB segments the store filled, puts failed and each server
-# hoarded captured tensors at ~2 GB/s until the container died), feature store <= 80 GB resident (watermarks
-# 64/40 GB), in-flight 384/256 samples, 4 prompts in flight per capture server, 4 loader workers.
+# hoarded captured tensors at ~2 GB/s until the container died), feature store <= 256 GB resident (watermarks
+# 192/128 GB: one optimizer step is 256 samples x up to 0.5 GB = 128 GB, and with 64 GB the producer paused every
+# step and the trainers spent half of each 54 s step waiting for data), in-flight 384/256 samples, 4 prompts in
+# flight per capture server, 4 loader workers.
 model:
   target_model_path: /scratch/dsv4/models/Qwen3.8-27B-NVFP4-BF16-LMHead
   draft_model_config: /scratch/dsv4/SpecForge/configs/qwen3.8-27b-dspark-moe-256exp.json
@@ -74,9 +76,9 @@ runtime:
   producer_concurrency: 4
   in_flight_high_watermark: 384
   in_flight_low_watermark: 256
-  resident_high_watermark_bytes: 68719476736
-  resident_low_watermark_bytes: 42949672960
-  feature_store_max_resident_bytes: 85899345920
+  resident_high_watermark_bytes: 206158430208
+  resident_low_watermark_bytes: 137438953472
+  feature_store_max_resident_bytes: 274877906944
 run_id: qwen3.8-27b-dspark-moe-256exp-3ep-gb300
 output_dir: /scratch/dsv4/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-gb300
 deployment:
