@@ -17,8 +17,10 @@
 # samples: 384 x ~0.5 GB of captured hidden states; with 30 GB segments the store filled, puts failed and each server
 # hoarded captured tensors at ~2 GB/s until the container died), feature store <= 256 GB resident (watermarks
 # 192/128 GB: one optimizer step is 256 samples x up to 0.5 GB = 128 GB, and with 64 GB the producer paused every
-# step and the trainers spent half of each 54 s step waiting for data), in-flight 384/256 samples, 4 prompts in
-# flight per capture server, 4 loader workers.
+# step and the trainers spent half of each 54 s step waiting for data), in-flight 384/256 samples, 4 loader workers.
+# Capture concurrency: each server runs 4 prompts at once (sglang_max_running_requests 4 instead of Kan's 2; a GB300
+# has the KV room) with producer lease/concurrency 8/8: at 2/4/4 the two capture servers delivered ~6.3 samples/s
+# and the trainers waited ~18 s of every 41 s step for data while the capture GPUs sat idle between batches.
 model:
   target_model_path: /scratch/dsv4/models/Qwen3.8-27B-NVFP4-BF16-LMHead
   draft_model_config: /scratch/dsv4/SpecForge/configs/qwen3.8-27b-dspark-moe-256exp.json
@@ -33,7 +35,7 @@ model:
   sglang_mem_fraction_static: 0.85
   sglang_disable_radix_cache: true
   sglang_context_length: 8199
-  sglang_max_running_requests: 2
+  sglang_max_running_requests: 4
   sglang_max_total_tokens: 32768
 data:
   train_data_path: /scratch/dsv4/data/qwen38_regen_mixture_v1_train.jsonl
@@ -72,8 +74,8 @@ tracking:
   wandb_name: qwen3.8-27b-dspark-moe-256exp-3ep-gb300
   wandb_dir: /scratch/dsv4/outputs/qwen3.8-27b-dspark-moe-256exp-3ep-gb300/wandb
 runtime:
-  producer_lease: 4
-  producer_concurrency: 4
+  producer_lease: 8
+  producer_concurrency: 8
   in_flight_high_watermark: 384
   in_flight_low_watermark: 256
   resident_high_watermark_bytes: 206158430208
