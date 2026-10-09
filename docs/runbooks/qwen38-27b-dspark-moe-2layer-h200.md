@@ -1,7 +1,7 @@
 # Qwen3.8-27B DSpark MoE drafter: 2-layer ablation on one 8x H200 node
 
-Status as of 2026-10-08 08:00 UTC: phase A (one epoch) is running on rx devbox `specforge-qwen-h200`
-(node gpu-10-220-71-44); phase B (two more epochs) is chained to start automatically when A finishes.
+Status as of 2026-10-09 05:20 UTC: phase A (one epoch) finished on rx devbox `specforge-qwen-h200` (node gpu-10-220-71-44)
+and was evaluated; phase B (two more epochs) started 2026-10-09 01:52 UTC on the same node.
 Live metrics: https://wandb.ai/miles_training/specforge-2%20layer%20moe
 
 ## 1. What is being tested
@@ -99,3 +99,28 @@ MoE 3-ep export 4.83 / 3.62 / 2.68. Kan's own numbers (NVFP4 target): dense 1-ep
   `SGLANG_STOP_FILE` so capture servers can be asked to exit; trainers end on their own.
 - The rx ssh relay resets sessions longer than about 60 s: run long work detached (`setsid nohup`) and poll.
 - Each checkpoint of the 2-layer drafter is 111 GB (training_state.pt + 4 optimizer shards); 3 are kept.
+
+## 7. Phase A result (1 epoch, 4,958 steps)
+
+Training end: train/acc 0.566 at the last logged step (100-step mean 0.564), ce 1.86, l1 0.678. Kan's 5-layer MoE
+phase A ended at 0.594 / loss 1.22. Export: `yushengsu/qwen38-dspark-moe-2layer` folder `1ep/` (private).
+
+Accept length on one GB300 per server (bf16 target `Qwen/Qwen3.8-27B`, SGLang 0.5.18 DSPARK gamma 7, triton
+attention, greedy, concurrency 8, Kan's protocol; accepted drafts per verify step):
+
+| drafter | GSM8K | MATH500 | MT-Bench | tok/s (GSM8K / MATH500 / MT-Bench) |
+|---|---|---|---|---|
+| 2-layer MoE, 1 epoch (this branch) | 3.75 | 2.98 | 2.17 | 858 / 1048 / 825 |
+| Kan 5-layer dense, 1 epoch (`RadixArk/qwen38-dspark-dense-ep1-step2500`, same corpus) | 4.30 | 3.21 | 2.31 | 1125 / 1142 / 874 |
+| official dense v1 (`RadixArk/Qwen3.8-27B-DSpark`) | 4.57 | 3.62 | 2.66 | 1160 / 1238 / 960 |
+| Kan 5-layer MoE, 3 epochs (`RadixArk/qwen38-dspark-moe-3ep-cont-step9916`) | 4.80 | 3.62 | 2.65 | 1056 / 1063 / 837 |
+
+At equal data (one epoch) the 2-layer MoE trails the 5-layer dense drafter by 13% / 7% / 6% and is also slower per
+token (block drafting touches most of the 512 experts every step; the `Qwen3MoeDSparkModel` loader uses the unoptimised
+`torch._grouped_mm` path, so MoE tok/s is a lower bound). Kan's 5-layer MoE 3-epoch numbers reproduce his report
+(+5% over official on GSM8K).
+
+Loader caveat: an earlier copy of the SGLang MoE draft loader applied the folded router-centering bias a second time
+during top-k selection; it measured Kan 3ep at 3.81 / 2.61 / 2.17 and the 2-layer drafter at 2.44 / 2.06 / 1.66 before
+being caught by the equivalence test (`RESULT: FAIL`). `patches/sglang/v0.5.18/dspark-moe-draft.patch` on this branch is
+the corrected version (equivalence test `RESULT: PASS`); verify `bias_mode == "selection"` guards the selection bias.
