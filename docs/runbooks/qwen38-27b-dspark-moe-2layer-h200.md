@@ -124,3 +124,21 @@ Loader caveat: an earlier copy of the SGLang MoE draft loader applied the folded
 during top-k selection; it measured Kan 3ep at 3.81 / 2.61 / 2.17 and the 2-layer drafter at 2.44 / 2.06 / 1.66 before
 being caught by the equivalence test (`RESULT: FAIL`). `patches/sglang/v0.5.18/dspark-moe-draft.patch` on this branch is
 the corrected version (equivalence test `RESULT: PASS`); verify `bias_mode == "selection"` guards the selection bias.
+
+## 8. Epochs 4-8 (plan extended to 8 epochs on 2026-10-11)
+
+After phase B (epochs 2-3, final step 9916) the node runs **one epoch per run** for epochs 4..8, each a weights-only
+warm start from the previous run's final checkpoint, mirroring the A -> B hand-off:
+
+- run ids `qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-ep<k>-from-ep<k-1>-h200`, 4,958 steps each (~40.4 h at ~29.3 s/step)
+- recipe generated from `examples/configs/online/disaggregated/external/qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1-epN-from-epN-1-h200.template.yaml`
+  (`num_epochs 1`, `max_checkpoints 3`, `draft_checkpoint_path` = previous final checkpoint, `prompt_seed 42 + (k-1)`:
+  the data plane orders prompts by `prompt_seed + epoch`, so this reproduces the order a single `num_epochs: 8` run would use)
+- `scripts/launch/chain-moe-2layer-epochs-4to8-h200.sh`: waits for the previous run's final checkpoint + trainer exit,
+  checks GPUs 4-7 free, capture servers (:30000-30003) and Mooncake master healthy, then launches the next run in external
+  disaggregated mode; log `/scratch/logs/chain_epochs.log`, stop file `/scratch/chain_epochs.stop`, `ABORT` lines on failure
+- `scripts/launch/keep-moe-2layer-epoch-ckpts.sh`: hardlinks only each run's step 4958 into `/scratch/ckpt-keep/<run>/` (111 GB per checkpoint)
+- `scripts/launch/auto-export-upload-moe-2layer-epochs-4to8.sh`: exports each kept step 4958, normalises, adds tokenizer + README
+  (`make_moe_2layer_epoch_readme.py`) and uploads to the **private** HF repo `yushengsu/qwen38-dspark-moe-2layer/<k>ep/`;
+  `make_moe_2layer_top_readme.py` refreshes the top-level epoch table
+- expected finish of epoch 8: about 2026-10-21 (UTC); W&B project `miles_training/specforge-2 layer moe`, one run per epoch

@@ -1,0 +1,92 @@
+# ONE-EPOCH continuation run #__EP__ of the 2-layer Qwen3.8-27B DSpark MoE drafter (epochs 4..8 of the 8-epoch plan).
+# Generated from /scratch/qwen38-moe-2layer-epN-template.yaml by /scratch/chain_epochs_4to8.sh.
+# Weights-only warm start from the previous epoch's final checkpoint (optimizer, lr warm-up and data position restart,
+# exactly like phase B / Kan's cont recipes). prompt_seed = 42 + (epoch-1) so every epoch sees a fresh prompt order,
+# which is what one long num_epochs=8 run would do (the data plane orders prompts by prompt_seed + epoch).
+# External disaggregated mode: reuses the four capture servers (:30000-30003) and the Mooncake master.
+# Trainer must be launched with CUDA_VISIBLE_DEVICES=4,5,6,7. Native W&B logging (entity via WANDB_ENTITY).
+model:
+  target_model_path: /scratch/models/Qwen3.8-27B
+  draft_model_config: /scratch/SpecForge-qwen38/configs/qwen3.8-27b-dspark-moe-v2-2layer.json
+  target_backend: sglang
+  trust_remote_code: true
+  embedding_key: model.language_model.embed_tokens.weight
+  lm_head_key: lm_head.weight
+  load_target_embedding: true
+  torch_dtype: bfloat16
+  mask_token_id: 248070
+  sglang_attention_backend: triton
+  sglang_mem_fraction_static: 0.85
+  sglang_disable_radix_cache: true
+  sglang_context_length: 8199
+  sglang_max_running_requests: 2
+  sglang_max_total_tokens: 32768
+  draft_checkpoint_path: __PREV_CKPT__
+data:
+  train_data_path: /scratch/data/qwen38_regen_mixture_v1_train.jsonl
+  max_length: 8192
+  chat_template: qwen3.5
+  cache_dir: /scratch/cache/qwen3.8-27b-regen-mixture-v1
+  build_dataset_num_proc: 64
+  dataloader_num_workers: 8
+training:
+  strategy: dspark
+  num_epochs: 1
+  batch_size: 4
+  accumulation_steps: 16
+  fsdp_sharding: FULL_SHARD
+  optimizer_cpu_offload: true
+  learning_rate: 0.0005
+  lr_scheduler: constant
+  warmup_ratio: 0.04
+  max_grad_norm: 1.0
+  attention_backend: flex_attention
+  num_anchors: 512
+  loss_decay_gamma: 4.0
+  objective_chunk_blocks: 128
+  dspark_ce_loss_alpha: 0.1
+  dspark_l1_loss_alpha: 0.9
+  dspark_confidence_head_alpha: 1.0
+  save_interval: 500
+  max_checkpoints: 3
+  log_interval: 10
+  dist_timeout: 15
+  seed: 42
+  prompt_seed: __PROMPT_SEED__
+tracking:
+  report_to: wandb
+  wandb_project: specforge-2 layer moe
+  wandb_name: __RUN__
+  wandb_dir: /scratch/outputs/__RUN__/wandb
+runtime:
+  producer_lease: 8
+  producer_concurrency: 8
+  in_flight_high_watermark: 768
+  in_flight_low_watermark: 512
+  resident_high_watermark_bytes: 322122547200
+  resident_low_watermark_bytes: 214748364800
+  feature_store_max_resident_bytes: 408021893120
+run_id: __RUN__
+output_dir: /scratch/outputs/__RUN__
+deployment:
+  mode: disaggregated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 4
+  disaggregated:
+    control_dir: /scratch/outputs/__RUN__/control
+    consumer_state_dir: /scratch/outputs/__RUN__/consumer-state
+    backend: mooncake
+    client_buffer_size: 1073741824
+    store_id: __RUN__
+    server_urls:
+    - http://127.0.0.1:30000
+    - http://127.0.0.1:30001
+    - http://127.0.0.1:30002
+    - http://127.0.0.1:30003
+    mooncake_metadata_server: http://127.0.0.1:35880/metadata
+    mooncake_master_server_addr: 127.0.0.1:35551
+    mooncake_local_hostname: 127.0.0.1
+    mooncake_protocol: tcp
+    idle_timeout_s: 7200
+    peer_wait_timeout_s: 7200
