@@ -17,7 +17,7 @@ if [ "$MODE" = smoke ]; then
   OV="training.max_steps=${SMOKE_STEPS:-3} training.save_interval=1000000 tracking.report_to=none run_id=$RUN output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state"
 else
   OUT=$D/outputs/$RUN; mkdir -p "$OUT"
-  export WANDB_API_KEY="$(cat /scratch/secrets/wandb_key)" WANDB_ENTITY=miles_training WANDB_RUN_ID=qwen38-dspark-dense-5layer-3ep-gb300 WANDB_RESUME=allow
+  export WANDB_API_KEY="$(cat /scratch/secrets/wandb_key)" WANDB_ENTITY=miles_training WANDB_RUN_ID=qwen38-dspark-dense-5layer-3ep-gb300-v2 WANDB_RESUME=allow
   OV=""
 fi
 echo "[$(date -u +%H:%M:%S)] launching $MODE run $RUN (overrides: $OV)"

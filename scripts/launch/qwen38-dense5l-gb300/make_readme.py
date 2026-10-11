@@ -77,7 +77,7 @@ python -m sglang.launch_server --model-path Qwen/Qwen3.8-27B --speculative-algor
 Code and recipe: https://github.com/yushengsu-thu/SpecForge/tree/yusheng/dense-5layer-3ep-gb300
 (`configs/qwen3.8-27b-dspark.json`, `examples/configs/online/disaggregated/managed-local/qwen3.8-27b-dspark-dense-5layer-3ep-gb300.yaml`,
 `scripts/launch/qwen38-dense5l-gb300/`). Training curves:
-https://wandb.ai/miles_training/specforge-qwen38-dspark-dense-5layer/runs/qwen38-dspark-dense-5layer-3ep-gb300
+https://wandb.ai/miles_training/specforge-qwen38-dspark-dense-5layer/runs/qwen38-dspark-dense-5layer-3ep-gb300-v2
 """
     Path(a.out).write_text(body)
     print(f"wrote {a.out} ({a.epochs_done} epoch(s) done)")
