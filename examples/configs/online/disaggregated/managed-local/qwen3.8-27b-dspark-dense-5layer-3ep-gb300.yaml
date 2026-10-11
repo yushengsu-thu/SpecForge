@@ -1,0 +1,120 @@
+# Qwen3.8-27B DSpark DENSE 5-layer drafter, trained from scratch for THREE epochs on ONE 4x GB300 node.
+#
+# The dense counterpart of the MoE drafters trained on this corpus (Kan's 512 x 512 top-10, the 16 x 1024 top-2 run
+# of #943, the 256-expert and 2-layer ablations). Kan's report compared those against a dense drafter trained for
+# only ONE epoch (kan/qwen38-dspark-ablation step 2500) or against the official v1 (different data / objective),
+# so this run gives the same-corpus, same-recipe, same-epoch-count dense reference.
+#
+# Draft: configs/qwen3.8-27b-dspark.json = Kan's dense config = the architecture of the official
+# RadixArk/Qwen3.8-27B-DSpark drafter (5 full-attention layers, hidden 5120, FFN 17408, 32 / 8 heads of dim 128,
+# target layers 5/19/33/47/61, Markov rank 256, confidence head, YaRN 32 / 8192, mask token 248070), 1.86B
+# parameters. Training block size stays 7 like every DSpark recipe in this repo (the official v1 was trained with
+# training_block_size 16 and is served with block 7; serving here is block 7 either way).
+#
+# Recipe = Kan's qwen3.8-27b-dspark-regen-mixture-v1-3ep.yaml (kan/qwen38-dspark-ablation) with only the
+# machine layout changed from 8x B200 (4 capture + 4 ranks) to 4x GB300 (2 capture + 2 ranks):
+#   - 3 epochs at global batch 512 = batch_size 4 x accumulation 64 x 2 ranks (Kan: 1 x 128 x 4); 2,479 optimizer
+#     steps per epoch (1,269,290 conversations // 512), 7,437 in all; lr 5e-4 constant after 4% warm-up, grad clip 1.0,
+#     SHARD_GRAD_OP, AdamW on the GPUs, DSpark CE 0.1 / L1 0.9 / confidence 1.0, 512 anchors, decay gamma 4,
+#     flex attention, seed / prompt_seed 42, dist_timeout 15 min, log every 10 steps.
+#   - teacher: NVFP4 target with the bf16 lm_head (RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead), as in Kan's runs and in
+#     epoch 1 of the 16 x 1024 run; 2 TP1 capture servers on GPUs 0-1 (triton attention, radix cache off, context
+#     8,199, 4 running requests / 32k pool tokens each = producer lease/concurrency 8), 2 FSDP ranks on GPUs 2-3.
+#   - save_interval 67 (2,479 = 37 x 67, so every epoch end is checkpointed and exported; ~1.4 h apart at the
+#     expected ~70 s/step) and 5 checkpoints kept; the export watcher copies each epoch-end checkpoint aside.
+# Host-memory budget (the devbox container is OOM-killed by kubelet at ~919 GB, no swap): in-flight samples 768/512
+# (both must be >= the 512-sample optimizer quantum), feature store <= 384 GiB (resident watermarks 320/240 GiB)
+# inside 2 x 200 GiB Mooncake segments (one per capture server; up to ~0.42 GiB of hidden states per 8k sample,
+# ~0.18 GiB at the corpus mean of 3.6k tokens), 8 loader workers per rank with 1 GiB client buffers.
+# W&B entity and run id come from the launching shell (WANDB_ENTITY, WANDB_RUN_ID, WANDB_RESUME=allow), the key
+# from WANDB_API_KEY. Box paths: scripts/launch/qwen38-dense5l-gb300/ (setup, launch, export watcher).
+model:
+  target_model_path: /scratch/models/Qwen3.8-27B-NVFP4-BF16-LMHead
+  draft_model_config: /scratch/SpecForge/configs/qwen3.8-27b-dspark.json
+  target_backend: sglang
+  trust_remote_code: true
+  embedding_key: model.language_model.embed_tokens.weight
+  lm_head_key: lm_head.weight
+  load_target_embedding: true
+  torch_dtype: bfloat16
+  mask_token_id: 248070
+  sglang_attention_backend: triton
+  sglang_mem_fraction_static: 0.85
+  sglang_disable_radix_cache: true
+  sglang_context_length: 8199
+  sglang_max_running_requests: 4
+  sglang_max_total_tokens: 32768
+data:
+  train_data_path: /scratch/data/qwen38_regen_mixture_v1_train.jsonl
+  max_length: 8192
+  chat_template: qwen3.5
+  cache_dir: /scratch/cache/qwen3.8-27b-regen-mixture-v1
+  build_dataset_num_proc: 64
+  dataloader_num_workers: 8
+training:
+  strategy: dspark
+  num_epochs: 3
+  batch_size: 4
+  accumulation_steps: 64
+  fsdp_sharding: SHARD_GRAD_OP
+  optimizer_cpu_offload: false
+  learning_rate: 0.0005
+  lr_scheduler: constant
+  warmup_ratio: 0.04
+  max_grad_norm: 1.0
+  attention_backend: flex_attention
+  num_anchors: 512
+  loss_decay_gamma: 4.0
+  objective_chunk_blocks: 128
+  dspark_ce_loss_alpha: 0.1
+  dspark_l1_loss_alpha: 0.9
+  dspark_confidence_head_alpha: 1.0
+  save_interval: 67
+  max_checkpoints: 5
+  log_interval: 10
+  dist_timeout: 15
+  seed: 42
+  prompt_seed: 42
+tracking:
+  report_to: wandb
+  wandb_project: specforge-qwen38-dspark-dense-5layer
+  wandb_name: qwen3.8-27b-dspark-dense-5layer-3ep-gb300
+  wandb_dir: /scratch/dense5l/outputs/qwen3.8-27b-dspark-dense-5layer-3ep-gb300/wandb
+runtime:
+  producer_lease: 8
+  producer_concurrency: 8
+  in_flight_high_watermark: 768
+  in_flight_low_watermark: 512
+  resident_high_watermark_bytes: 343597383680
+  resident_low_watermark_bytes: 257698037760
+  feature_store_max_resident_bytes: 412316860416
+run_id: qwen3.8-27b-dspark-dense-5layer-3ep-gb300
+output_dir: /scratch/dense5l/outputs/qwen3.8-27b-dspark-dense-5layer-3ep-gb300
+deployment:
+  mode: disaggregated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 2
+  disaggregated:
+    control_dir: /scratch/dense5l/outputs/qwen3.8-27b-dspark-dense-5layer-3ep-gb300/control
+    consumer_state_dir: /scratch/dense5l/outputs/qwen3.8-27b-dspark-dense-5layer-3ep-gb300/consumer-state
+    backend: mooncake
+    client_buffer_size: 1073741824
+    managed_local:
+      trainer_cuda_visible_devices:
+      - '2'
+      - '3'
+      mooncake:
+        protocol: tcp
+        global_segment_size_bytes: 214748364800
+        local_buffer_size_bytes: 1073741824
+        default_kv_lease_ttl_ms: 300000
+      capture_servers:
+      - port: 30000
+        cuda_visible_devices:
+        - '0'
+        tp_size: 1
+      - port: 30001
+        cuda_visible_devices:
+        - '1'
+        tp_size: 1
