@@ -25,7 +25,10 @@
 # Host-memory budget (the devbox container is OOM-killed by kubelet at ~919 GB, no swap): in-flight samples 768/512
 # (both must be >= the 512-sample optimizer quantum), feature store <= 384 GiB (resident watermarks 320/240 GiB)
 # inside 2 x 200 GiB Mooncake segments (one per capture server; up to ~0.42 GiB of hidden states per 8k sample,
-# ~0.18 GiB at the corpus mean of 3.6k tokens), 8 loader workers per rank with 1 GiB client buffers.
+# ~0.18 GiB at the corpus mean of 3.6k tokens), 24 loader workers per rank with 1 GiB client buffers: the trainer-side
+# fetch from the local Mooncake store over TCP is latency-bound per worker (8 workers delivered 0.76 GiB/s per rank =
+# 2.8 samples/s per rank at step 10, i.e. 38 s of the 83 s step were spent waiting for data while the capture servers
+# sat in backpressure), so the fetch parallelism is raised to 24 workers per rank.
 # W&B entity and run id come from the launching shell (WANDB_ENTITY, WANDB_RUN_ID, WANDB_RESUME=allow), the key
 # from WANDB_API_KEY. Box paths: scripts/launch/qwen38-dense5l-gb300/ (setup, launch, export watcher).
 model:
@@ -50,7 +53,7 @@ data:
   chat_template: qwen3.5
   cache_dir: /scratch/cache/qwen3.8-27b-regen-mixture-v1
   build_dataset_num_proc: 64
-  dataloader_num_workers: 8
+  dataloader_num_workers: 24
 training:
   strategy: dspark
   num_epochs: 3
