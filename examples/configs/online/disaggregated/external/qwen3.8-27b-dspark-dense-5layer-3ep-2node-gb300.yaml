@@ -5,8 +5,11 @@
 #     segment each (started by scripts/launch/qwen38-dense5l-gb300/capture_node.sh, which registers them with the
 #     master on the trainer node).
 #   - trainer node (TRAINER_IP): mooncake_master + producer + 4-rank FSDP trainer, batch_size 4 x accumulation 32 x
-#     4 ranks = 512 (one node: 4 x 64 x 2), 24 loader workers per rank (trainer_node.sh renders this file with the
-#     real IPs and the Mooncake protocol: tcp, or rdma when the cross-node transfer_engine_bench test passes).
+#     4 ranks = 512 (one node: 4 x 64 x 2), 12 loader workers per rank (trainer_node.sh renders this file with the
+#     real IPs and the Mooncake protocol). Measured on gb300-coreweave between the two nodes (transfer_engine_bench,
+#     2 GiB buffers, 4 MiB blocks): TCP 1.4 GB/s; RDMA with auto-discovery 12 GB/s but with 'transport retry counter
+#     exceeded' on some NIC pairs (ibp3p3 etc.); RDMA pinned to ibp0p0 / ibp1p0 on both sides 23.8 GB/s with zero
+#     errors -> protocol rdma, mooncake_rdma_devices ibp0p0,ibp1p0 (MOONCAKE_RDMA_DEVICES on the capture node).
 # Everything else (draft config, data, optimizer, loss, lr, seed, save_interval 67, W&B project) is identical to the
 # one-node recipe; the W&B run id and the HF repo are the same too (the launcher resumes the same run id).
 model:
@@ -31,7 +34,7 @@ data:
   chat_template: qwen3.5
   cache_dir: /scratch/cache/qwen3.8-27b-regen-mixture-v1
   build_dataset_num_proc: 64
-  dataloader_num_workers: 24
+  dataloader_num_workers: 12
 training:
   strategy: dspark
   num_epochs: 3
