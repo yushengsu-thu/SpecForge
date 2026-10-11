@@ -1,4 +1,5 @@
-# Qwen3.8-27B DSpark DENSE 5-layer drafter, 3 epochs from scratch on TWO 4x GB300 nodes of one devbox
+# Qwen3.8-27B DSpark DENSE 5-layer drafter, EIGHT epochs from scratch (one continuous run, every epoch end
+# checkpointed and exported to HF) on TWO 4x GB300 nodes of one devbox
 # (rx devbox acquire --gpu gb300 --count 8): the same run as qwen3.8-27b-dspark-dense-5layer-3ep-gb300.yaml
 # (managed-local, one node) with the capture servers and the trainer on separate nodes.
 #   - capture node (CAPTURE_IP): 4 TP1 NVFP4 capture servers, one per GPU, 4 running requests each, 100 GiB Mooncake
@@ -12,6 +13,9 @@
 #     errors -> protocol rdma, mooncake_rdma_devices ibp0p0,ibp1p0 (MOONCAKE_RDMA_DEVICES on the capture node).
 # Everything else (draft config, data, optimizer, loss, lr, seed, save_interval 67, W&B project) is identical to the
 # one-node recipe; the W&B run id and the HF repo are the same too (the launcher resumes the same run id).
+# 8 epochs = 19,832 optimizer steps (~2,479 per epoch); if the run dies, trainer_node.sh can warm-start the
+# remaining epochs from the last epoch-end checkpoint (WARMSTART=<ckpt dir> NUM_EPOCHS=<left> PROMPT_SEED=<new>
+# WANDB_STEP_OFFSET=<steps done>), which is how Kan's and the 16 x 1024 runs were continued.
 model:
   target_model_path: /scratch/models/Qwen3.8-27B-NVFP4-BF16-LMHead
   draft_model_config: /scratch/SpecForge/configs/qwen3.8-27b-dspark.json
@@ -37,14 +41,15 @@ data:
   dataloader_num_workers: 12
 training:
   strategy: dspark
-  num_epochs: 3
+  num_epochs: 8
   batch_size: 4
   accumulation_steps: 32
   fsdp_sharding: SHARD_GRAD_OP
   optimizer_cpu_offload: false
   learning_rate: 0.0005
   lr_scheduler: constant
-  warmup_ratio: 0.04
+  # ~297 warm-up steps = Kan's 4% of a 3-epoch run, expressed over the 8-epoch schedule (19,832 steps)
+  warmup_ratio: 0.015
   max_grad_norm: 1.0
   attention_backend: flex_attention
   num_anchors: 512

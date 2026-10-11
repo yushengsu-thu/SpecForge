@@ -10,7 +10,7 @@ Box-side scripts for the run described in
 | secrets | `/scratch/secrets/hf_token`, `/scratch/secrets/wandb_key` (mode 600; never committed) |
 | setup (code, deps, spec-capture patch, NVFP4 teacher, corpus jsonl) | `setsid nohup bash setup_box.sh > /scratch/dense5l/logs/setup_box.log 2>&1 < /dev/null &` |
 | smoke (3 optimizer steps, no W&B, no checkpoints) | `bash launch_train.sh smoke` |
-| full run | `bash launch_train.sh full` (W&B entity `miles_training`, project `specforge-qwen38-dspark-dense-5layer`) |
+| full run (8 epochs) | `bash launch_train.sh full` (W&B entity `miles_training`, project `specforge-qwen38-dspark-dense-5layer`) |
 | per-epoch export + upload | `setsid nohup bash watch_epoch_exports.sh > /scratch/dense5l/logs/watch_epoch_exports.log 2>&1 < /dev/null &` |
 | outputs | `/scratch/dense5l/outputs/<run_id>/launch.log` (`step N: {...}` lines every 10 steps), checkpoints `<run_id>-step<N>` |
 | HF | https://huggingface.co/RadixArk/qwen38-dspark-dense-5layer (private; folders `1ep/`, `2ep/`, `3ep/`) |

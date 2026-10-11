@@ -2,9 +2,12 @@
 # Trainer node of the two-node run: render the recipe with the real IPs, start the mooncake master, wait for the
 # capture servers, launch the trainer (smoke: SMOKE_STEPS steps, no W&B / checkpoints).
 #   usage: bash trainer_node.sh <CAPTURE_IP> <TRAINER_IP> [smoke|full] [PROTOCOL=tcp|rdma]
+#   continuation after a crash (weights-only warm start, fresh AdamW / warm-up / shuffle, as in Kan's phases):
+#     WARMSTART=/scratch/dense5l/epoch_ckpts/<run>-step<N> NUM_EPOCHS=<epochs left> PROMPT_SEED=43 WANDB_STEP_OFFSET=<N> \
+#     RUN_SUFFIX=-cont-from-<k>ep bash trainer_node.sh ... full rdma      (then watch_epoch_exports.sh with EPOCH_OFFSET=<k>)
 set -u
 CAP=${1:?capture ip}; TRN=${2:?trainer ip}; MODE=${3:-full}; PROTO=${4:-tcp}
-RUN=qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300
+RUN=qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300${RUN_SUFFIX:-}
 D=/scratch/dense5l; mkdir -p $D/logs $D/outputs
 log() { echo "[$(date -u +%H:%M:%S)] $*"; }
 export HF_HOME=/scratch/hf-cache HF_HUB_CACHE=/scratch/hf-cache/hub HF_DATASETS_CACHE=/scratch/hf-cache/datasets
@@ -27,6 +30,11 @@ else
   # same W&B run as the one-node launch (resumed), same HF repo (watch_epoch_exports.sh with RUN_ID=$RUN)
   export WANDB_API_KEY="$(cat /scratch/secrets/wandb_key)" WANDB_ENTITY=miles_training WANDB_RUN_ID=qwen38-dspark-dense-5layer-3ep-gb300-v2 WANDB_RESUME=allow
   OV=""
+fi
+if [ -n "${WARMSTART:-}" ]; then
+  [ -f "$WARMSTART/training_state.pt" ] || { log "MISSING $WARMSTART/training_state.pt"; exit 1; }
+  OV="$OV model.draft_checkpoint_path=$WARMSTART training.num_epochs=${NUM_EPOCHS:?} training.prompt_seed=${PROMPT_SEED:?} run_id=$RUN output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state tracking.wandb_dir=$OUT/wandb"
+  export SPECFORGE_WANDB_STEP_OFFSET=${WANDB_STEP_OFFSET:-0}
 fi
 log "launching $MODE: $RUN ($OV)"
 setsid nohup python -m specforge.cli train -c "$R" $OV > "$OUT/launch.log" 2>&1 < /dev/null &

@@ -56,14 +56,15 @@ data:
   dataloader_num_workers: 24
 training:
   strategy: dspark
-  num_epochs: 3
+  num_epochs: 8
   batch_size: 4
   accumulation_steps: 64
   fsdp_sharding: SHARD_GRAD_OP
   optimizer_cpu_offload: false
   learning_rate: 0.0005
   lr_scheduler: constant
-  warmup_ratio: 0.04
+  # ~297 warm-up steps = Kan's 4% of a 3-epoch run, expressed over the 8-epoch schedule (19,832 steps)
+  warmup_ratio: 0.015
   max_grad_norm: 1.0
   attention_backend: flex_attention
   num_anchors: 512

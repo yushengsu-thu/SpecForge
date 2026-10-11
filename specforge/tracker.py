@@ -209,6 +209,11 @@ class WandbTracker(Tracker):
 
     def log(self, log_dict: Dict[str, Any], step: Optional[int] = None):
         if self.rank == 0 and self.is_initialized and self._run is not None:
+            # A warm-started continuation restarts global_step at 0; SPECFORGE_WANDB_STEP_OFFSET (steps
+            # already logged by the earlier phase) keeps the resumed W&B run's step axis monotonic.
+            offset = int(os.environ.get("SPECFORGE_WANDB_STEP_OFFSET", "0") or 0)
+            if step is not None and offset:
+                step = step + offset
             # W&B defaults ``commit`` to False whenever an explicit step is
             # supplied.  Finalize each trainer record so live runs publish the
             # point immediately instead of keeping the newest step buffered.
