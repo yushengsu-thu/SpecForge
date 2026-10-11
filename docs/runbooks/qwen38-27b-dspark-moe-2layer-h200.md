@@ -149,3 +149,13 @@ warm start from the previous run's final checkpoint, mirroring the A -> B hand-o
 **private** repo **https://huggingface.co/RadixArk/qwen38-dspark-moe-2layer**. All epoch exports (1ep/ … 8ep/) live there;
 the uploader (`auto-export-upload-moe-2layer-epochs-4to8.sh`, node copy `/scratch/auto_export_upload_v5.sh`) now targets
 that repo for epochs 3-8.
+
+### 8.2 HF repo layout = RadixArk/qwen38-dspark-dense-5layer (2026-10-12)
+
+At the user's request the repo follows the layout of the dense 5-layer reference repo: each `<k>ep/` folder holds only
+the SGLang-servable export (config.json, model.safetensors, tokenizer; no per-folder README), and the top-level
+README.md is the single model card with the table `folder | optimizer step | train/acc (last 100 steps) | train/ce_loss
+| status` (`scripts/launch/make_moe_2layer_top_readme.py`, node copy `/scratch/make_top_readme.py`). The uploader
+(`auto-export-upload-moe-2layer-epochs-4to8.sh`, node copy `/scratch/auto_export_upload_v6.sh`) excludes README.md from
+folder uploads and refreshes the top-level README after every epoch. The two per-folder READMEs of 1ep/ and 2ep/ were
+removed in commit 3c0abf35 after verifying the LFS sha256 of both `model.safetensors` against the local exports.
