@@ -7,7 +7,7 @@
 # that after every rank wrote its state).
 #   setsid nohup bash watch_epoch_exports.sh > /scratch/dense5l/logs/watch_epoch_exports.log 2>&1 < /dev/null &
 set -u
-RUN_ID=qwen3.8-27b-dspark-dense-5layer-3ep-gb300
+RUN_ID=${RUN_ID:-qwen3.8-27b-dspark-dense-5layer-3ep-gb300}   # two-node run: RUN_ID=qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300
 D=/scratch/dense5l; RUN_DIR=$D/outputs/$RUN_ID
 DRAFT_CONFIG=configs/qwen3.8-27b-dspark.json
 TARGET=/scratch/models/Qwen3.8-27B-NVFP4-BF16-LMHead

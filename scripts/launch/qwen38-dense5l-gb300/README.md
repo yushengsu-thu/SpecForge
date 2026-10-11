@@ -20,3 +20,13 @@ JSONL Kan's recipes train on. `make_readme.py` refreshes the HF model card from 
 Devbox gotchas: the container is OOM-killed at ~919 GB host memory (recipe header has the budget); SGLang 0.5.18's
 `get_free_port()` can hand two capture servers the same NCCL port, so `launch_plan.py` pins `--nccl-port`;
 the rx ssh relay drops connections after ~60 s, so everything long runs under `setsid nohup`.
+
+## Two-node variant (one devbox, `--count 8` = 2 x 4 GB300)
+
+Recipe `examples/configs/online/disaggregated/external/qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300.yaml` (same run,
+batch 4 x 32 x 4 ranks = 512). Rank 0 = trainer node, rank 1 = capture node (`rx devbox run <box> --rank 1 -- ...`).
+1. both nodes: `setup_box.sh` (capture node with `SKIP_DATA=1`); secrets only on the trainer node.
+2. trainer node: `bash trainer_node.sh <CAPTURE_IP> <TRAINER_IP> smoke|full [tcp|rdma]` (starts the mooncake master,
+   waits for the servers, launches); capture node: `bash capture_node.sh <CAPTURE_IP> <TRAINER_IP> 4 [tcp|rdma]`.
+3. trainer node: `RUN_ID=qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300 bash watch_epoch_exports.sh` (same HF repo).
+The W&B run id is the same as the one-node launch (resumed), so the URL does not change.

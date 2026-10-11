@@ -1,0 +1,92 @@
+# Qwen3.8-27B DSpark DENSE 5-layer drafter, 3 epochs from scratch on TWO 4x GB300 nodes of one devbox
+# (rx devbox acquire --gpu gb300 --count 8): the same run as qwen3.8-27b-dspark-dense-5layer-3ep-gb300.yaml
+# (managed-local, one node) with the capture servers and the trainer on separate nodes.
+#   - capture node (CAPTURE_IP): 4 TP1 NVFP4 capture servers, one per GPU, 4 running requests each, 100 GiB Mooncake
+#     segment each (started by scripts/launch/qwen38-dense5l-gb300/capture_node.sh, which registers them with the
+#     master on the trainer node).
+#   - trainer node (TRAINER_IP): mooncake_master + producer + 4-rank FSDP trainer, batch_size 4 x accumulation 32 x
+#     4 ranks = 512 (one node: 4 x 64 x 2), 24 loader workers per rank (trainer_node.sh renders this file with the
+#     real IPs and the Mooncake protocol: tcp, or rdma when the cross-node transfer_engine_bench test passes).
+# Everything else (draft config, data, optimizer, loss, lr, seed, save_interval 67, W&B project) is identical to the
+# one-node recipe; the W&B run id and the HF repo are the same too (the launcher resumes the same run id).
+model:
+  target_model_path: /scratch/models/Qwen3.8-27B-NVFP4-BF16-LMHead
+  draft_model_config: /scratch/SpecForge/configs/qwen3.8-27b-dspark.json
+  target_backend: sglang
+  trust_remote_code: true
+  embedding_key: model.language_model.embed_tokens.weight
+  lm_head_key: lm_head.weight
+  load_target_embedding: true
+  torch_dtype: bfloat16
+  mask_token_id: 248070
+  sglang_attention_backend: triton
+  sglang_mem_fraction_static: 0.85
+  sglang_disable_radix_cache: true
+  sglang_context_length: 8199
+  sglang_max_running_requests: 4
+  sglang_max_total_tokens: 32768
+data:
+  train_data_path: /scratch/data/qwen38_regen_mixture_v1_train.jsonl
+  max_length: 8192
+  chat_template: qwen3.5
+  cache_dir: /scratch/cache/qwen3.8-27b-regen-mixture-v1
+  build_dataset_num_proc: 64
+  dataloader_num_workers: 24
+training:
+  strategy: dspark
+  num_epochs: 3
+  batch_size: 4
+  accumulation_steps: 32
+  fsdp_sharding: SHARD_GRAD_OP
+  optimizer_cpu_offload: false
+  learning_rate: 0.0005
+  lr_scheduler: constant
+  warmup_ratio: 0.04
+  max_grad_norm: 1.0
+  attention_backend: flex_attention
+  num_anchors: 512
+  loss_decay_gamma: 4.0
+  objective_chunk_blocks: 128
+  dspark_ce_loss_alpha: 0.1
+  dspark_l1_loss_alpha: 0.9
+  dspark_confidence_head_alpha: 1.0
+  save_interval: 67
+  max_checkpoints: 5
+  log_interval: 10
+  dist_timeout: 15
+  seed: 42
+  prompt_seed: 42
+tracking:
+  report_to: wandb
+  wandb_project: specforge-qwen38-dspark-dense-5layer
+  wandb_name: qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300
+  wandb_dir: /scratch/dense5l/outputs/qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300/wandb
+runtime:
+  producer_lease: 8
+  producer_concurrency: 16
+  in_flight_high_watermark: 768
+  in_flight_low_watermark: 512
+  resident_high_watermark_bytes: 343597383680
+  resident_low_watermark_bytes: 257698037760
+  feature_store_max_resident_bytes: 412316860416
+run_id: qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300
+output_dir: /scratch/dense5l/outputs/qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300
+deployment:
+  mode: disaggregated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 4
+  disaggregated:
+    control_dir: /scratch/dense5l/outputs/qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300/control
+    consumer_state_dir: /scratch/dense5l/outputs/qwen3.8-27b-dspark-dense-5layer-3ep-2node-gb300/consumer-state
+    backend: mooncake
+    client_buffer_size: 1073741824
+    server_urls:
+    - http://CAPTURE_IP:30000
+    - http://CAPTURE_IP:30001
+    - http://CAPTURE_IP:30002
+    - http://CAPTURE_IP:30003
+    mooncake_metadata_server: http://TRAINER_IP:35880/metadata
+    mooncake_master_server_addr: TRAINER_IP:35551
+    mooncake_local_hostname: TRAINER_IP
+    mooncake_protocol: MOONCAKE_PROTOCOL

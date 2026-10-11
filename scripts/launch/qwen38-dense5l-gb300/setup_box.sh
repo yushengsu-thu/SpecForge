@@ -29,11 +29,11 @@ command -v specforge >/dev/null || log "specforge CLI missing (python -m specfor
 # 4. teacher: NVFP4 target with the bf16 lm_head
 [ -f /scratch/models/Qwen3.8-27B-NVFP4-BF16-LMHead/config.json ] || { log "download NVFP4 target"; hf download RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead --local-dir /scratch/models/Qwen3.8-27B-NVFP4-BF16-LMHead 2>&1 | grep -v -i token | tail -1; }
 log "target: $(du -sh /scratch/models/Qwen3.8-27B-NVFP4-BF16-LMHead | cut -f1)"
-# 5. corpus -> slim {id, conversations} jsonl (status == success rows only)
-[ -f /scratch/data/qwen38_regen_mixture_v1_train.jsonl ] || {
+# 5. corpus -> slim {id, conversations} jsonl (status == success rows only); SKIP_DATA=1 on a capture-only node
+[ -n "${SKIP_DATA:-}" ] || [ -f /scratch/data/qwen38_regen_mixture_v1_train.jsonl ] || {
   log "download Regen-Mixture-v1"; hf download RadixArk/Qwen3.8-27B-Regen-Mixture-v1 --repo-type dataset --local-dir /scratch/data/regen-mixture-v1 2>&1 | grep -v -i token | tail -1
   log "prepare jsonl ($(ls /scratch/data/regen-mixture-v1/data | wc -l) shards)"
   python3 /scratch/SpecForge/scripts/launch/qwen38-dense5l-gb300/prep_regen_mixture.py --src /scratch/data/regen-mixture-v1/data --out /scratch/data/qwen38_regen_mixture_v1_train.jsonl 2>&1 | tail -6
 }
-log "jsonl rows: $(wc -l < /scratch/data/qwen38_regen_mixture_v1_train.jsonl) ($(du -sh /scratch/data/qwen38_regen_mixture_v1_train.jsonl | cut -f1))"
+[ -n "${SKIP_DATA:-}" ] || log "jsonl rows: $(wc -l < /scratch/data/qwen38_regen_mixture_v1_train.jsonl) ($(du -sh /scratch/data/qwen38_regen_mixture_v1_train.jsonl | cut -f1))"
 log SETUP_DONE
