@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Top-level README for yushengsu/qwen38-dspark-moe-2layer: one folder per epoch (1-8), status from upload markers."""
+"""Top-level README for RadixArk/qwen38-dspark-moe-2layer: one folder per epoch (1-8), status from upload markers."""
 import glob, os, re
 descs = {1: "phase A (from scratch), step 4958 = end of epoch 1",
          2: "phase B (weights-only warm start from the epoch-1 checkpoint), run-local step 5000 = end of epoch 2",
@@ -44,7 +44,7 @@ with the training metrics of that checkpoint):
 - Data: `RadixArk/Qwen3.8-27B-Regen-Mixture-v1`; target served in bf16 (`Qwen/Qwen3.8-27B`) on 8x H200.
 
 Serving needs an SGLang build with the `Qwen3MoeDSparkModel` draft class (upstream SGLang 0.5.18 only ships the dense
-`Qwen3DSparkModel`). Download one folder, e.g. `hf download yushengsu/qwen38-dspark-moe-2layer --include "1ep/*"`, and pass
+`Qwen3DSparkModel`). Download one folder, e.g. `hf download RadixArk/qwen38-dspark-moe-2layer --include "1ep/*"`, and pass
 it as `--speculative-draft-model-path` together with `--speculative-algorithm DSPARK --speculative-dspark-block-size 7
 --speculative-draft-model-quantization unquant --attention-backend triton --speculative-draft-attention-backend triton`.
 

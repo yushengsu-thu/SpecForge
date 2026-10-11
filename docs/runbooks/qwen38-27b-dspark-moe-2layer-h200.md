@@ -103,7 +103,7 @@ MoE 3-ep export 4.83 / 3.62 / 2.68. Kan's own numbers (NVFP4 target): dense 1-ep
 ## 7. Phase A result (1 epoch, 4,958 steps)
 
 Training end: train/acc 0.566 at the last logged step (100-step mean 0.564), ce 1.86, l1 0.678. Kan's 5-layer MoE
-phase A ended at 0.594 / loss 1.22. Export: `yushengsu/qwen38-dspark-moe-2layer` folder `1ep/` (private).
+phase A ended at 0.594 / loss 1.22. Export: `RadixArk/qwen38-dspark-moe-2layer` folder `1ep/` (private).
 
 Accept length on one GB300 per server (bf16 target `Qwen/Qwen3.8-27B`, SGLang 0.5.18 DSPARK gamma 7, triton
 attention, greedy, concurrency 8, Kan's protocol; accepted drafts per verify step):
@@ -139,6 +139,13 @@ warm start from the previous run's final checkpoint, mirroring the A -> B hand-o
   disaggregated mode; log `/scratch/logs/chain_epochs.log`, stop file `/scratch/chain_epochs.stop`, `ABORT` lines on failure
 - `scripts/launch/keep-moe-2layer-epoch-ckpts.sh`: hardlinks only each run's step 4958 into `/scratch/ckpt-keep/<run>/` (111 GB per checkpoint)
 - `scripts/launch/auto-export-upload-moe-2layer-epochs-4to8.sh`: exports each kept step 4958, normalises, adds tokenizer + README
-  (`make_moe_2layer_epoch_readme.py`) and uploads to the **private** HF repo `yushengsu/qwen38-dspark-moe-2layer/<k>ep/`;
+  (`make_moe_2layer_epoch_readme.py`) and uploads to the **private** HF repo `RadixArk/qwen38-dspark-moe-2layer/<k>ep/`;
   `make_moe_2layer_top_readme.py` refreshes the top-level epoch table
 - expected finish of epoch 8: about 2026-10-21 (UTC); W&B project `miles_training/specforge-2 layer moe`, one run per epoch
+
+### 8.1 HF repo moved to RadixArk (2026-10-11)
+
+`yushengsu/qwen38-dspark-moe-2layer` was moved server-side (HfApi.move_repo, history kept, old URL redirects) to the
+**private** repo **https://huggingface.co/RadixArk/qwen38-dspark-moe-2layer**. All epoch exports (1ep/ … 8ep/) live there;
+the uploader (`auto-export-upload-moe-2layer-epochs-4to8.sh`, node copy `/scratch/auto_export_upload_v5.sh`) now targets
+that repo for epochs 3-8.

@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Epochs 4..8: when a one-epoch run's final checkpoint (step 4958) is kept, export it to the servable HF layout,
-# normalize, add tokenizer + README, upload to yushengsu/qwen38-dspark-moe-2layer/<ep>ep (private repo).
+# Epochs 3..8 (B step 9916 = epoch 3, one-epoch runs step 4958 = epochs 4-8): when the final checkpoint is kept, export it to the servable HF layout,
+# normalize, add tokenizer + README, upload to RadixArk/qwen38-dspark-moe-2layer/<ep>ep (private repo).
 set -u
 export HF_HOME=/scratch/hf-cache PYTHONUNBUFFERED=1
 PFX=qwen3.8-27b-dspark-moe-2layer-regen-mixture-v1
-JOBS=(); for ep in 4 5 6 7 8; do JOBS+=("$PFX-ep$ep-from-ep$((ep-1))-h200 4958 $ep"); done
+JOBS=("$PFX-cont2ep-from-1ep-h200 9916 3"); for ep in 4 5 6 7 8; do JOBS+=("$PFX-ep$ep-from-ep$((ep-1))-h200 4958 $ep"); done
 LOG=/scratch/logs/auto_export_upload.log
 log(){ echo "[$(date -u +%FT%TZ)] $*" >> "$LOG"; }
 export_one(){
   local run=$1 step=$2 ep=$3
   local CK=/scratch/ckpt-keep/$run/$run-step$step
   local E=/scratch/exports/qwen38-dspark-moe-2layer-${ep}ep-step$step
-  local REPO=yushengsu/qwen38-dspark-moe-2layer
+  local REPO=RadixArk/qwen38-dspark-moe-2layer
   if [ ! -f "$E/.normalized" ]; then
     rm -rf "$E"; mkdir -p "$E"
     log "exporting $run step $step -> $E"
