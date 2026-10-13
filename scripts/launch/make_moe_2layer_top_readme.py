@@ -39,7 +39,7 @@ def at_epoch_end(ms, end, window=100):
     ce = [ms[s]["ce_loss"] for s in steps if ms[s].get("ce_loss") is not None]
     return {"acc": sum(acc) / len(acc) if acc else None, "ce": sum(ce) / len(ce) if ce else None}
 
-rows, ckpts = [], []
+rows, ckpts, accs = [], [], {}
 cache = {}
 for k in range(1, 9):
     run, step, cum = EPOCHS[k]
@@ -48,12 +48,23 @@ for k in range(1, 9):
         if run not in cache:
             cache[run] = metrics(f"/scratch/outputs/{run}/launch.log")
         m = at_epoch_end(cache[run], step)
+        if m and m["acc"] is not None:
+            accs[k] = m["acc"]
         acc = f"{m['acc']:.3f}" if m and m["acc"] is not None else "n/a"
         ce = f"{m['ce']:.2f}" if m and m["ce"] is not None else "n/a"
         rows.append(f"| `{k}ep/` | {cum} | {acc} | {ce} | uploaded |")
     else:
         rows.append(f"| `{k}ep/` | {cum} | | | pending |")
     ckpts.append(f"`{k}ep/` = `{run}-step{step}`")
+acc_line = " · ".join(f"{k}ep {v:.3f}" for k, v in sorted(accs.items())) or "none yet"
+pending = [k for k in range(1, 9) if k not in accs]
+if pending:
+    acc_line += f" · {pending[0]}ep-{pending[-1]}ep pending" if len(pending) > 1 else f" · {pending[0]}ep pending"
+if accs:
+    best_k = max(accs, key=accs.get)
+    best_line = f"{accs[best_k]:.3f} (epoch {best_k})"
+else:
+    best_line = "n/a"
 
 body = f"""---
 license: other
@@ -62,6 +73,17 @@ tags: [speculative-decoding, dspark, draft-model, sglang]
 ---
 
 # Qwen3.8-27B DSpark 2-layer MoE drafter (8 epochs on Regen-Mixture-v1, one export per epoch)
+
+## Summary
+
+- **Target model**: `Qwen/Qwen3.8-27B` (bf16 teacher, hidden states captured from layers 5/19/33/47/61)
+- **Draft model**: 2-layer MoE DSpark drafter, hidden 5120, 32 / 8 heads of dim 128; per layer 512 routed experts of
+  width 512, top-10 softmax routing, plus 1 sigmoid-gated shared expert of width 2048; Markov head rank 256, confidence
+  head, block size 7; 8.48B total / about 1.08B active parameters
+- **Training**: Kan's MoE recipe (`kan/moe-3-qwen38`), corpus `RadixArk/Qwen3.8-27B-Regen-Mixture-v1`, global batch 256,
+  lr 5e-4, 8 epochs (one run per epoch after epoch 3, warm-started from the previous epoch), one 8x H200 node
+- **train/acc per epoch** (mean of the last 100 steps before each epoch end): {acc_line}
+- **Highest train/acc**: {best_line}
 
 Private. A MoE DSpark draft model for `Qwen/Qwen3.8-27B`: Kan Wu's 5-layer MoE drafter (SpecForge branch
 `kan/moe-3-qwen38`) with the draft reduced from 5 to 2 decoder layers and nothing else changed (2 full-attention layers,
