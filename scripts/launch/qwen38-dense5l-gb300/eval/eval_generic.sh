@@ -9,5 +9,5 @@ for t in $(seq 1 120); do curl -sf -m 3 http://127.0.0.1:$P/health >/dev/null &&
 curl -sf -m 3 http://127.0.0.1:$P/health >/dev/null || { log "SERVER NOT HEALTHY"; exit 1; }
 log "server healthy; eval start"
 python3 $E/eval_drafters_lite.py --name $N --base-url http://127.0.0.1:$P --model $E/models/Qwen3.8-27B \
-  --datasets gsm8k,mt_bench,math500,traces,aime26 --concurrency 8 --timeout 7200 --out $E/logs/eval_$N.json 2>&1 | grep -v -iE "warning|token"
+  --datasets gsm8k,mt_bench,math500,traces,aime26 --concurrency 8 --timeout 7200 --out $E/logs/eval_$N.json 2>&1 | grep -v -iE "warning|hf_[a-z]"
 log "eval finished; stopping server"; pkill -TERM -P $SP 2>/dev/null; kill -TERM $SP 2>/dev/null; sleep 10; pkill -9 -f "launch_server.*--port $P\$" 2>/dev/null; log "EVAL_ONE_DONE $N"
