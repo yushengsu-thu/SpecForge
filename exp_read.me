@@ -127,8 +127,14 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
   step ~80 (14:20 UTC).
 - 2026-10-15 14:25 UTC: tried two SGLang capture processes on GPU 0 (7 ranks); the launch
   failed at startup (see below), and the decision was to go back to two capture GPUs.
-- 2026-10-15 14:3x UTC: relaunched with the dense-arm layout (2 capture GPUs + 6 ranks, global
-  batch 132, 129,172 steps, checkpoints every 1,196 steps; W&B run id `dense-1-8-r3`). Planned
-  next: a fused, same-precision target-head objective (teacher logits computed once per
-  position instead of per anchor block, one log-softmax pass, analytic backward) swapped in
-  at a checkpoint boundary via `training.resume_from`.
+- 2026-10-15 14:36 UTC: relaunched with the dense-arm layout (2 capture GPUs + 6 ranks, global
+  batch 132, 129,172 steps, checkpoints every 1,196 steps; W&B run id `dense-1-8-r3`): 6.0-6.2 s
+  per step, data wait 0.7-0.8 s.
+- 2026-10-15 15:0x UTC: restarted from scratch with the DDP gradient-sync fix (`a08a24ec`, found
+  by the MoE arm: DDP decides at forward time whether the next backward all-reduces, so
+  `no_sync()` around backward alone never deferred the collective and every micro-step
+  reduced the full gradient; the accumulated gradient is unchanged). Same W&B run id; the
+  ~200 overlapping early steps are dropped by W&B. Planned next: a fused, same-precision
+  target-head objective (teacher logits computed once per position instead of per anchor
+  block, one log-softmax pass, analytic backward) swapped in at a checkpoint boundary via
+  `training.resume_from`.
