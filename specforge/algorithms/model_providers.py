@@ -445,8 +445,6 @@ def build_dspark_model(
             dspark_ce_loss_alpha=cfg.training.dspark_ce_loss_alpha,
             dspark_l1_loss_alpha=cfg.training.dspark_l1_loss_alpha,
             dspark_confidence_head_alpha=(cfg.training.dspark_confidence_head_alpha),
-            dspark_fast_head=cfg.training.dspark_fast_head,
-            dspark_fast_head_max_table_gib=cfg.training.dspark_fast_head_max_table_gib,
         ),
     )
 

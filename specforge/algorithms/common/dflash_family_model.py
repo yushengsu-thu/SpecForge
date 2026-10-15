@@ -2122,8 +2122,6 @@ class OnlineDSparkModel(OnlineDFlashModel):
         dspark_l1_loss_alpha: float = 0.9,
         dspark_confidence_head_alpha: float = 1.0,
         objective_chunk_blocks: int = 128,
-        dspark_fast_head: bool = False,
-        dspark_fast_head_max_table_gib: float = 16.0,
     ):
         super().__init__(
             draft_model=draft_model,
@@ -2136,10 +2134,6 @@ class OnlineDSparkModel(OnlineDFlashModel):
             loss_decay_gamma=loss_decay_gamma,
             objective_chunk_blocks=objective_chunk_blocks,
             loss_type="dflash",
-        )
-        self.dspark_fast_head = bool(dspark_fast_head)
-        self.dspark_fast_head_max_table_bytes = int(
-            float(dspark_fast_head_max_table_gib) * (1 << 30)
         )
         if dspark_ce_loss_alpha < 0:
             raise ValueError("dspark_ce_loss_alpha must be >= 0")
@@ -2350,156 +2344,6 @@ class OnlineDSparkModel(OnlineDFlashModel):
             walk_accepted,
         )
 
-    def _dspark_fast_head_totals(
-        self,
-        *,
-        hidden_4d: torch.Tensor,
-        prev_token_ids: torch.Tensor,
-        target_ids: torch.Tensor,
-        loss_weights: torch.Tensor,
-        eval_mask: torch.Tensor,
-        safe_label_indices: torch.Tensor,
-        target_last_hidden_states: Optional[torch.Tensor],
-        block_index: Optional[torch.Tensor],
-        num_blocks: int,
-    ) -> Optional[Tuple[torch.Tensor, ...]]:
-        """Same-precision fast objective; ``None`` when it does not apply.
-
-        See ``specforge.algorithms.common.dspark_fast_head``: the teacher head
-        is projected once per sequence position, the draft side runs in one
-        autograd.Function with an analytic backward, and the chunk loop saves
-        activations instead of checkpointing.
-        """
-
-        from specforge.algorithms.common.dspark_fast_head import (
-            build_teacher_table,
-            fast_head_supported,
-        )
-
-        if target_last_hidden_states is None or not fast_head_supported(self):
-            return None
-        if hidden_4d.dtype != torch.bfloat16 or not hidden_4d.is_cuda:
-            return None
-        table = build_teacher_table(
-            self.lm_head.weight,
-            target_last_hidden_states,
-            max_table_bytes=self.dspark_fast_head_max_table_bytes,
-        )
-        if table is None:
-            return None
-        batch_size = target_ids.shape[0]
-        target_pred_indices = (safe_label_indices - 1).clamp(min=0)
-        batch_offsets = (
-            torch.arange(batch_size, device=target_ids.device) * table.seq_len
-        ).view(batch_size, 1, 1)
-        flat_teacher_index = target_pred_indices + batch_offsets
-        return checkpointed_chunk_reduce(
-            partial(
-                self._dspark_fast_chunk_terms,
-                teacher=table,
-                total_blocks=num_blocks,
-            ),
-            hidden_4d,
-            prev_token_ids,
-            target_ids,
-            loss_weights,
-            eval_mask,
-            flat_teacher_index,
-            block_index,
-            chunk_size=self.objective_chunk_blocks,
-            dim=1,
-            checkpoint=False,
-        )
-
-    def _dspark_fast_chunk_terms(
-        self,
-        hidden: torch.Tensor,
-        prev_token_ids: torch.Tensor,
-        target_ids: torch.Tensor,
-        loss_weights: torch.Tensor,
-        eval_mask: torch.Tensor,
-        flat_teacher_index: torch.Tensor,
-        block_index: Optional[torch.Tensor] = None,
-        *,
-        teacher,
-        total_blocks: int = 0,
-    ) -> Tuple[torch.Tensor, ...]:
-        """Fast-path counterpart of ``_dspark_objective_chunk_terms``.
-
-        Returns the same additive terms, in the same order.
-        """
-
-        from specforge.algorithms.common.dspark_fast_head import dspark_head_loss
-
-        batch_size, num_blocks, block_size, hidden_size = hidden.shape
-        rows = batch_size * num_blocks * block_size
-        flat_index = flat_teacher_index.reshape(rows)
-        teacher_probs = teacher.probs.index_select(0, flat_index)
-        teacher_ids = teacher.ids.index_select(0, flat_index).view_as(target_ids)
-        teacher_top1 = teacher.top1.index_select(0, flat_index).view_as(loss_weights)
-        markov_head = getattr(self.draft_model, "markov_head", None)
-        latent = None
-        markov_weight = None
-        if markov_head is not None:
-            latent = markov_head.get_prev_embeddings(prev_token_ids).reshape(rows, -1)
-            markov_weight = markov_head.markov_w2.weight
-        ce_num, l1_num, ce_rows, l1_rows, pred_rows, p_max_rows = dspark_head_loss(
-            hidden.reshape(rows, hidden_size),
-            latent,
-            self.lm_head,
-            markov_weight,
-            target_ids.reshape(rows),
-            loss_weights.reshape(rows),
-            teacher_probs,
-        )
-        if self.dspark_l1_loss_alpha <= 0:
-            l1_num = ce_num.new_zeros(())
-
-        zero = ce_num.new_zeros(())
-        with torch.no_grad():
-            cross_entropy = ce_rows.view_as(loss_weights)
-            l1_per_token = l1_rows.view_as(loss_weights)
-            predicted_ids = pred_rows.view_as(target_ids)
-            draft_top1 = p_max_rows.view_as(loss_weights)
-            eval_f = eval_mask.float()
-            correct = ((predicted_ids == target_ids) & eval_mask).float()
-            correct_num = correct.sum()
-            eval_den = eval_f.sum()
-            ce_position_num = (cross_entropy * eval_f).sum(dim=(0, 1))
-            correct_position_num = correct.sum(dim=(0, 1))
-            position_den = eval_f.sum(dim=(0, 1))
-            walk_accepted = _scatter_accepted_prefix(
-                predicted_ids, target_ids, eval_mask, block_index, total_blocks
-            )
-            teacher_agreement_num = ((predicted_ids == teacher_ids).float() * eval_f).sum()
-            teacher_top1_num = (teacher_top1 * eval_f).sum()
-            draft_top1_num = (draft_top1 * eval_f).sum()
-            accept_probability = (1.0 - 0.5 * l1_per_token).clamp(0.0, 1.0)
-            valid_blocks = eval_mask.any(dim=-1).float()
-            accepted_expectation = (accept_probability * eval_f).cumprod(dim=-1).sum(
-                dim=-1
-            ) + 1.0
-            tau_num = (accepted_expectation * valid_blocks).sum()
-            tau_den = valid_blocks.sum()
-
-        return (
-            ce_num,
-            l1_num,
-            zero,  # confidence loss (head disabled on this path)
-            zero,  # confidence abs error
-            correct_num,
-            eval_den,
-            ce_position_num,
-            correct_position_num,
-            position_den,
-            teacher_agreement_num,
-            teacher_top1_num,
-            draft_top1_num,
-            tau_num,
-            tau_den,
-            walk_accepted,
-        )
-
     def _compute_dspark_loss(
         self,
         *,
@@ -2538,37 +2382,22 @@ class OnlineDSparkModel(OnlineDFlashModel):
                 safe_label_indices,
             )
 
-        block_index = (
-            torch.arange(num_blocks, device=target_ids.device).unsqueeze(0)
-            if collect_detailed_metrics
-            else None
+        totals = checkpointed_chunk_reduce(
+            partial(self._dspark_objective_chunk_terms, total_blocks=num_blocks),
+            hidden_4d,
+            prev_token_ids,
+            target_ids,
+            loss_weights,
+            eval_mask,
+            aligned_target_hidden,
+            (
+                torch.arange(num_blocks, device=target_ids.device).unsqueeze(0)
+                if collect_detailed_metrics
+                else None
+            ),
+            chunk_size=self.objective_chunk_blocks,
+            dim=1,
         )
-        totals = None
-        if self.dspark_fast_head and need_target:
-            totals = self._dspark_fast_head_totals(
-                hidden_4d=hidden_4d,
-                prev_token_ids=prev_token_ids,
-                target_ids=target_ids,
-                loss_weights=loss_weights,
-                eval_mask=eval_mask,
-                safe_label_indices=safe_label_indices,
-                target_last_hidden_states=target_last_hidden_states,
-                block_index=block_index,
-                num_blocks=num_blocks,
-            )
-        if totals is None:
-            totals = checkpointed_chunk_reduce(
-                partial(self._dspark_objective_chunk_terms, total_blocks=num_blocks),
-                hidden_4d,
-                prev_token_ids,
-                target_ids,
-                loss_weights,
-                eval_mask,
-                aligned_target_hidden,
-                block_index,
-                chunk_size=self.objective_chunk_blocks,
-                dim=1,
-            )
 
         (
             ce_num,
