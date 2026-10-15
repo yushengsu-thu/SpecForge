@@ -10,7 +10,7 @@ instead of 6. One continuous run: one W&B curve, one checkpoint per epoch, every
 |---|---|
 | recipe | `examples/configs/online/disaggregated/external/qwen3-8b-dspark-dense-same-2node-h200.yaml` |
 | launch | `scripts/launch/dense-same/` (`capture_node.sh`, `trainer_node.sh`, `watch_exports.sh`, `epoch_results.py`) |
-| W&B | entity `eigent_radixark_training`, project `qwen3-8b-dspark`, run id `dense-same-causal` shown as `dense-same` (fixed id, `WANDB_RESUME=allow`; the id `dense-same` belonged to the abandoned bidirectional run and W&B does not allow reusing a deleted id) |
+| W&B | entity `eigent_radixark_training`, project `qwen3-8b-dspark`, run id `dense-same-r3` shown as `dense-same` (fixed id, `WANDB_RESUME=allow`; `dense-same` and `dense-same-causal` were the two abandoned attempts and W&B does not allow reusing a deleted id) |
 | HF | `yushengsu/dense-same`, folders `1ep/` ... `12ep/` (servable HF export + tokenizer), README mirrors the table below |
 | hardware | devbox `moe-16exp-1024dim` (h200-sci-k8s-1): rank 0 = 8x H200 capture servers, rank 1 = 8x H200 trainer |
 | started | 2026-10-15 18:52 UTC (causal run; the 13:23 UTC bidirectional run was abandoned at step 4,050) |
@@ -58,20 +58,25 @@ instead of 6. One continuous run: one W&B curve, one checkpoint per epoch, every
 | objective_chunk_blocks | 128 |
 | loss | 0.1 CE + 0.9 L1, confidence loss 0 |
 | attention_backend | flex_attention |
-| sharding | NO_SHARD (DDP) |
+| sharding | NO_SHARD (DDP), `ddp_bucket_cap_mb` 128 |
+| vocabulary projection | `cache_vocab_projection: true`, `flatten_vocab_projection: true` (PR #942 layer #963; the published run's `dspark_cache_projection` / `dspark_flatten_projection`) |
 | dtype / kernels | bfloat16, Liger kernels |
 | save_interval / max_checkpoints / log_interval | 11,100 (= one epoch) / 3 / 10 |
 | seed / prompt_seed | 42 / 42 |
 | capture servers | 8x SGLang 0.5.18 (spec-capture patch), TP1 bf16, triton attention, context 8208, 4 running requests, Mooncake RDMA |
 
-PR #942 layers merged into this branch (stack #957 to #960): streaming-read fix, DDP no_sync around forward+backward (one gradient
-all-reduce per optimizer step), empty qwen3-instruct system prompt, independent attention range/direction (`is_causal`).
-Not used: `dspark_flatten_projection`, `dspark_cache_projection`, `ddp_bucket_cap_mb` (speed-only knobs from later layers of the stack).
+PR #942 layers merged into this branch (stack #957 to #963): streaming-read fix (#957), DDP no_sync around forward+backward and
+`ddp_bucket_cap_mb` (#958), empty qwen3-instruct system prompt (#959), independent attention range/direction, `is_causal` (#960),
+DFlash fused plain head (#961, DFlash only, unused here), selective checkpoint contexts for frozen projections (#962), shared
+Domino/DSpark vocabulary projection controls `cache_vocab_projection` / `flatten_vocab_projection` (#963). Not merged: #965 to #967
+(DSpine, consumer dispatch balancing, RTX PRO5000 recipes).
 
 ## Run log
 
 - 2026-10-15 13:23 UTC: first launch (bidirectional draft block, template with the implicit "You are a helpful assistant." system prompt).
 - 2026-10-15 18:52 UTC: first run stopped at step 4,050 (train/acc 0.624) and its outputs archived as `dense-same-bidir-abandoned`; PR #942 layers #957-#960 merged (commit f2650d2), config switched to `configs/qwen3-8b-dspark-causal-noconf-b16.json` (`is_causal: true`) and the empty system prompt (new cache dir `qwen3-8b-dspark-perfectblend-nosys-8192`); run restarted from scratch in the same output dir; the old W&B run was deleted and the new run uses the id `dense-same-causal` (W&B refuses a deleted id).
+
+- 2026-10-15 (third launch): PR #942 layers #961-#963 merged; `cache_vocab_projection`, `flatten_vocab_projection` and `ddp_bucket_cap_mb: 128` enabled to match the published run; the causal run was stopped (about 50 minutes in) and restarted from scratch as W&B run id `dense-same-r3`.
 
 ## Results per epoch
 

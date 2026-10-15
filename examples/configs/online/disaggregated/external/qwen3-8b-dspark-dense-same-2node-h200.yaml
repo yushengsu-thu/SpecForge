@@ -1,5 +1,6 @@
 # dense-same: Qwen3-8B DSpark **dense** drafter (configs/qwen3-8b-dspark-causal-noconf-b16.json: block 16, causal draft
-# block (is_causal: true, PR #942 / #960), no
+# block (is_causal: true, PR #942 / #960), vocabulary projection cached and flattened (PR #942 / #963, the published
+# run's dspark_cache_projection / dspark_flatten_projection), DDP bucket 128 MB (PR #942 / #958), no
 # confidence head, 5 layers, hidden 4096, FFN 12288) trained for 12 epochs with the hyperparameters of the
 # published Qwen3-8B dense DSpark run (https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge): global batch
 # 128, AdamW lr 6e-4 cosine with 4% warm-up, grad clip 1.0, 512 anchors, loss_decay_gamma 7.0, 0.1 CE + 0.9 L1.
@@ -44,6 +45,9 @@ training:
   batch_size: 2
   accumulation_steps: 8
   fsdp_sharding: NO_SHARD
+  ddp_bucket_cap_mb: 128
+  cache_vocab_projection: true
+  flatten_vocab_projection: true
   optimizer_cpu_offload: false
   learning_rate: 0.0006
   lr_scheduler: cosine
