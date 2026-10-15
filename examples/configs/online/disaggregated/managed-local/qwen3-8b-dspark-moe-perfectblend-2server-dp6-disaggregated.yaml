@@ -14,11 +14,13 @@
 #
 # Prepare: hf download yaro1214/open_data perfectblend_train_regen_temperature0_no_think.jsonl \
 #            --repo-type dataset --local-dir ./cache/dataset
-# Smoke (3 optimizer steps on a 2,000-row slice, no checkpoints kept beyond the last):
+# Smoke (3 optimizer steps on a 2,000-row slice; DSpark's loss-mask filter applies
+# data.max_prompts only after tokenizing the whole file, so slice the file instead):
+#   head -n 2000 ./cache/dataset/perfectblend_train_regen_temperature0_no_think.jsonl > ./cache/dataset/perfectblend_smoke_2000.jsonl
 #   specforge train -c examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-perfectblend-2server-dp6-disaggregated.yaml \
-#     training.max_steps=3 data.max_prompts=2000 training.save_interval=3 training.log_interval=1 \
-#     tracking.report_to=none run_id=qwen3-8b-dspark-moe-smoke output_dir=outputs/qwen3-8b-dspark-moe-smoke \
-#     deployment.disaggregated.control_dir=outputs/qwen3-8b-dspark-moe-smoke/control
+#     data.train_data_path=./cache/dataset/perfectblend_smoke_2000.jsonl data.cache_dir=./cache/qwen3-8b-smoke-moe \
+#     training.max_steps=3 training.save_interval=3 training.log_interval=1 tracking.report_to=none \
+#     run_id=qwen3-8b-dspark-moe-smoke output_dir=outputs/qwen3-8b-dspark-moe-smoke deployment.disaggregated.control_dir=outputs/qwen3-8b-dspark-moe-smoke/control
 # Full run: drop the overrides (one epoch; raise training.num_epochs for more).
 model:
   target_model_path: Qwen/Qwen3-8B

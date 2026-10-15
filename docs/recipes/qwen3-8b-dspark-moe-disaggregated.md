@@ -78,14 +78,19 @@ is `max_length + 7` headroom for the capture requests.
 ## Smoke and launch
 
 Three optimizer steps on a 2,000-row slice, all services managed by the
-supervisor (set `model.target_model_path` to a local directory when the
-Hugging Face cache is read-only):
+supervisor. DSpark's loss-mask filter applies `data.max_prompts` only after the
+whole file is tokenized, so slice the file for a fast smoke; set
+`model.target_model_path` to a local directory when the Hugging Face cache is
+read-only.
 
 ```bash
+head -n 2000 ./cache/dataset/perfectblend_train_regen_temperature0_no_think.jsonl \
+  > ./cache/dataset/perfectblend_smoke_2000.jsonl
 specforge train \
   -c examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-perfectblend-2server-dp6-disaggregated.yaml \
-  training.max_steps=3 data.max_prompts=2000 training.save_interval=3 training.log_interval=1 \
-  tracking.report_to=none run_id=qwen3-8b-dspark-moe-smoke output_dir=outputs/qwen3-8b-dspark-moe-smoke \
+  data.train_data_path=./cache/dataset/perfectblend_smoke_2000.jsonl data.cache_dir=./cache/qwen3-8b-smoke-moe \
+  training.max_steps=3 training.save_interval=3 training.log_interval=1 tracking.report_to=none \
+  run_id=qwen3-8b-dspark-moe-smoke output_dir=outputs/qwen3-8b-dspark-moe-smoke \
   deployment.disaggregated.control_dir=outputs/qwen3-8b-dspark-moe-smoke/control
 ```
 
