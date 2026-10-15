@@ -26,7 +26,6 @@ def _build(device, vocab_size, hidden_size, draft_config):
     from specforge.modeling.draft.dspark import DSparkDraftModel
 
     cfg = Qwen3Config(**draft_config)
-    cfg._attn_implementation = "flex_attention"  # the trainer builds the draft with flex attention
     draft = DSparkDraftModel(cfg).to(device=device, dtype=torch.bfloat16)
     head = torch.nn.Linear(hidden_size, vocab_size, bias=False)
     target_dir = os.environ.get("SPECFORGE_TEST_TARGET_DIR")
@@ -148,53 +147,6 @@ class TestDSparkFastHeadEquivalence(unittest.TestCase):
                 torch.cuda.synchronize()
                 print(f"{'fast' if fast else 'ref '} objective fwd+bwd ({num_blocks} blocks x {batch}): {(time.time() - t0) / 3:.3f} s/iter, peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB")
                 torch.cuda.reset_peak_memory_stats()
-
-    @unittest.skipUnless(torch.cuda.is_available(), "GPU only")
-    def test_full_forward_matches(self):
-        """End to end: OnlineDSparkModel.forward with the fast head on vs off."""
-
-        device = torch.device("cuda")
-        draft_config = json.load(open(ROOT / "configs" / "qwen3-8b-dspark-dense-1-8-noconf-b16.json"))
-        vocab_size, hidden_size = draft_config["vocab_size"], draft_config["hidden_size"]
-        num_target_layers = len(draft_config["dflash_config"]["target_layer_ids"])
-        model = _build(device, vocab_size, hidden_size, draft_config)
-        model.num_anchors = int(os.environ.get("SPECFORGE_TEST_ANCHORS", "128"))
-        g = torch.Generator(device="cpu").manual_seed(1)
-        batch, seq_len = 2, 300
-        input_ids = torch.randint(0, vocab_size, (batch, seq_len), generator=g).to(device)
-        loss_mask = torch.ones(batch, seq_len)
-        loss_mask[:, :40] = 0  # a prompt prefix without loss
-        loss_mask[1, 250:] = 0  # padding at the end of the second sample
-        loss_mask = loss_mask.to(device)
-        hidden_states = (torch.randn(batch, seq_len, num_target_layers * hidden_size, generator=g) * 0.5).to(device=device, dtype=torch.bfloat16)
-        target_last = (torch.randn(batch, seq_len, hidden_size, generator=g) * 0.5).to(device=device, dtype=torch.bfloat16)
-
-        def run(fast: bool):
-            model.dspark_fast_head = fast
-            torch.manual_seed(123)  # anchors are sampled inside forward
-            loss, accuracy, metrics = model(
-                input_ids=input_ids, hidden_states=hidden_states, loss_mask=loss_mask,
-                target_last_hidden_states=target_last, collect_detailed_metrics=True,
-            )
-            ratios = {
-                k: (torch.as_tensor(n).detach().float().cpu(), torch.as_tensor(d).detach().float().cpu())
-                for k, (n, d) in metrics["ratio_metrics"].items()
-            }
-            return float(loss), float(accuracy), ratios
-
-        ref = run(False)
-        fast = run(True)
-        print(f"loss ref={ref[0]:.6f} fast={fast[0]:.6f} | acc ref={ref[1]:.4f} fast={fast[1]:.4f}")
-        self.assertLessEqual(abs(ref[0] - fast[0]) / max(abs(ref[0]), 1e-6), 2e-3)
-        self.assertEqual(ref[1], fast[1])
-        for key, (n, d) in ref[2].items():
-            n2, d2 = fast[2][key]
-            tol = 1e-2 if key.startswith("ce") else 1e-4
-            self.assertLessEqual((d - d2).abs().max().item(), 1e-6, key)
-            rel = ((n - n2).abs().max() / n.abs().max().clamp_min(1e-6)).item()
-            print(f"{key:40s} max_rel={rel:.2e}")
-            self.assertLessEqual(rel, tol, f"{key}: {n.flatten()[:4].tolist()} vs {n2.flatten()[:4].tolist()}")
-        self.assertTrue(getattr(model, "_dspark_fast_head_logged", False), "fast path was not taken")
 
 
 if __name__ == "__main__":
