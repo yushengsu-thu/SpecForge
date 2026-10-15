@@ -6,9 +6,10 @@
 # as in the published jiapingW run), no confidence head:
 # ~0.47B parameters vs ~1.05B for the dense arm. Everything else (corpus, template, GPU
 # layout, global batch 132, lr schedule, DSpark loss) is identical to the dense arm so the
-# curves are directly comparable. With upstream PR #942 merged, the qwen3-instruct template
-# renders WITHOUT a system prompt (like the published run) and the recipe uses its
-# dspark_flatten_projection / dspark_cache_projection / ddp_bucket_cap_mb settings. Trained for 12 epochs = 129,172 optimizer steps
+# curves are directly comparable. With the upstream PR #942 stack (#957-#963) merged, the
+# qwen3-instruct template renders WITHOUT a system prompt (like the published run) and the
+# recipe uses the stack's flatten_vocab_projection / cache_vocab_projection (the published
+# launch.yaml's dspark_*_projection keys, renamed by #963) and ddp_bucket_cap_mb settings. Trained for 12 epochs = 129,172 optimizer steps
 # ((1,420,903 x 12) // 132). A checkpoint every 1,196 steps (9 per epoch; resume points for
 # swapping in kernel optimizations), all retained: epoch k is the <run_id>-step{10764*k}
 # checkpoint (one epoch to within 6 steps).
@@ -61,8 +62,8 @@ training:
   dspark_ce_loss_alpha: 0.1
   dspark_l1_loss_alpha: 0.9
   dspark_confidence_head_alpha: 0.0
-  dspark_flatten_projection: true
-  dspark_cache_projection: true
+  flatten_vocab_projection: true
+  cache_vocab_projection: true
   save_interval: 1196
   max_checkpoints: 0
   log_interval: 10
