@@ -151,9 +151,6 @@ class TrainingBackend(abc.ABC):
     #: ``TrainerCore`` skip its own synchronizing check.
     checks_loss_denominator: bool = False
 
-    def accumulation_context(self, *, is_boundary: bool = True):
-        return contextlib.nullcontext()
-
     @abc.abstractmethod
     def prepare_model(self, model: nn.Module) -> nn.Module: ...
 
@@ -287,11 +284,6 @@ class FSDPTrainingBackend(TrainingBackend):
                     process_group=pc.fsdp_process_group,
                     broadcast_buffers=False,
                     gradient_as_bucket_view=True,
-                    bucket_cap_mb=(
-                        float(os.environ["SPECFORGE_DDP_BUCKET_CAP_MB"])
-                        if "SPECFORGE_DDP_BUCKET_CAP_MB" in os.environ
-                        else None
-                    ),
                 )
                 self._wrapper_kind = "ddp"
             else:
@@ -353,29 +345,19 @@ class FSDPTrainingBackend(TrainingBackend):
     def backward(self, loss: torch.Tensor, *, is_boundary: bool = True) -> None:
         """Backward one micro-step with one gradient collective per window.
 
-        FSDP defers reduction here; DDP requires ``accumulation_context``
-        around both forward and backward to defer its reducer.
+        Non-boundary micro-steps run under the FSDP/DDP ``no_sync()`` context;
+        the boundary backward reduces the accumulated sum once.
         """
         # SPECFORGE_FSDP_SHARDED_GRAD_ACCUM=1: reduce-scatter every micro-step and
         # accumulate the *sharded* gradient instead of FSDP's no_sync() path, which
         # holds the full unsharded gradient on every rank between boundaries
         # (41.6 GB for the 20B MoE drafter). Costs one reduce-scatter per micro-step.
         sharded_accum = os.environ.get("SPECFORGE_FSDP_SHARDED_GRAD_ACCUM", "0") == "1"
-        if (
-            is_boundary
-            or not self._wrapped
-            or sharded_accum
-            or self._wrapper_kind == "ddp"
-        ):
+        if is_boundary or not self._wrapped or sharded_accum:
             loss.backward()
         else:
             with self.module.no_sync():
                 loss.backward()
-
-    def accumulation_context(self, *, is_boundary: bool = True):
-        if self._wrapper_kind == "ddp" and not is_boundary:
-            return self.module.no_sync()
-        return contextlib.nullcontext()
 
     def scale_gradients(self, factor: torch.Tensor) -> None:
         if self.module is None:

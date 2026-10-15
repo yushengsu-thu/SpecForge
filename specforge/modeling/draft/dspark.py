@@ -9,7 +9,6 @@ import torch
 from torch import nn
 
 from .dflash import DFlashDraftModel, resolve_dflash_attention_mode
-from .dflash_kernels import DFlashKernels
 from .registry import register_draft
 
 
@@ -286,7 +285,7 @@ class DSparkDraftModel(DFlashDraftModel):
 
     expected_projector_type = "dspark"
 
-    def __init__(self, config, dflash_kernels: Optional[DFlashKernels] = None) -> None:
+    def __init__(self, config) -> None:
         dflash_config = dict(getattr(config, "dflash_config", None) or {})
         attention_mode = resolve_dflash_attention_mode(config)
         num_heads = int(config.num_attention_heads)
@@ -316,7 +315,7 @@ class DSparkDraftModel(DFlashDraftModel):
                 "DSparkDraftModel requires " "dflash_config.projector_type='dspark'."
             )
         config.dflash_config = dflash_config
-        super().__init__(config, dflash_kernels=dflash_kernels)
+        super().__init__(config)
 
     def _sample_draft_tokens(
         self,
