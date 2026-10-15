@@ -18,6 +18,9 @@ if [ "$RANK" = 1 ]; then
   python -c "import specforge" 2>/dev/null && [ "$(python -c "import specforge,os;print(os.path.dirname(os.path.dirname(specforge.__file__)))")" = "$SF" ] || { log "pip install -e"; pip install -q -e $SF --no-deps 2>&1 | grep -v -i warning | tail -1; }
   # the lmsysorg/sglang image ships torch + sglang only; the trainer also needs these (never touches torch)
   python -c "import wandb, accelerate, zstandard, yaml, liger_kernel, mooncake" 2>/dev/null || { log "pip install trainer deps"; pip install -q wandb accelerate zstandard pyyaml liger-kernel mooncake-transfer-engine 2>&1 | grep -v -i warning | tail -1; }
+  # the mooncake-transfer-engine wheel links its zero-copy modules against libcudart.so.12; the cu130 image only
+  # has libcudart.so.13, so provide the CUDA 12 runtime from pip and make it visible to the dynamic loader
+  [ -e /usr/local/lib/libcudart.so.12 ] || { pip install -q nvidia-cuda-runtime-cu12 2>&1 | grep -v -i warning | tail -1; ln -sf "$(python -c "import glob,nvidia,os; print(glob.glob(os.path.dirname(nvidia.__path__[0])+'/nvidia/cuda_runtime/lib/libcudart.so.12*')[0])")" /usr/local/lib/libcudart.so.12 && ldconfig && log "libcudart.so.12 linked for mooncake"; }
   python -c "import specforge, mooncake, liger_kernel, wandb, accelerate, zstandard; print('trainer env ok')" || { log "ENV_FAILED"; exit 1; }
   [ -f $BASE/data/perfectblend_train_regen_temperature0_no_think.jsonl ] || { log "download corpus"; hf download yaro1214/open_data perfectblend_train_regen_temperature0_no_think.jsonl --repo-type dataset --local-dir $BASE/data > $BASE/logs/dl-dataset.log 2>&1; }
   log "corpus: $(du -sh $BASE/data/perfectblend_train_regen_temperature0_no_think.jsonl | cut -f1)"
