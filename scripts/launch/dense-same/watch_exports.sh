@@ -26,7 +26,7 @@ for ep in $(seq "$FIRST" "$LAST"); do
     until complete "$ck" "$step"; do sleep 120; done; sleep 60
   fi
   log "epoch $ep: exporting -> $dst"; rm -rf "$dst"; mkdir -p "$EXPORTS"
-  specforge export --to hf --checkpoint "$ck" --draft-config "$DRAFT_CONFIG" --output-dir "$dst" > "$EXPORTS/export-ep$ep.log" 2>&1 || { log "epoch $ep: EXPORT_FAILED"; tail -5 "$EXPORTS/export-ep$ep.log"; continue; }
+  specforge export --to hf --checkpoint "$ck" --draft-config "$DRAFT_CONFIG" --output-dir "$dst" --embedding-source "$TARGET" > "$EXPORTS/export-ep$ep.log" 2>&1 || { log "epoch $ep: EXPORT_FAILED"; tail -5 "$EXPORTS/export-ep$ep.log"; continue; }
   python3 scripts/gates/normalize_dflash_export.py --config "$dst/config.json" --block-size 16 2>&1 | tail -1
   python3 -c "from transformers import AutoTokenizer; AutoTokenizer.from_pretrained('$TARGET').save_pretrained('$dst')" 2>&1 | tail -1
   du -sh "$dst" | tail -1
