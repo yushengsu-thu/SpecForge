@@ -960,6 +960,13 @@ class TrainingConfig(StrictConfigModel):
     dflash_teacher_metrics: bool = True
     lambda_base_start: float = 1.0
     lambda_base_decay_ratio: float = 0.5
+    #: Same-precision fast DSpark head objective: teacher logits once per
+    #: sequence position, one fused draft-side loss with an analytic backward,
+    #: no activation-checkpoint recompute. Falls back to the reference path when
+    #: it does not apply (confidence head, non-vanilla Markov head, L1 off, or
+    #: a teacher table above ``dspark_fast_head_max_table_gib``).
+    dspark_fast_head: bool = False
+    dspark_fast_head_max_table_gib: float = Field(default=16.0, gt=0.0)
     dspark_ce_loss_alpha: float = 0.1
     dspark_l1_loss_alpha: float = 0.9
     dspark_confidence_head_alpha: float = 1.0
