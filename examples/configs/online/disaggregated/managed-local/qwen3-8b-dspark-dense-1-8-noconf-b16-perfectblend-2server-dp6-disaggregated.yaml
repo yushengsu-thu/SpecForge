@@ -1,11 +1,14 @@
-# Qwen3-8B DSpark **dense-1/8** drafter (configs/qwen3-8b-dspark-dense-1-8-noconf-b16.json):
+# Qwen3-8B DSpark **dense-1/8** drafter (configs/qwen3-8b-dspark-dense-1-8-causal-noconf-b16.json):
 # the dense recipe next to it (qwen3-8b-dspark-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml)
 # with the draft MLP hidden dim cut to 1/8 (intermediate_size 12288 -> 1536). Residual hidden
 # stays 4096 (= target hidden, required by the shared projector / target embed_tokens / target
-# lm_head), attention stays GQA 32/8 x 128, 5 layers, block 16, no confidence head:
+# lm_head), attention stays GQA 32/8 x 128, 5 layers, block 16, causal draft block (is_causal,
+# as in the published jiapingW run), no confidence head:
 # ~0.47B parameters vs ~1.05B for the dense arm. Everything else (corpus, template, GPU
 # layout, global batch 132, lr schedule, DSpark loss) is identical to the dense arm so the
-# curves are directly comparable. Trained for 12 epochs = 129,172 optimizer steps
+# curves are directly comparable. With upstream PR #942 merged, the qwen3-instruct template
+# renders WITHOUT a system prompt (like the published run) and the recipe uses its
+# dspark_flatten_projection / dspark_cache_projection / ddp_bucket_cap_mb settings. Trained for 12 epochs = 129,172 optimizer steps
 # ((1,420,903 x 12) // 132). A checkpoint every 1,196 steps (9 per epoch; resume points for
 # swapping in kernel optimizations), all retained: epoch k is the <run_id>-step{10764*k}
 # checkpoint (one epoch to within 6 steps).
@@ -17,7 +20,7 @@
 # WANDB_RUN_ID + WANDB_RESUME=allow keep every (re)launch on one W&B line.
 model:
   target_model_path: Qwen/Qwen3-8B
-  draft_model_config: configs/qwen3-8b-dspark-dense-1-8-noconf-b16.json
+  draft_model_config: configs/qwen3-8b-dspark-dense-1-8-causal-noconf-b16.json
   target_backend: sglang
   embedding_key: model.embed_tokens.weight
   torch_dtype: bfloat16
@@ -33,7 +36,7 @@ data:
   train_data_path: ./cache/dataset/perfectblend_train_regen_temperature0_no_think.jsonl
   max_length: 8192
   chat_template: qwen3-instruct
-  cache_dir: ./cache/qwen3-8b-dspark-perfectblend-8192
+  cache_dir: ./cache/qwen3-8b-dspark-perfectblend-no-system-8192
   build_dataset_num_proc: 64
   dataloader_num_workers: 8
 training:
@@ -45,6 +48,7 @@ training:
   batch_size: 2
   accumulation_steps: 11
   fsdp_sharding: NO_SHARD
+  ddp_bucket_cap_mb: 128
   optimizer_cpu_offload: false
   learning_rate: 0.0006
   lr_scheduler: cosine
@@ -57,6 +61,8 @@ training:
   dspark_ce_loss_alpha: 0.1
   dspark_l1_loss_alpha: 0.9
   dspark_confidence_head_alpha: 0.0
+  dspark_flatten_projection: true
+  dspark_cache_projection: true
   save_interval: 1196
   max_checkpoints: 0
   log_interval: 10
