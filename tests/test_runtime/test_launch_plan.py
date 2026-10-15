@@ -1278,8 +1278,8 @@ class LaunchPlanTest(unittest.TestCase):
         )
         root = Path(__file__).resolve().parents[2]
         recipes = {
-            "qwen3-8b-dspark-perfectblend-2server-dp6-disaggregated.yaml": "configs/qwen3-8b-dspark.json",
-            "qwen3-8b-dspark-moe-perfectblend-2server-dp6-disaggregated.yaml": "configs/qwen3-8b-dspark-moe.json",
+            "qwen3-8b-dspark-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml": "configs/qwen3-8b-dspark-noconf-b16.json",
+            "qwen3-8b-dspark-moe-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml": "configs/qwen3-8b-dspark-moe-noconf-b16.json",
         }
         for name, draft_config in recipes.items():
             path = root / "examples/configs/online/disaggregated/managed-local" / name
@@ -1288,6 +1288,14 @@ class LaunchPlanTest(unittest.TestCase):
             self.assertEqual(cfg.model.draft_model_config, draft_config)
             self.assertEqual(cfg.data.chat_template, "qwen3-instruct")
             self.assertEqual(cfg.data.max_length, 8192)
+            self.assertEqual(cfg.training.fsdp_sharding, "NO_SHARD")
+            self.assertEqual(cfg.training.dspark_confidence_head_alpha, 0.0)
+            self.assertEqual(
+                cfg.training.batch_size
+                * cfg.training.accumulation_steps
+                * cfg.deployment.trainer.nproc_per_node,
+                132,
+            )
             with (
                 mock.patch(
                     "specforge.training.capture_contract.resolve_server_capture_contract",
@@ -1312,7 +1320,7 @@ class LaunchPlanTest(unittest.TestCase):
             )
             for service in plan.services[1:]:
                 argv = service.command.argv
-                self.assertEqual(argv[argv.index("--context-length") + 1], "8199")
+                self.assertEqual(argv[argv.index("--context-length") + 1], "8208")
                 self.assertEqual(
                     argv[argv.index("--spec-capture-method") + 1], "dspark"
                 )

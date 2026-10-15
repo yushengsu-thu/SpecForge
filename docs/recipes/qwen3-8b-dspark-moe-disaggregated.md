@@ -5,16 +5,29 @@ hidden 4096) on one 8-GPU node and differ only in the draft config:
 
 | Recipe | Draft config | Drafter |
 | --- | --- | --- |
-| `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-perfectblend-2server-dp6-disaggregated.yaml` | `configs/qwen3-8b-dspark.json` | dense, 5 layers, FFN 12288, ~1.05B parameters |
-| `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-perfectblend-2server-dp6-disaggregated.yaml` | `configs/qwen3-8b-dspark-moe.json` | MoE, 5 layers, 8 experts x 4096 top-1 + shared 2048, ~2.4B total / ~0.7B active |
+| `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml` | `configs/qwen3-8b-dspark-noconf-b16.json` | dense, 5 layers, FFN 12288, ~1.05B parameters |
+| `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml` | `configs/qwen3-8b-dspark-moe-noconf-b16.json` | MoE, 5 layers, 8 experts x 4096 top-1 + shared 2048, ~2.4B total / ~0.7B active |
 
-Both keep the Qwen3-8B DSpark skeleton of `configs/qwen3-8b-dspark.json`:
-block size 7, GQA 32/8 heads of dim 128, target feature layers 1/9/17/25/33,
-vanilla Markov head (rank 256), confidence head on, `mask_token_id` 151669.
+Both use the skeleton of `configs/qwen3-8b-dspark.json` with two changes taken
+from the published Qwen3-8B dense DSpark run on this corpus
+([jiapingW/Qwen3-8b-dspark-SpecForge](https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge),
+step 39000: gsm8k accept length 9.72 at D16/V16): **block size 16** and **no
+confidence head** (`enable_confidence_head: false`, `confidence_head_alpha: 0`,
+`training.dspark_confidence_head_alpha: 0`). The rest is unchanged: GQA 32/8
+heads of dim 128, target feature layers 1/9/17/25/33, vanilla Markov head
+(rank 256), `mask_token_id` 151669, bidirectional attention inside the draft
+block.
+
+That run's `is_causal`, `dspark_flatten_projection`, `dspark_cache_projection`
+and `ddp_bucket_cap_mb` belong to the unmerged PR #942 and are not used:
+`is_causal` would switch the draft block to causal attention (a different
+drafter variant that also needs serving support), the two projection knobs
+only speed up the vocabulary projection, and the DDP bucket size only tunes
+communication. Everything else in that recipe is reproduced below.
 
 ## The MoE drafter
 
-`configs/qwen3-8b-dspark-moe.json` is the Qwen3.8-27B MoE drafter structure
+`configs/qwen3-8b-dspark-moe-noconf-b16.json` is the Qwen3.8-27B MoE drafter structure
 (`qwen3_5_moe` preset: softmax top-k routing, one sigmoid-gated SwiGLU shared
 expert, auxiliary load-balancing loss, Qwen checkpoint naming; Kan's router
 settings `moe_router_center: sample`, momentum 0.99, aux coefficient 0.001,
@@ -64,16 +77,17 @@ hf download yaro1214/open_data perfectblend_train_regen_temperature0_no_think.js
 ## Layout and schedule
 
 Managed-local on one node: two TP1 bf16 capture servers (`--spec-capture-method
-dspark`, aux layers 1/9/17/25/33) on GPUs 0-1, ports 30000-30001; six FSDP
-trainer ranks on GPUs 2-7. `batch_size 4 x accumulation_steps 8 x 6 ranks` is a
-global batch of 192, so one epoch is 7,401 optimizer steps. AdamW, lr 6e-4
-cosine with 4% warmup, 512 anchors, `loss_decay_gamma 4.0`, DSpark loss
-`0.1 CE + 0.9 L1 + confidence`. The MoE drafter fits without optimizer CPU
-offload (`FULL_SHARD` over six ranks).
+dspark`, aux layers 1/9/17/25/33) on GPUs 0-1, ports 30000-30001; six DDP
+trainer ranks (`fsdp_sharding: NO_SHARD`) on GPUs 2-7. `batch_size 2 x
+accumulation_steps 11 x 6 ranks` is a global batch of 132 (the published run
+used 128 on 32 ranks), so one epoch is 10,765 optimizer steps and the planned
+six epochs are 64,590. AdamW, lr 6e-4 cosine with 4% warmup, grad clip 1.0,
+512 anchors, `loss_decay_gamma 7.0`, DSpark loss `0.1 CE + 0.9 L1`, Liger
+kernels, one retained checkpoint every 3,000 steps.
 
 The capture servers need the SGLang spec-capture patch
-(`scripts/apply_sglang_spec_capture_patch.sh`); `sglang_context_length: 8199`
-is `max_length + 7` headroom for the capture requests.
+(`scripts/apply_sglang_spec_capture_patch.sh`); `sglang_context_length: 8208`
+is `max_length + block_size` headroom for the capture requests.
 
 ## Smoke and launch
 
@@ -87,7 +101,7 @@ read-only.
 head -n 2000 ./cache/dataset/perfectblend_train_regen_temperature0_no_think.jsonl \
   > ./cache/dataset/perfectblend_smoke_2000.jsonl
 specforge train \
-  -c examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-perfectblend-2server-dp6-disaggregated.yaml \
+  -c examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml \
   data.train_data_path=./cache/dataset/perfectblend_smoke_2000.jsonl data.cache_dir=./cache/qwen3-8b-smoke-moe \
   training.max_steps=3 training.save_interval=3 training.log_interval=1 tracking.report_to=none \
   run_id=qwen3-8b-dspark-moe-smoke output_dir=outputs/qwen3-8b-dspark-moe-smoke \

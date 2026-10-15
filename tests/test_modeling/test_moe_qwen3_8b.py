@@ -1,11 +1,12 @@
 # coding=utf-8
-"""Qwen3-8B DSpark MoE drafter (``configs/qwen3-8b-dspark-moe.json``).
+"""Qwen3-8B DSpark MoE drafter (``configs/qwen3-8b-dspark-moe-noconf-b16.json``).
 
 The drafter keeps Kan's Qwen3.8-27B MoE structure (``qwen3_5_moe`` preset,
 one sigmoid-gated SwiGLU shared expert, sample router centering, auxiliary
 balance loss, grouped_mm dispatch) at the Qwen3-8B target width: 8 routed
-experts of width 4096, top-1 routing. Top-1 is only sound without top-k
-renormalization, which is what the tests below pin down.
+experts of width 4096, top-1 routing, on the block-16 / no-confidence-head
+skeleton of ``configs/qwen3-8b-dspark-noconf-b16.json``. Top-1 is only sound
+without top-k renormalization, which is what the tests below pin down.
 """
 
 import json
@@ -28,8 +29,9 @@ from specforge.modeling.draft.moe import (
 from specforge.modeling.draft.moe.aux_loss import AuxLossController
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CONFIG_PATH = REPO_ROOT / "configs" / "qwen3-8b-dspark-moe.json"
-DENSE_CONFIG_PATH = REPO_ROOT / "configs" / "qwen3-8b-dspark.json"
+CONFIG_PATH = REPO_ROOT / "configs" / "qwen3-8b-dspark-moe-noconf-b16.json"
+DENSE_CONFIG_PATH = REPO_ROOT / "configs" / "qwen3-8b-dspark-noconf-b16.json"
+BLOCK7_CONFIG_PATH = REPO_ROOT / "configs" / "qwen3-8b-dspark.json"
 HIDDEN = 32
 
 
@@ -63,8 +65,9 @@ def _draft_config(**overrides):
         "attention_mode": "gqa",
         "projector_type": "dspark",
         "markov_rank": 4,
-        "enable_confidence_head": True,
-        "confidence_head_with_markov": True,
+        "enable_confidence_head": False,
+        "confidence_head_with_markov": False,
+        "confidence_head_alpha": 0.0,
         "target_layer_ids": [1, 3],
         "moe_aux_loss_coeff": 0.001,
         "moe_dispatch": "grouped_mm",
@@ -145,8 +148,28 @@ class TestCheckedInConfig(unittest.TestCase):
             },
         )
         self.assertEqual(moe["hidden_size"], 4096)
+        self.assertEqual(moe["block_size"], 16)
+        self.assertFalse(moe["dflash_config"]["enable_confidence_head"])
+        self.assertEqual(moe["dflash_config"]["confidence_head_alpha"], 0.0)
         self.assertEqual(moe["dflash_config"]["mask_token_id"], 151669)
         self.assertEqual(moe["dflash_config"]["target_layer_ids"], [1, 9, 17, 25, 33])
+
+    def test_dense_noconf_b16_differs_from_the_block7_drafter_only_as_intended(self):
+        dense = json.loads(DENSE_CONFIG_PATH.read_text())
+        block7 = json.loads(BLOCK7_CONFIG_PATH.read_text())
+        self.assertEqual(set(dense), set(block7))
+        for key in block7:
+            if key in ("block_size", "dflash_config"):
+                continue
+            self.assertEqual(dense[key], block7[key], key)
+        self.assertEqual((block7["block_size"], dense["block_size"]), (7, 16))
+        changed = {
+            k for k in dense["dflash_config"] if dense["dflash_config"][k] != block7["dflash_config"].get(k)
+        }
+        self.assertEqual(
+            changed,
+            {"enable_confidence_head", "confidence_head_alpha", "confidence_head_with_markov"},
+        )
 
     def test_serving_fields_carry_the_top1_recipe(self):
         fields = resolve_moe_config(json.loads(CONFIG_PATH.read_text())).serving_fields()
@@ -179,6 +202,8 @@ class TestCheckedInConfig(unittest.TestCase):
         self.assertGreater(total / 1e9, 2.3)
         self.assertLess(total / 1e9, 3.0)
         self.assertLess(active / 1e9, 1.0)
+        self.assertIsNone(model.confidence_head)
+        self.assertEqual(model.block_size, 16)
         official = to_checkpoint_state_dict(model.state_dict())
         self.assertIn("layers.4.mlp.experts.7.gate_proj.weight", official)
         self.assertIn("layers.4.mlp.shared_expert.gate_proj.weight", official)
@@ -252,7 +277,7 @@ class TestDSparkIntegration(unittest.TestCase):
             self.assertIsInstance(layer.balance, AuxLossController)
             self.assertTrue(layer.shared_experts.gated)
         self.assertIsNotNone(model.markov_head)
-        self.assertIsNotNone(model.confidence_head)
+        self.assertIsNone(model.confidence_head)
         out, noise = self._forward(model)
         self.assertTrue(torch.isfinite(out).all())
         aux = collect_moe_aux_loss(model)
