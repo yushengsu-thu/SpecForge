@@ -10,7 +10,7 @@ instead of 6. One continuous run: one W&B curve, one checkpoint per epoch, every
 |---|---|
 | recipe | `examples/configs/online/disaggregated/external/qwen3-8b-dspark-dense-same-2node-h200.yaml` |
 | launch | `scripts/launch/dense-same/` (`capture_node.sh`, `trainer_node.sh`, `watch_exports.sh`, `epoch_results.py`) |
-| W&B | entity `eigent_radixark_training`, project `qwen3-8b-dspark`, run id `dense-same-r5` shown as `dense-same` (fixed id, `WANDB_RESUME=allow`; `dense-same`, `dense-same-causal`, `dense-same-r3` and `dense-same-r4` were abandoned attempts and W&B does not allow reusing a deleted id) |
+| W&B | entity `eigent_radixark_training`, project `qwen3-8b-dspark`, run id `dense-same-r6` shown as `dense-same` (fixed id, `WANDB_RESUME=allow`; `dense-same`, `dense-same-causal`, `dense-same-r3`, `dense-same-r4` and `dense-same-r5` were abandoned attempts and W&B does not allow reusing a deleted id) |
 | HF | `yushengsu/dense-same`, folders `1ep/` ... `12ep/` (servable HF export + tokenizer), README mirrors the table below |
 | hardware | devbox `moe-16exp-1024dim` (h200-sci-k8s-1): rank 0 = 8x H200 capture servers, rank 1 = 8x H200 trainer |
 | started | 2026-10-15 18:52 UTC (causal run; the 13:23 UTC bidirectional run was abandoned at step 4,050) |
@@ -86,6 +86,8 @@ Domino/DSpark vocabulary projection controls `cache_vocab_projection` / `flatten
 
 - 2026-10-15 (fifth launch): PR #942 layers #965-#966 merged, `runtime.consumer_dispatch: cost_balanced` enabled with the 4-quanta in-flight window (512/384, unchanged); the fourth launch (20:02 UTC, W&B `dense-same-r4`) was stopped and archived as `dense-same-r4-abandoned`; restarted from scratch as W&B run id `dense-same-r5`.
 
+- 2026-10-15 ~22:20 UTC: the devbox `moe-16exp-1024dim` (id aafb151e) was released (not by this run's automation); /scratch was wiped with the r5 run at about step 2,300 (no checkpoint yet). A new 16x H200 devbox with the same name (id c31564d0) was acquired at 22:31 UTC and rebuilt with `scripts/launch/dense-same/setup_node.sh`; the run restarts from scratch as W&B run id `dense-same-r6`.
+
 ## Results per epoch
 
 Filled by `scripts/launch/dense-same/epoch_results.py` from `/scratch/dense/epoch_results.json` as each epoch
@@ -115,9 +117,9 @@ gsm8k accept length 9.72 (D16/V16), 6.45 (D16/V8).
 ## Reproduce
 
 ```bash
-# both nodes: clone + patch the installed SGLang
+# both nodes (idempotent: clone, SGLang patch, model; trainer node also pip, corpus, secrets from /personal/dense-secrets)
 git clone -b dense-same https://github.com/yushengsu-thu/SpecForge.git /scratch/dense/SpecForge
-cd /scratch/dense/SpecForge && bash scripts/apply_sglang_spec_capture_patch.sh
+bash /scratch/dense/SpecForge/scripts/launch/dense-same/setup_node.sh <0|1>
 # rank 0 (capture): model + 8 servers
 hf download Qwen/Qwen3-8B --local-dir /scratch/models/Qwen3-8B
 bash scripts/launch/dense-same/capture_node.sh <CAPTURE_IP> <TRAINER_IP>
