@@ -77,7 +77,7 @@ for k in ["official-v1", "dense-4ep", "moe2l-4ep", "moe256-4ep", "moe16x-5ep"]:
         print("| %s | %s | %s | %s |" % (SG[k], rows[k].get(1, ""), rows[k].get(8, ""), rows[k].get(32, "")))
 
 # --- e2e v2: five datasets, Mamba cache 32 slots (e2e2_<label>_<ds>_c<c>.json) ---
-labels2 = [l for l in ["baseline", "dense-4ep", "official-v1", "moe256-4ep", "moe16x-5ep"] if any(os.path.exists(f"{E}/e2e2_{l}_{d}_c1.json") for d in ("gsm8k", "mt-bench", "math500", "aime26", "traces"))]
+labels2 = [l for l in ["baseline", "dense-4ep", "official-v1", "moe2l-4ep", "moe256-4ep", "moe16x-5ep"] if any(os.path.exists(f"{E}/e2e2_{l}_{d}_c1.json") for d in ("gsm8k", "mt-bench", "math500", "aime26", "traces"))]
 if labels2:
     print("\n### End-to-end serving throughput, five datasets (`specforge benchmark`, 512 new tokens, greedy; gsm8k and mt-bench non-thinking, math500 / aime26 / traces thinking; aime26 cycles its 30 prompts; servers with 32 running requests and a 32-slot Mamba cache); cell = output tokens/s (speed-up over autoregressive) [acceptance length]\n")
     def e2e2(label, ds, c):

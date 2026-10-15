@@ -4,7 +4,8 @@ its own tables, always next to dense 4ep and official v1 (and the no-draft basel
 import json, os, sys
 E = "/scratch/dense5l-eval/logs"
 DS = [("gsm8k", "GSM8K (5-shot, non-thinking)"), ("math500", "MATH500 (thinking)"), ("mt_bench", "MT-Bench (2 turns, thinking)"), ("aime26", "AIME26 (thinking, 32k)"), ("traces", "training traces (thinking)")]
-FAMILIES = [("256-expert MoE (RadixArk/qwen38-dspark-moe-256exp)", "moe256", [1, 2, 3, 4], "moe256-4ep", "256exp 4ep"),
+FAMILIES = [("2-layer MoE (RadixArk/qwen38-dspark-moe-2layer)", "moe2l", [1, 2, 3, 4], "moe2l-4ep", "MoE-2L 4ep"),
+            ("256-expert MoE (RadixArk/qwen38-dspark-moe-256exp)", "moe256", [1, 2, 3, 4], "moe256-4ep", "256exp 4ep"),
             ("16x1024 MoE (RadixArk/qwen38-dspark-moe-16x1024)", "moe16x", [1, 2, 3, 4, 5], "moe16x-5ep", "16x1024 5ep")]
 REF = [("dense5l-4ep", "dense 4ep"), ("official-v1", "official v1")]
 def load(p):
@@ -36,7 +37,7 @@ for title, prefix, epochs, best, bestname in FAMILIES:
     def e2(lab, ds, c):
         try: return json.load(open(f"{E}/e2e2_{lab}_{ds}_c{c}.json"))
         except Exception: return None
-    e2lab = {"dense5l-4ep": "dense-4ep", "official-v1": "official-v1", "moe256-4ep": "moe256-4ep", "moe16x-5ep": "moe16x-5ep"}
+    e2lab = {"dense5l-4ep": "dense-4ep", "official-v1": "official-v1", "moe256-4ep": "moe256-4ep", "moe16x-5ep": "moe16x-5ep", "moe2l-4ep": "moe2l-4ep"}
     for c in (1, 8, 32):
         rows = []
         for ds, name in E2:
