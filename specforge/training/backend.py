@@ -154,16 +154,6 @@ class TrainingBackend(abc.ABC):
     @abc.abstractmethod
     def prepare_model(self, model: nn.Module) -> nn.Module: ...
 
-    def prepare_micro_step(self, is_boundary: bool) -> None:
-        """Called before the forward of every micro-step with its boundary flag.
-
-        DDP decides at *forward* time (``require_backward_grad_sync``) whether the
-        following backward reduces gradients, so a ``no_sync()`` around backward
-        alone cannot defer the collective; backends that wrap in DDP set the flag
-        here. The default is a no-op.
-        """
-        return None
-
     @abc.abstractmethod
     def backward(self, loss: torch.Tensor, *, is_boundary: bool = True) -> None: ...
 
@@ -351,20 +341,6 @@ class FSDPTrainingBackend(TrainingBackend):
                     and self.parallel_config.sharding_strategy != "NO_SHARD"
                 ),
             )
-
-    def prepare_micro_step(self, is_boundary: bool) -> None:
-        """Arm or disarm DDP's gradient reduction for the coming micro-step.
-
-        ``DistributedDataParallel.forward`` reads ``require_backward_grad_sync``
-        to decide whether the reducer all-reduces in the next backward, which is
-        exactly what ``no_sync()`` toggles. Wrapping only ``backward()`` in
-        ``no_sync()`` therefore reduced the full gradient on every micro-step
-        (profiled on the Qwen3-8B MoE drafter: 18 of 19 all-reduces per optimizer
-        step were redundant). FSDP checks its flag in the backward hook, so its
-        ``no_sync()`` around backward keeps working.
-        """
-        if self._wrapper_kind == "ddp" and self.module is not None:
-            self.module.require_backward_grad_sync = bool(is_boundary)
 
     def backward(self, loss: torch.Tensor, *, is_boundary: bool = True) -> None:
         """Backward one micro-step with one gradient collective per window.
