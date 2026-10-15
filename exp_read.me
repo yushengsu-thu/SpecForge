@@ -11,7 +11,7 @@ to 1/8, trained for 12 epochs on the Open Perfect Blend regen corpus.
 | W&B (one line for all 12 epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8-r3 (display name `dense-1-8`) |
 | Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/dense-1-8 (`epoch-01/` ... `epoch-12/`, each a `specforge export`ed servable directory) |
 | Machine | one 8x H200 node (`specforge-dsv4-h200`, cluster h200-sci-k8s-1), SGLang 0.5.18 + spec-capture patch, torch 2.13.0+cu130 |
-| Launch yaml | `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-1server-dp7-disaggregated.yaml` |
+| Launch yaml | `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml` |
 
 ## Target
 
@@ -55,9 +55,9 @@ to 1/8, trained for 12 epochs on the Open Perfect Blend regen corpus.
 | | |
 | --- | --- |
 | strategy | dspark (online, disaggregated managed-local) |
-| epochs | **12** -> 128,201 optimizer steps = (1,420,903 x 12) // 133 |
-| global batch | 133 = batch_size 1 x accumulation_steps 19 x 7 trainer ranks (dense arm: 132 on 6 ranks; the published run: 128 on 32 ranks) |
-| steps per epoch | 10,683.5 -> epoch k = `<run_id>-step{10683 k}`; checkpoints every 1,187 steps (9 per epoch, resume points), all kept |
+| epochs | **12** -> 129,172 optimizer steps = (1,420,903 x 12) // 132 |
+| global batch | 132 = batch_size 2 x accumulation_steps 11 x 6 trainer ranks (same as the dense arm; the published run used 128 on 32 ranks) |
+| steps per epoch | 10,764.4 -> epoch k = `<run_id>-step{10764 k}`; checkpoints every 1,196 steps (9 per epoch, resume points), all kept |
 | optimizer | AdamW, fp32 master params, weight_decay 0 |
 | lr / schedule | 6e-4, cosine over all 129,173 steps, warmup 4% |
 | max_grad_norm | 1.0 |
@@ -72,11 +72,10 @@ to 1/8, trained for 12 epochs on the Open Perfect Blend regen corpus.
 
 | | |
 | --- | --- |
-| capture servers | 2 x SGLang TP1 bf16 processes (`--spec-capture-method dspark`) **both on GPU 0**, ports 30000-30001, `mem_fraction_static` 0.4 each, `sglang_context_length` 8208, `max_running_requests` 8, `max_total_tokens` 131072, `max_prefill_tokens` 32768, radix cache off, triton attention |
-| trainer ranks | 7 x DDP, GPUs 1-7 |
-| feature transport | Mooncake (tcp), 100 GiB segment, in-flight watermarks 133 / 266 samples, resident 120 / 200 GiB |
-| why 1 GPU + 7 | the trainers are the bottleneck for this small drafter (GPUs at 100%, the two capture GPUs of the dense-arm layout idled in backpressure with data wait ~0.6 s of a 6 s step), so one capture GPU feeds seven ranks |
-| why 2 processes | with a single SGLang process the capture GPU sat idle ~60% of the time (prefill bursts at 35k tok/s separated by feature-shipping gaps, 22.8k tok/s effective) and the trainers waited 1.8 s per step; a second process on the same GPU overlaps the gaps (`schema.py` now allows capture servers to share a device) |
+| capture servers | 2 x SGLang TP1 bf16 (`--spec-capture-method dspark`), GPUs 0-1, ports 30000-30001, `sglang_context_length` 8208, `max_running_requests` 4, `max_total_tokens` 65536, radix cache off, triton attention |
+| trainer ranks | 6 x DDP, GPUs 2-7 |
+| feature transport | Mooncake (tcp), 100 GiB segment, in-flight watermarks 132 / 264 samples, resident 120 / 200 GiB |
+| layout note | same GPU split as the dense arm. A 1-capture-GPU + 7-rank variant was tried (see the run log): one SGLang process cannot keep seven ranks fed (data wait 1.8 s/step, GPU 0 idle ~60% between prefill bursts), so the two-capture-GPU layout stays |
 | launch | `WANDB_RUN_ID=dense-1-8 WANDB_RESUME=allow specforge train -c <yaml> model.target_model_path=/scratch/models/Qwen3-8B data.train_data_path=/scratch/data/perfectblend/...jsonl data.cache_dir=/scratch/cache/qwen3-8b-dspark-perfectblend-8192 output_dir=/scratch/outputs/<run_id> deployment.disaggregated.control_dir=/scratch/outputs/<run_id>/control tracking.wandb_dir=/scratch/outputs/<run_id>/wandb` |
 
 Also on this branch: the `--nccl-port` pin for managed-local capture servers
@@ -92,18 +91,18 @@ D16/V8) are run on every epoch checkpoint after the 12 epochs finish.
 
 | epoch | step | train/acc | train/loss | checkpoint | gsm8k t0 D16/V16 | gsm8k t0 D16/V8 | pooled t0 D16/V16 | pooled t0 D16/V8 | gsm8k t1 D16/V16 | gsm8k t1 D16/V8 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 10683 | | | `epoch-01/` | | | | | | |
-| 2 | 21366 | | | `epoch-02/` | | | | | | |
-| 3 | 32049 | | | `epoch-03/` | | | | | | |
-| 4 | 42732 | | | `epoch-04/` | | | | | | |
-| 5 | 53415 | | | `epoch-05/` | | | | | | |
-| 6 | 64098 | | | `epoch-06/` | | | | | | |
-| 7 | 74781 | | | `epoch-07/` | | | | | | |
-| 8 | 85464 | | | `epoch-08/` | | | | | | |
-| 9 | 96147 | | | `epoch-09/` | | | | | | |
-| 10 | 106830 | | | `epoch-10/` | | | | | | |
-| 11 | 117513 | | | `epoch-11/` | | | | | | |
-| 12 | 128196 | | | `epoch-12/` | | | | | | |
+| 1 | 10764 | | | `epoch-01/` | | | | | | |
+| 2 | 21528 | | | `epoch-02/` | | | | | | |
+| 3 | 32292 | | | `epoch-03/` | | | | | | |
+| 4 | 43056 | | | `epoch-04/` | | | | | | |
+| 5 | 53820 | | | `epoch-05/` | | | | | | |
+| 6 | 64584 | | | `epoch-06/` | | | | | | |
+| 7 | 75348 | | | `epoch-07/` | | | | | | |
+| 8 | 86112 | | | `epoch-08/` | | | | | | |
+| 9 | 96876 | | | `epoch-09/` | | | | | | |
+| 10 | 107640 | | | `epoch-10/` | | | | | | |
+| 11 | 118404 | | | `epoch-11/` | | | | | | |
+| 12 | 129168 | | | `epoch-12/` | | | | | | |
 
 Reference (published dense drafter, FFN 12288, jiapingW/Qwen3-8b-dspark-SpecForge step 39,000
 ~3.5 epochs, global batch 128): train/acc 0.71 / 0.75 / 0.78 at the end of epochs 1 / 2 / 3;
@@ -126,7 +125,10 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
   128,201 steps, checkpoints every 1,187 steps): 6.5-6.8 s per step but data wait 1.7-1.9 s and
   only 20 samples/s; the single capture process left GPU 0 idle ~60% of the time. Stopped at
   step ~80 (14:20 UTC).
-- 2026-10-15 14:2x UTC: relaunched with two SGLang capture processes on GPU 0 (W&B run id
-  `dense-1-8-r3`). Planned next: a fused, same-precision target-head objective (teacher logits
-  computed once per position instead of per anchor block, one log-softmax pass, analytic
-  backward) swapped in at a checkpoint boundary via `training.resume_from`.
+- 2026-10-15 14:25 UTC: tried two SGLang capture processes on GPU 0 (7 ranks); the launch
+  failed at startup (see below), and the decision was to go back to two capture GPUs.
+- 2026-10-15 14:3x UTC: relaunched with the dense-arm layout (2 capture GPUs + 6 ranks, global
+  batch 132, 129,172 steps, checkpoints every 1,196 steps; W&B run id `dense-1-8-r3`). Planned
+  next: a fused, same-precision target-head objective (teacher logits computed once per
+  position instead of per anchor block, one log-softmax pass, analytic backward) swapped in
+  at a checkpoint boundary via `training.resume_from`.
