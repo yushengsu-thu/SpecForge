@@ -7,7 +7,7 @@ DS = [("gsm8k", "GSM8K (5-shot, non-thinking)"), ("math500", "MATH500 (thinking)
 FAMILIES = [("2-layer MoE (RadixArk/qwen38-dspark-moe-2layer)", "moe2l", [1, 2, 3, 4], "moe2l-4ep", "MoE-2L 4ep"),
             ("256-expert MoE (RadixArk/qwen38-dspark-moe-256exp)", "moe256", [1, 2, 3, 4], "moe256-4ep", "256exp 4ep"),
             ("16x1024 MoE (RadixArk/qwen38-dspark-moe-16x1024)", "moe16x", [1, 2, 3, 4, 5], "moe16x-5ep", "16x1024 5ep")]
-REF = [("dense5l-4ep", "dense 4ep"), ("official-v1", "official v1")]
+REF = [("dense5l-4ep", "dense 4ep"), ("official-v1", "official v2 (main b9a5dbdf)")]
 def load(p):
     try: return json.load(open(p))["datasets"]
     except Exception: return None

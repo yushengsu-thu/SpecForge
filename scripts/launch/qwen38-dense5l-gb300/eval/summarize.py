@@ -10,7 +10,7 @@ def load(name):
 names = (["dense5l-%dep" % k for k in range(1, 9)] + ["official-v1"] + ["moe2l-%dep" % k for k in range(1, 9)] + ["moe256-%dep" % k for k in range(1, 9)] + ["moe16x-%dep" % k for k in range(1, 9)])
 def _hdr(n):
     base, _, ep = n.rpartition("-")
-    return {"dense5l": "dense", "moe2l": "MoE-2L", "moe256": "MoE-256exp", "moe16x": "MoE-16x1024"}.get(base, base) + " " + ep if n != "official-v1" else "official v1"
+    return {"dense5l": "dense", "moe2l": "MoE-2L", "moe256": "MoE-256exp", "moe16x": "MoE-16x1024"}.get(base, base) + " " + ep if n != "official-v1" else "official v2 (main b9a5dbdf)"
 HDR = {n: _hdr(n) for n in names}
 R = {n: load(n) for n in names}
 dss = [("gsm8k", "GSM8K (1319, 5-shot, non-thinking)"), ("math500", "MATH500 (500, thinking)"),
@@ -36,7 +36,7 @@ print("errors:", {n: sum(r["errors"] for r in R[n].values()) for n in present})
 print()
 # --- e2e ---
 labels = [l for l in ["baseline", "dense-4ep", "official-v1", "moe2l-4ep", "moe256-4ep", "moe16x-5ep"] if os.path.exists(f"{E}/e2e_{l}_gsm8k_c1.json")]
-PRETTY = {"baseline": "no draft (autoregressive)", "dense-4ep": "dense 4ep", "official-v1": "official v1", "moe2l-4ep": "MoE-2L 4ep", "moe256-4ep": "MoE-256exp 4ep", "moe16x-5ep": "MoE-16x1024 5ep"}
+PRETTY = {"baseline": "no draft (autoregressive)", "dense-4ep": "dense 4ep", "official-v1": "official v2 (main b9a5dbdf)", "moe2l-4ep": "MoE-2L 4ep", "moe256-4ep": "MoE-256exp 4ep", "moe16x-5ep": "MoE-16x1024 5ep"}
 def e2e(label, ds, c):
     p = f"{E}/e2e_{label}_{ds}_c{c}.json"
     return json.load(open(p)) if os.path.exists(p) else None
@@ -65,7 +65,7 @@ print("### Speed gate at a pinned acceptance length of 5.0 (SGLANG_SIMULATE_ACC_
 print()
 print("| drafter | concurrency 1 | concurrency 8 | concurrency 32 |")
 print("|---|---|---|---|")
-SG = {"official-v1": "official v1", "dense-4ep": "dense 4ep", "moe2l-4ep": "MoE-2L 4ep", "moe256-4ep": "MoE-256exp 4ep", "moe16x-5ep": "MoE-16x1024 5ep"}
+SG = {"official-v1": "official v2 (main b9a5dbdf)", "dense-4ep": "dense 4ep", "moe2l-4ep": "MoE-2L 4ep", "moe256-4ep": "MoE-256exp 4ep", "moe16x-5ep": "MoE-16x1024 5ep"}
 rows = {}
 for tsv in glob.glob("/scratch/dense5l-eval/moe_speed*/summary.tsv"):
     for line in open(tsv).read().splitlines()[1:]:
