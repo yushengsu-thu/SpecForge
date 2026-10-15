@@ -1,10 +1,11 @@
-# Qwen3-8B DSpark **dense-1/8** drafter (configs/qwen3-8b-dspark-dense-1-8-causal-noconf-b16.json):
+# Qwen3-8B DSpark **dense-1/8, 2-layer** drafter (configs/qwen3-8b-dspark-dense-1-8-2layer-causal-noconf-b16.json):
 # the dense recipe next to it (qwen3-8b-dspark-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml)
 # with the draft MLP hidden dim cut to 1/8 (intermediate_size 12288 -> 1536). Residual hidden
 # stays 4096 (= target hidden, required by the shared projector / target embed_tokens / target
-# lm_head), attention stays GQA 32/8 x 128, 5 layers, block 16, causal draft block (is_causal,
-# as in the published jiapingW run), no confidence head:
-# ~0.47B parameters vs ~1.05B for the dense arm. Everything else (corpus, template, GPU
+# lm_head); the draft has 2 layers instead of 5 and attention GQA 8/2 x 128 (1/4 of the dense
+# arm's 32/8 width), block 16, causal draft block (is_causal, as in the published jiapingW run),
+# no confidence head: ~0.22B parameters.
+# (The 5-layer, 32-head FFN-1/8 variant of this recipe was ~0.47B; the dense arm is ~1.05B.) Everything else (corpus, template, GPU
 # layout, global batch 132, lr schedule, DSpark loss) is identical to the dense arm so the
 # curves are directly comparable. With the upstream PR #942 stack (#957-#963) merged, the
 # qwen3-instruct template renders WITHOUT a system prompt (like the published run) and the
@@ -21,7 +22,7 @@
 # WANDB_RUN_ID + WANDB_RESUME=allow keep every (re)launch on one W&B line.
 model:
   target_model_path: Qwen/Qwen3-8B
-  draft_model_config: configs/qwen3-8b-dspark-dense-1-8-causal-noconf-b16.json
+  draft_model_config: configs/qwen3-8b-dspark-dense-1-8-2layer-causal-noconf-b16.json
   target_backend: sglang
   embedding_key: model.embed_tokens.weight
   torch_dtype: bfloat16

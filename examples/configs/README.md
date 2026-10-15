@@ -191,7 +191,7 @@ assume the command runs from the repository root.
 | DFlash 2 online, external services on two nodes | [`online/disaggregated/external/qwen3.8-27b-dflash2-disaggregated.yaml`](online/disaggregated/external/qwen3.8-27b-dflash2-disaggregated.yaml) |
 | Domino online, managed-local stack | [`online/disaggregated/managed-local/qwen3-8b-domino-multiserver-disaggregated.yaml`](online/disaggregated/managed-local/qwen3-8b-domino-multiserver-disaggregated.yaml) |
 | DSpark online, managed-local stack (dense) | [`online/disaggregated/managed-local/qwen3-8b-dspark-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml`](online/disaggregated/managed-local/qwen3-8b-dspark-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml) |
-| DSpark online, managed-local stack (dense-1/8: FFN 1536, causal) | [`online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml`](online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml) |
+| DSpark online, managed-local stack (dense-1/8: 2 layers, 8/2 heads, FFN 1536, causal) | [`online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml`](online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml) |
 | DSpark MoE online, managed-local stack | [`online/disaggregated/managed-local/qwen3-8b-dspark-moe-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml`](online/disaggregated/managed-local/qwen3-8b-dspark-moe-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml) |
 
 The runtime derives online/offline mode from the selected `data` source and
