@@ -32,3 +32,12 @@ concurrency 1 / 8 / 32 (100 prompts at c=1, 200 otherwise, 512 new tokens, greed
 with a drafter, the acceptance length. `queue_e2e.sh` runs the no-draft baseline, the dense 4ep drafter and the
 official v1 on three GPUs once the accept-length evals are done. Speed-up = drafter tok/s / baseline tok/s at the same
 concurrency.
+
+## MoE drafters (e.g. RadixArk/qwen38-dspark-moe-2layer)
+
+`serve_moe.sh` = `serve_dense.sh` plus `SGLANG_EXTERNAL_MODEL_PACKAGE=specforge.serving.sglang_models` (the PR #941
+`Qwen3MoeDSparkModel` class, `PYTHONPATH` on this checkout) and `--moe-runner-backend triton`; install the tuned fused-MoE
+tile config first (`patches/sglang/moe_configs/configs/triton_3_7_1/E=512,N=512,device_name=NVIDIA_H200.json` into SGLang's
+`moe_runner/triton_utils/configs/triton_3_7_1/`), the server log then says "Using MoE kernel config from ...".
+`smoke_moe.sh <draft>` loads one export and serves one request; `eval_moe_one.sh <k>` is `eval_one.sh` for `drafts/moe2l-<k>ep`.
+`summarize.py` prints the accept-length, e2e and speed-gate tables from the JSON / TSV results.
