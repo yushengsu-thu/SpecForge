@@ -72,12 +72,10 @@ tracking:
 runtime:
   producer_lease: 8
   producer_concurrency: 8
-  # Four optimizer quanta (132 samples each) in flight, refilled when one drains: with the
-  # fast head the trainers outrun a 2-quanta window (stop-and-go capture, ~0.7 s data wait per
-  # 3.9 s step). Qwen3-8B features are ~5 x 4096 x tokens x 2 bytes per sample, so 200 GiB
-  # resident is ~2,000 full-length samples.
-  in_flight_high_watermark: 528
-  in_flight_low_watermark: 396
+  # 1.5 optimizer quanta (132 samples) in flight; Qwen3-8B features are ~5 x 4096 x
+  # tokens x 2 bytes per sample, so 200 GiB resident is ~2,000 full-length samples.
+  in_flight_high_watermark: 264
+  in_flight_low_watermark: 132
   resident_high_watermark_bytes: 214748364800
   resident_low_watermark_bytes: 128849018880
   feature_store_max_resident_bytes: 274877906944

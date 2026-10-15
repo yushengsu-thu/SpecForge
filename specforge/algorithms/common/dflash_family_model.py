@@ -2392,21 +2392,14 @@ class OnlineDSparkModel(OnlineDFlashModel):
             return None
         if not getattr(self, "_dspark_fast_head_logged", False):
             self._dspark_fast_head_logged = True
-            message = (
+            logger.info(
                 "dspark_fast_head active: teacher table %d positions x %d vocab "
-                "(%.2f GiB), chunks of %d blocks without checkpoint recompute"
-                % (
-                    table.probs.shape[0],
-                    table.probs.shape[1],
-                    table.probs.numel() * 4 / 2**30,
-                    self.objective_chunk_blocks,
-                )
+                "(%.2f GiB), chunks of %d blocks without checkpoint recompute",
+                table.probs.shape[0],
+                table.probs.shape[1],
+                table.probs.numel() * 4 / 2**30,
+                self.objective_chunk_blocks,
             )
-            logger.info(message)
-            import torch.distributed as dist
-
-            if not (dist.is_available() and dist.is_initialized()) or dist.get_rank() == 0:
-                print(message, flush=True)  # trainer stdout reaches the launch log
         batch_size = target_ids.shape[0]
         target_pred_indices = (safe_label_indices - 1).clamp(min=0)
         batch_offsets = (
