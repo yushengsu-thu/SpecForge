@@ -24,10 +24,16 @@ fp32 probabilities, fp32 L1 and CE) but
 The per-row CE is ``lse - logit[label]`` in fp32 instead of ``F.cross_entropy``
 on the bf16 logits (which rounds each row's loss to bf16); the L1 term and
 every gradient path are the same operations as the reference.
+
+``SPECFORGE_DSPARK_FAST_HEAD_COMPILE=1`` runs the elementwise forward statistics
+and the analytic logit gradient through ``torch.compile(dynamic=True)``, which
+fuses the full-vocab passes (same math; measured 2x faster than the eager fast
+path on H200 with the Qwen3-8B head, with lower peak memory).
 """
 
 from __future__ import annotations
 
+import os
 from typing import NamedTuple, Optional, Tuple
 
 import torch
@@ -78,6 +84,66 @@ def build_teacher_table(
     return DSparkTeacherTable(probs=probs, ids=ids, top1=top1, seq_len=seq_len)
 
 
+def _forward_stats_eager(logits, labels, teacher_probs):
+    lp = logits.float()
+    lse = torch.logsumexp(lp, dim=-1)
+    target_logit = lp.gather(1, labels.unsqueeze(1)).squeeze(1)
+    ce = lse - target_logit
+    probs = lp.sub_(lse.unsqueeze(1)).exp_()  # fp32 probabilities, in place
+    p_max, pred = probs.max(dim=-1)
+    l1 = probs.sub_(teacher_probs).abs_().sum(dim=-1)  # consumes ``probs``
+    return ce, l1, pred, p_max, lse
+
+
+def _forward_stats_functional(logits, labels, teacher_probs):
+    lp = logits.float()
+    lse = torch.logsumexp(lp, dim=-1)
+    target_logit = lp.gather(1, labels.unsqueeze(1)).squeeze(1)
+    ce = lse - target_logit
+    probs = torch.exp(lp - lse.unsqueeze(1))
+    p_max, pred = probs.max(dim=-1)
+    l1 = (probs - teacher_probs).abs().sum(dim=-1)
+    return ce, l1, pred, p_max, lse
+
+
+def _backward_grad_eager(logits, lse, labels, coef_ce, coef_l1, teacher_probs):
+    rows = logits.shape[0]
+    probs = logits.float().sub_(lse.unsqueeze(1)).exp_()  # recompute p
+    # d|p - t| / dp = sign(p - t), with sign(0) = 0 like torch.abs' backward.
+    factor = torch.sign(probs - teacher_probs)
+    sign_dot_p = (factor * probs).sum(dim=-1)  # <s, p> per row
+    # factor <- coef_ce + coef_l1 * (s - <s, p>); grad_logits = p * factor
+    factor.sub_(sign_dot_p.unsqueeze(1)).mul_(coef_l1.unsqueeze(1)).add_(
+        coef_ce.unsqueeze(1)
+    )
+    grad_logits = probs.mul_(factor)
+    del factor
+    grad_logits[torch.arange(rows, device=logits.device), labels] -= coef_ce
+    return grad_logits.to(logits.dtype)
+
+
+def _backward_grad_functional(logits, lse, labels, coef_ce, coef_l1, teacher_probs):
+    probs = torch.exp(logits.float() - lse.unsqueeze(1))
+    sign = torch.sign(probs - teacher_probs)
+    sign_dot_p = (sign * probs).sum(dim=-1)
+    grad_logits = probs * (
+        coef_ce.unsqueeze(1) + coef_l1.unsqueeze(1) * (sign - sign_dot_p.unsqueeze(1))
+    )
+    grad_logits = grad_logits.scatter_add(
+        1, labels.unsqueeze(1), (-coef_ce).unsqueeze(1).to(grad_logits.dtype)
+    )
+    return grad_logits.to(logits.dtype)
+
+
+_COMPILE = os.environ.get("SPECFORGE_DSPARK_FAST_HEAD_COMPILE", "0") == "1"
+if _COMPILE:
+    _forward_stats = torch.compile(_forward_stats_functional, dynamic=True)
+    _backward_grad = torch.compile(_backward_grad_functional, dynamic=True)
+else:
+    _forward_stats = _forward_stats_eager
+    _backward_grad = _backward_grad_eager
+
+
 class _DSparkHeadLoss(torch.autograd.Function):
     """Draft-side head objective with a fused, recompute-free backward.
 
@@ -100,13 +166,7 @@ class _DSparkHeadLoss(torch.autograd.Function):
         if latent is not None:
             # The reference adds the bf16 Markov bias to the bf16 base logits.
             logits = logits + F.linear(latent, markov_weight)
-        lp = logits.float()
-        lse = torch.logsumexp(lp, dim=-1)
-        target_logit = lp.gather(1, labels.unsqueeze(1)).squeeze(1)
-        ce = lse - target_logit
-        probs = lp.sub_(lse.unsqueeze(1)).exp_()  # fp32 probabilities, in place
-        p_max, pred = probs.max(dim=-1)
-        l1 = probs.sub_(teacher_probs).abs_().sum(dim=-1)  # consumes ``probs``
+        ce, l1, pred, p_max, lse = _forward_stats(logits, labels, teacher_probs)
         ce_num = (ce * loss_weights).sum()
         l1_num = (l1 * loss_weights).sum()
         ctx.save_for_backward(logits, lse, labels, loss_weights, teacher_probs)
@@ -121,27 +181,15 @@ class _DSparkHeadLoss(torch.autograd.Function):
         logits, lse, labels, loss_weights, teacher_probs = ctx.saved_tensors
         latent, head_weight, markov_weight = ctx.latent, ctx.head_weight, ctx.markov_weight
         need_hidden, need_latent, _, need_markov = ctx.needs_input_grad[:4]
-        rows = logits.shape[0]
         if grad_ce_num is None:
             grad_ce_num = lse.new_zeros(())
         if grad_l1_num is None:
             grad_l1_num = lse.new_zeros(())
         coef_ce = grad_ce_num * loss_weights  # [rows]
         coef_l1 = grad_l1_num * loss_weights
-        probs = logits.float().sub_(lse.unsqueeze(1)).exp_()  # recompute p
-        # d|p - t| / dp = sign(p - t), with sign(0) = 0 like torch.abs' backward.
-        factor = torch.sign(probs - teacher_probs)
-        sign_dot_p = (factor * probs).sum(dim=-1)  # <s, p> per row
-        # factor <- coef_ce + coef_l1 * (s - <s, p>); grad_logits = p * factor
-        factor.sub_(sign_dot_p.unsqueeze(1)).mul_(coef_l1.unsqueeze(1)).add_(
-            coef_ce.unsqueeze(1)
-        )
-        grad_logits = probs.mul_(factor)
-        del factor
-        grad_logits[torch.arange(rows, device=logits.device), labels] -= coef_ce
-        # The reference casts the fp32 logit gradient to the bf16 logits' dtype
-        # before the linear backward; do the same.
-        grad_logits = grad_logits.to(logits.dtype)
+        # fp32 logit gradient cast to the bf16 logits' dtype before the linear
+        # backward, like the reference.
+        grad_logits = _backward_grad(logits, lse, labels, coef_ce, coef_l1, teacher_probs)
         grad_hidden = grad_logits @ head_weight if need_hidden else None
         grad_latent = None
         grad_markov = None

@@ -82,6 +82,25 @@ Also on this branch: the `--nccl-port` pin for managed-local capture servers
 (`specforge/launch_plan.py`), so two servers started in the same second cannot
 collide on the torch.distributed TCPStore port.
 
+## Target-head objective speedup (same precision, same design)
+
+The reference DSpark objective spent most of each step in the frozen target head: two
+full-vocab GEMMs per chunk (draft rows and teacher rows), fp32 upcasts, two softmaxes, the L1
+difference, all recomputed in the backward under activation checkpointing. `training.dspark_fast_head`
+(`specforge/algorithms/common/dspark_fast_head.py`) keeps the same math and dtypes but projects the
+teacher once per sequence position, runs the draft side as one autograd.Function with an analytic
+backward, and saves activations instead of recomputing; `SPECFORGE_DSPARK_FAST_HEAD_COMPILE=1` fuses
+the remaining elementwise passes with `torch.compile`. Equivalence on the dense-1/8 drafter with the
+real Qwen3-8B head (`tests/test_runtime/test_dspark_fast_head_equiv.py`): L1 identical, CE within
+4e-5 (the reference rounds per-row CE to bf16), gradient cosine >= 0.999999 for the draft hidden and
+both Markov weights.
+
+| objective fwd+bwd, 512 anchor blocks (one H200 shared with a capture server) | s/iter | peak GiB |
+| --- | --- | --- |
+| reference | 0.333 | 18.4 |
+| fast head, eager | 0.214 | 18.1 |
+| fast head, compiled | 0.110 | 14.7 |
+
 ## Results per epoch
 
 Training metrics are the values logged at (or just before) the epoch's checkpoint step (W&B `train/acc`,
