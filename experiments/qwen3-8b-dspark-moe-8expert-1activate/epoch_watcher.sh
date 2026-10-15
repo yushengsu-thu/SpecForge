@@ -64,7 +64,7 @@ report(){  # regenerate exp_read.me, commit when it changed, mirror it as the HF
      git add exp_read.me && git -c user.name="$GIT_NAME" -c user.email="$GIT_EMAIL" commit -q -F - <<MSG && echo committed
 exp_read.me: results update ($1)
 
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 MSG
    fi) >> "$LOG" 2>&1
   hf upload "$HF_REPO" "$REPO/exp_read.me" README.md --commit-message "README: $1" >> "$LOG" 2>&1 || log "WARN README upload failed"
