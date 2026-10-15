@@ -721,7 +721,6 @@ class TestPackageArchitecture(unittest.TestCase):
                 "qwen3-8b-dspark-moe-noconf-b16.json",
                 "qwen3-8b-dspark-noconf-b16.json",
                 "qwen3-8b-dspark.json",
-                "qwen3-8b-dspark-causal-noconf-b16.json",
                 "qwen3.6-27b-dspark.json",
                 "qwen3.8-27b-dspark-moe-aux0.01.json",
                 "qwen3.8-27b-dspark-moe-exp-b-center.json",

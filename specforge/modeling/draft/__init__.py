@@ -8,7 +8,6 @@ from .dflash import (
 from .dflash2 import DFlash2DraftModel
 from .domino import DominoDraftModel
 from .dspark import DSparkDraftModel
-from .dspine import DSpineDraftModel
 from .llama3_eagle import LlamaForCausalLMEagle3
 from .mtp import Qwen3_5MTPDraftModel
 from .peagle import PEagleDraftModel
@@ -20,7 +19,6 @@ __all__ = [
     "DFlash2DraftModel",
     "DominoDraftModel",
     "DSparkDraftModel",
-    "DSpineDraftModel",
     "LlamaForCausalLMEagle3",
     "PEagleDraftModel",
     "Qwen3_5MTPDraftModel",

@@ -202,5 +202,3 @@ wandb/
 
 # macOS
 .DS_Store
-
-/.deployment/

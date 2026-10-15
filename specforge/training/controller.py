@@ -8,9 +8,10 @@
 #     http://www.apache.org/licenses/LICENSE-2.0
 """TrainerCore + TrainerController: the trainer-boundary split.
 
-``TrainerCore`` owns strategy forward/loss, optional window replay, backend
-backward/step, and the accumulation boundary. ``TrainerController`` owns
-the lifecycle: fit / evaluate / save_checkpoint.
+``TrainerCore`` runs exactly one branch-free step (strategy forward/loss, backend
+backward/step) plus the grad-accumulation boundary. ``TrainerController`` owns
+the lifecycle: fit / evaluate / save_checkpoint. EAGLE3 and DFlash share this
+unchanged — only the strategy differs.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ import os
 import sys
 import threading
 import time
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import torch
@@ -171,6 +172,27 @@ def _dp_mean_scalars(
         dist.all_reduce(packed, group=process_group)
     packed /= world
     return {name: packed[index] for index, name in enumerate(names)}
+
+
+def _device_memory_metrics() -> Dict[str, float]:
+    """Rank-local CUDA allocator stats for the logging rank (``perf/mem_*``).
+
+    ``mem_alloc_retries`` counts cudaMalloc retries after a cache flush: a
+    non-zero, growing value means the caching allocator is thrashing, which
+    shows up as step time, not as an error.
+    """
+    if not torch.cuda.is_available():
+        return {}
+    try:
+        stats = torch.cuda.memory_stats()
+    except (RuntimeError, AssertionError):
+        return {}
+    gib = float(2**30)
+    return {
+        "perf/mem_peak_alloc_gib": stats.get("allocated_bytes.all.peak", 0) / gib,
+        "perf/mem_reserved_gib": stats.get("reserved_bytes.all.current", 0) / gib,
+        "perf/mem_alloc_retries": float(stats.get("num_alloc_retries", 0)),
+    }
 
 
 def _reduce_ratio_metrics(
@@ -417,43 +439,21 @@ class TrainerCore:
         self._micro = 0
         self._ratio_totals: Dict[str, tuple[torch.Tensor, torch.Tensor]] = {}
         self._sum_totals: Dict[str, torch.Tensor] = {}
-        self._prepared_steps: List[StepOutput] = []
 
     @property
     def accumulation_remainder(self) -> int:
         """Micro-batches whose gradients have not reached an optimizer step."""
-        return (self._micro + len(self._prepared_steps)) % self.accumulation_steps
+        return self._micro % self.accumulation_steps
 
     def train_step(
         self, batch: TrainBatch, ctx: Optional[StepContext] = None
     ) -> StepResult:
-        ctx = replace(ctx or StepContext(), accumulation_steps=self.accumulation_steps)
-        is_boundary = (self._micro + 1) % self.accumulation_steps == 0
-        with self.backend.accumulation_context(is_boundary=is_boundary):
-            out: StepOutput = self.strategy.forward_loss(batch, ctx)
-            if out.replay_loss is None:
-                if self._prepared_steps:
-                    raise ValueError(
-                        "Cannot mix immediate and replayed losses in one window"
-                    )
-                return self._backward_step(out)
-
-        self._prepared_steps.append(out)
-        self._accumulate_ratio_metrics(out.ratio_metrics)
-        if len(self._prepared_steps) < self.accumulation_steps:
-            return self._result(out, None, False)
-
-        window_ratios = self._ratio_totals
-        prepared_steps = self._prepared_steps
-        self._ratio_totals = {}
-        self._prepared_steps = []
-        for prepared in prepared_steps:
-            is_boundary = (self._micro + 1) % self.accumulation_steps == 0
-            with self.backend.accumulation_context(is_boundary=is_boundary):
-                result = self._backward_step(prepared.replay_loss(window_ratios))
-        return result
-
-    def _backward_step(self, out: StepOutput) -> StepResult:
+        # DDP must know before the forward whether this micro-step's backward
+        # ends the accumulation window (see TrainingBackend.prepare_micro_step).
+        self.backend.prepare_micro_step(
+            (self._micro + 1) % self.accumulation_steps == 0
+        )
+        out: StepOutput = self.strategy.forward_loss(batch, ctx)
         loss = out.loss
         ratio_metrics = dict(out.ratio_metrics)
         if out.loss_terms is not None:
@@ -1030,6 +1030,7 @@ class TrainerController:
                         time.perf_counter() - perf_window_started,
                         1e-12,
                     )
+                    log_metrics.update(_device_memory_metrics())
                     parallel = getattr(self.core.backend, "parallel_config", None)
                     world_size = int(getattr(parallel, "world_size", 1))
                     tp_size = int(getattr(parallel, "tp_size", 1))
