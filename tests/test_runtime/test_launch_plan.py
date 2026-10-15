@@ -753,6 +753,57 @@ class LaunchPlanTest(unittest.TestCase):
             argv = service.command.argv
             self.assertEqual(argv[argv.index("--context-length") + 1], "2055")
 
+    def test_qwen3_8b_dspark_example_yamls_build_the_managed_plan(self):
+        """The Qwen3-8B dense and MoE DSpark recipes share one 2-server/6-rank layout."""
+        dspark = builtin_algorithm_registry().resolve("dspark")
+        contract = ServerCaptureContract(
+            method="dspark",
+            aux_layer_ids=(1, 9, 17, 25, 33),
+            target_hidden_size=4096,
+            target_vocab_size=151936,
+            draft_vocab_size=151936,
+        )
+        root = Path(__file__).resolve().parents[2]
+        recipes = {
+            "qwen3-8b-dspark-perfectblend-2server-dp6-disaggregated.yaml": "configs/qwen3-8b-dspark.json",
+            "qwen3-8b-dspark-moe-perfectblend-2server-dp6-disaggregated.yaml": "configs/qwen3-8b-dspark-moe.json",
+        }
+        for name, draft_config in recipes.items():
+            path = root / "examples/configs/online/disaggregated/managed-local" / name
+            cfg = Config.from_file(str(path))
+            self.assertEqual(cfg.training.strategy, "dspark")
+            self.assertEqual(cfg.model.draft_model_config, draft_config)
+            self.assertEqual(cfg.data.chat_template, "qwen3-instruct")
+            self.assertEqual(cfg.data.max_length, 8192)
+            with (
+                mock.patch(
+                    "specforge.training.capture_contract.resolve_server_capture_contract",
+                    return_value=contract,
+                ),
+                mock.patch("specforge.launch_plan.os.path.exists", return_value=False),
+            ):
+                plan = _build_launch_plan(
+                    cfg, algorithm=dspark, config_path=str(path), env={}
+                )
+            self.assertEqual((plan.kind, plan.role), ("managed_supervisor", "both"))
+            self.assertEqual(
+                [
+                    service.command.env.get("CUDA_VISIBLE_DEVICES")
+                    for service in plan.services
+                ],
+                ["", "0", "1"],
+                name,
+            )
+            self.assertEqual(
+                plan.commands[1].env["CUDA_VISIBLE_DEVICES"], "2,3,4,5,6,7", name
+            )
+            for service in plan.services[1:]:
+                argv = service.command.argv
+                self.assertEqual(argv[argv.index("--context-length") + 1], "8199")
+                self.assertEqual(
+                    argv[argv.index("--spec-capture-method") + 1], "dspark"
+                )
+
     def test_managed_local_plan_rejects_split_or_existing_runtime(self):
         with tempfile.TemporaryDirectory() as root:
             cfg = _managed_config(os.path.join(root, "attempt"))

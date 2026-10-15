@@ -138,6 +138,14 @@ class MoEConfig:
             )
         if self.moe_intermediate_size <= 0:
             raise ValueError("moe_intermediate_size must be positive")
+        if self.num_experts_per_tok == 1 and self.norm_topk_prob:
+            raise ValueError(
+                "num_experts_per_tok=1 with norm_topk_prob=True renormalizes the "
+                "single top-1 weight to exactly 1, so the router receives no "
+                "gradient from the task loss (only the balance loss would move "
+                "it); set norm_topk_prob false (Switch-style softmax weight) or "
+                "route to at least two experts"
+            )
         if self.n_shared_experts not in (0, 1):
             raise ValueError(
                 "n_shared_experts must be 0 or 1 (one shared expert of "
