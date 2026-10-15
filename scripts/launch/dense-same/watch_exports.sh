@@ -6,7 +6,7 @@
 set -u
 FIRST=${1:-1}; LAST=${2:-12}; TOTAL_EPOCHS=12; STEPS_PER_EPOCH=${STEPS_PER_EPOCH:-11100}
 RUN_ID=dense-same; BASE=/scratch/dense; OUT=$BASE/outputs/$RUN_ID; EXPORTS=$BASE/exports; RESULTS=$BASE/epoch_results.json
-REPO=yushengsu/dense-same; DRAFT_CONFIG=configs/qwen3-8b-dspark-noconf-b16.json; TARGET=/scratch/models/Qwen3-8B
+REPO=yushengsu/dense-same; DRAFT_CONFIG=configs/qwen3-8b-dspark-causal-noconf-b16.json; TARGET=/scratch/models/Qwen3-8B
 TOOLS=scripts/launch/dense-same/epoch_results.py
 export HF_HOME=/scratch/hf-cache HF_HUB_CACHE=/scratch/hf-cache/hub HF_TOKEN="$(cat $BASE/hf_token)" CUDA_VISIBLE_DEVICES=
 cd $BASE/SpecForge || exit 1
