@@ -1,7 +1,6 @@
 # coding=utf-8
 """DFlash-family training models and shared masking helpers."""
 
-import logging
 import os
 from functools import partial
 from typing import Dict, NamedTuple, Optional, Tuple
@@ -14,8 +13,6 @@ from specforge.algorithms.common.dflash_metrics import hard_label_prefix_counts
 from specforge.core.chunking import checkpointed_chunk_reduce
 from specforge.modeling.draft.dflash import DFlashDraftModel
 from specforge.modeling.draft.flex_attention_backend import flex_attention_backend
-
-logger = logging.getLogger(__name__)
 
 try:
     from torch.nn.attention.flex_attention import BlockMask, create_block_mask
@@ -2390,16 +2387,6 @@ class OnlineDSparkModel(OnlineDFlashModel):
         )
         if table is None:
             return None
-        if not getattr(self, "_dspark_fast_head_logged", False):
-            self._dspark_fast_head_logged = True
-            logger.info(
-                "dspark_fast_head active: teacher table %d positions x %d vocab "
-                "(%.2f GiB), chunks of %d blocks without checkpoint recompute",
-                table.probs.shape[0],
-                table.probs.shape[1],
-                table.probs.numel() * 4 / 2**30,
-                self.objective_chunk_blocks,
-            )
         batch_size = target_ids.shape[0]
         target_pred_indices = (safe_label_indices - 1).clamp(min=0)
         batch_offsets = (
