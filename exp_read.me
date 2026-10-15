@@ -108,6 +108,14 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
 
 ## Run log
 
-- 2026-10-15: branch created, draft config + launch yaml added, corpus and Qwen3-8B
-  downloaded to the node. 3-step smoke on a 2,000-row slice, then the 12-epoch launch
-  (entries below are appended as the run progresses).
+- 2026-10-15 13:24 UTC: branch created, draft config + launch yaml added, corpus and Qwen3-8B
+  downloaded to the node. 3-step smoke on a 2,000-row slice (`training.max_steps=3`, no warmup):
+  step 1 loss 3.08 (CE 12.94 / L1 2.00) acc 0.000, step 2 loss 7.07 acc 0.037, step 3 loss 3.01
+  acc 0.014; optimizer step 6.5-6.7 s on six H200 ranks (22 micro-batches), trainer peak memory
+  36 GB / rank, `*-step3` saved and exported to HF layout (model.safetensors 932 MB = 0.466B
+  parameters, `intermediate_size` 1536, block 16).
+- 2026-10-15 13:30 UTC: 12-epoch run launched (`launch_dense18.sh full`, launcher pid 370089,
+  log `/scratch/outputs/qwen3-8b-dspark-dense-1-8-perfectblend-2server-dp6/launch.log`); the
+  corpus cache (1,420,909 rows, 64 procs) builds first. Epoch checkpoints are exported and
+  uploaded to the HF repo by a watcher on the node as soon as each `*-step{10764 k}` lands;
+  the table above is filled in from the run's logged `train/acc` / `train/loss` at that step.
