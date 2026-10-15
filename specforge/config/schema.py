@@ -723,15 +723,15 @@ class ManagedLocalStackConfig(StrictConfigModel):
                 f"{sorted(overlap)}"
             )
 
+        # Capture servers may share a CUDA device: for a target whose prefill
+        # leaves the GPU idle while one server ships its captured features,
+        # two SGLang processes on the same GPU overlap each other's gaps
+        # (size them with model.sglang_mem_fraction_static / max_total_tokens).
         server_devices = [
             device
             for server in self.capture_servers
             for device in server.cuda_visible_devices
         ]
-        if len(set(server_devices)) != len(server_devices):
-            raise ValueError(
-                "managed_local capture servers must not share CUDA devices"
-            )
         overlap_devices = set(server_devices).intersection(
             self.trainer_cuda_visible_devices
         )

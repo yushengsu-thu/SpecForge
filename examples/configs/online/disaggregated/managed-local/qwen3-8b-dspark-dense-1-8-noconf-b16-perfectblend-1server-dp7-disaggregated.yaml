@@ -5,8 +5,10 @@
 # lm_head), attention stays GQA 32/8 x 128, 5 layers, block 16, no confidence head:
 # ~0.47B parameters vs ~1.05B for the dense arm. Corpus, template, lr schedule and DSpark loss
 # are identical to the dense arm. GPU layout differs: the trainers are the bottleneck for this
-# small drafter (the capture servers idle in backpressure), so ONE TP1 capture server (GPU 0)
-# feeds SEVEN DDP trainer ranks (GPUs 1-7); batch_size 1 x accumulation 19 x 7 ranks = global
+# small drafter (the capture servers idle in backpressure), so ONE capture GPU (GPU 0) feeds
+# SEVEN DDP trainer ranks (GPUs 1-7). The capture GPU runs TWO TP1 SGLang processes: a single
+# server left the GPU idle ~60% of the time (prefill bursts separated by feature shipping), so
+# two processes overlap each other's gaps. batch_size 1 x accumulation 19 x 7 ranks = global
 # batch 133 (dense arm: 132). Trained for 12 epochs = 128,201 optimizer steps
 # ((1,420,903 x 12) // 133). A checkpoint every 1,187 steps (9 per epoch; resume points for
 # swapping in kernel optimizations), all retained: epoch k is the <run_id>-step{10683*k}
@@ -26,11 +28,12 @@ model:
   use_liger_kernel: true
   mask_token_id: 151669
   sglang_attention_backend: triton
-  sglang_mem_fraction_static: 0.85
+  sglang_mem_fraction_static: 0.4
   sglang_disable_radix_cache: true
   sglang_context_length: 8208
   sglang_max_running_requests: 8
   sglang_max_total_tokens: 131072
+  sglang_max_prefill_tokens: 32768
 data:
   train_data_path: ./cache/dataset/perfectblend_train_regen_temperature0_no_think.jsonl
   max_length: 8192
@@ -107,6 +110,10 @@ deployment:
         default_kv_lease_ttl_ms: 300000
       capture_servers:
         - port: 30000
+          cuda_visible_devices:
+            - "0"
+          tp_size: 1
+        - port: 30001
           cuda_visible_devices:
             - "0"
           tp_size: 1
