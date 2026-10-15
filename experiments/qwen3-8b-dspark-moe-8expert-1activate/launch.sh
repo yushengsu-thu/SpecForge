@@ -19,6 +19,9 @@ export HF_HOME=/scratch/hf-cache HF_DATASETS_CACHE=/scratch/hf-cache/datasets MC
        OMP_NUM_THREADS=32 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONPATH=$REPO PYTHONUNBUFFERED=1
 # W&B credentials live outside the repository: /root/.secrets/wandb.env (WANDB_API_KEY=...)
 if [ -f /root/.secrets/wandb.env ]; then set -a; . /root/.secrets/wandb.env; set +a; fi
+# One W&B run for the whole experiment: a relaunch appends to run 1ia117wn instead of drawing a new
+# line (W&B honours WANDB_RUN_ID / WANDB_RESUME; override WANDB_RUN_ID for a different experiment).
+export WANDB_RUN_ID=${WANDB_RUN_ID:-1ia117wn} WANDB_RESUME=${WANDB_RESUME:-allow}
 export SGLANG_STOP_FILE=$OUT/stop_capture
 mkdir -p "$OUT"; rm -f "$SGLANG_STOP_FILE"
 if [ -f "$OUT/launcher.pid" ] && kill -0 "$(cat "$OUT/launcher.pid")" 2>/dev/null; then
