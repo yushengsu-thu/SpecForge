@@ -128,6 +128,12 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
   fork base and the four-quanta in-flight window (528 / 396) restored, at the user's request, to win
   back the rank-wait and capture stop-and-go time seen in the profile. Relaunched (W&B run id
   `dense-1-8-r7`).
+- 2026-10-15 20:17 UTC (current run, r7): **3.1-3.6 s per optimizer step** (train compute 3.1-3.6 s,
+  data wait 0.002 s, trainer peak memory 38.8 GB). Same code with round-robin dispatch and a
+  two-quanta window (r6) ran at 5.42 s per step with 0.83 s data wait, and the pre-#942 code at
+  6.0 s. About 9.6 h per epoch, ~4.8 days for 12 epochs (ETA 2026-10-20). The corpus cache for
+  this run was built without a system prompt (new cache key) but, because of a launcher override,
+  under the old `qwen3-8b-dspark-perfectblend-8192` directory name.
 
 - 2026-10-15 13:24 UTC: branch created, draft config + launch yaml added, corpus and Qwen3-8B
   downloaded to the node. 3-step smoke on a 2,000-row slice (`training.max_steps=3`, no warmup):
