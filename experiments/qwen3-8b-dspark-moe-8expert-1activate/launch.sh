@@ -14,7 +14,8 @@ CACHE=${CACHE:-/scratch/cache/qwen3-8b-dspark-perfectblend-8192}
 OUT=${OUT:-/scratch/outputs/$RUN}
 EXTRA=("$@")
 
-export HF_HOME=${HF_HOME:-/scratch/hf-cache} MC_TRANSFER_TIMEOUT=300 SGLANG_SPEC_CAPTURE_SINK_CLIENTS=4 \
+# The box's /etc/environment points HF_HOME at the read-only /cluster-storage; force the writable cache.
+export HF_HOME=/scratch/hf-cache HF_DATASETS_CACHE=/scratch/hf-cache/datasets MC_TRANSFER_TIMEOUT=300 SGLANG_SPEC_CAPTURE_SINK_CLIENTS=4 \
        OMP_NUM_THREADS=32 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONPATH=$REPO PYTHONUNBUFFERED=1
 # W&B credentials live outside the repository: /root/.secrets/wandb.env (WANDB_API_KEY=...)
 if [ -f /root/.secrets/wandb.env ]; then set -a; . /root/.secrets/wandb.env; set +a; fi

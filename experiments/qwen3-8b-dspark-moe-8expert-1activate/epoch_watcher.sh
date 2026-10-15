@@ -23,7 +23,8 @@ STOP=${STOP:-$OUT/watcher.stop}
 LOG=${LOG:-/scratch/logs/$RUN.watcher.log}
 GIT_NAME=${GIT_NAME:-Yusheng Su}; GIT_EMAIL=${GIT_EMAIL:-yushengsu.thu@gmail.com}
 REPORT=experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py
-export HF_HOME=${HF_HOME:-/scratch/hf-cache} PYTHONUNBUFFERED=1 PYTHONPATH=$REPO
+# The box's /etc/environment points HF_HOME at the read-only /cluster-storage; force the writable cache.
+export HF_HOME=/scratch/hf-cache HF_DATASETS_CACHE=/scratch/hf-cache/datasets PYTHONUNBUFFERED=1 PYTHONPATH=$REPO
 if [ -f /root/.secrets/wandb.env ]; then set -a; . /root/.secrets/wandb.env; set +a; fi
 mkdir -p "$(dirname "$LOG")" "$KEEP" "$EXPORTS"
 log(){ echo "[$(date -u +%FT%TZ)] $*" >> "$LOG"; }
