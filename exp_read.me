@@ -86,7 +86,7 @@ Domino/DSpark vocabulary projection controls `cache_vocab_projection` / `flatten
 
 - 2026-10-15 (fifth launch): PR #942 layers #965-#966 merged, `runtime.consumer_dispatch: cost_balanced` enabled with the 4-quanta in-flight window (512/384, unchanged); the fourth launch (20:02 UTC, W&B `dense-same-r4`) was stopped and archived as `dense-same-r4-abandoned`; restarted from scratch as W&B run id `dense-same-r5`.
 
-- 2026-10-15 ~22:20 UTC: the devbox `moe-16exp-1024dim` (id aafb151e) was released (not by this run's automation); /scratch was wiped with the r5 run at about step 2,300 (no checkpoint yet). A new 16x H200 devbox with the same name (id c31564d0) was acquired at 22:31 UTC and rebuilt with `scripts/launch/dense-same/setup_node.sh`; the run restarts from scratch as W&B run id `dense-same-r6`.
+- 2026-10-15 ~22:20 UTC: the devbox `moe-16exp-1024dim` (id aafb151e) was released (not by this run's automation); /scratch was wiped with the r5 run at about step 2,300 (no checkpoint yet). A new 16x H200 devbox with the same name (id c31564d0) was acquired at 22:31 UTC and rebuilt with `scripts/launch/dense-same/setup_node.sh`; the run restarted from scratch at 22:49 UTC as W&B run id `dense-same-r6` (2.98 s per step, same as r5). Two false starts on the fresh image: the trainer needs wandb/accelerate/zstandard/liger-kernel installed, and plain `pip install mooncake-transfer-engine` must not be run (it replaces the image's CUDA-13 Mooncake 0.3.12.post1 with a CUDA-12 0.3.13 wheel and feature reads fail with status -900); both are now handled by `setup_node.sh`.
 
 ## Results per epoch
 
