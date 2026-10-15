@@ -557,6 +557,11 @@ def _managed_local_services(
                 "127.0.0.1",
                 "--port",
                 str(server.port),
+                # Pin the torch.distributed TCPStore port per server: SGLang's
+                # default get_free_port() can hand two servers that start in the
+                # same second the same port (EADDRINUSE), killing one at startup.
+                "--nccl-port",
+                str(server.port + 7000),
             ]
         )
         attention_backend = (
