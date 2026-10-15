@@ -448,6 +448,11 @@ class TrainerCore:
     def train_step(
         self, batch: TrainBatch, ctx: Optional[StepContext] = None
     ) -> StepResult:
+        # DDP must know before the forward whether this micro-step's backward
+        # ends the accumulation window (see TrainingBackend.prepare_micro_step).
+        self.backend.prepare_micro_step(
+            (self._micro + 1) % self.accumulation_steps == 0
+        )
         out: StepOutput = self.strategy.forward_loss(batch, ctx)
         loss = out.loss
         ratio_metrics = dict(out.ratio_metrics)
