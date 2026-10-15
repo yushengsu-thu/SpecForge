@@ -10,7 +10,7 @@ instead of 6. One continuous run: one W&B curve, one checkpoint per epoch, every
 |---|---|
 | recipe | `examples/configs/online/disaggregated/external/qwen3-8b-dspark-dense-same-2node-h200.yaml` |
 | launch | `scripts/launch/dense-same/` (`capture_node.sh`, `trainer_node.sh`, `watch_exports.sh`, `epoch_results.py`) |
-| W&B | entity `eigent_radixark_training`, project `qwen3-8b-dspark`, run id `dense-same-r4` shown as `dense-same` (fixed id, `WANDB_RESUME=allow`; `dense-same`, `dense-same-causal` and `dense-same-r3` were abandoned attempts and W&B does not allow reusing a deleted id) |
+| W&B | entity `eigent_radixark_training`, project `qwen3-8b-dspark`, run id `dense-same-r5` shown as `dense-same` (fixed id, `WANDB_RESUME=allow`; `dense-same`, `dense-same-causal`, `dense-same-r3` and `dense-same-r4` were abandoned attempts and W&B does not allow reusing a deleted id) |
 | HF | `yushengsu/dense-same`, folders `1ep/` ... `12ep/` (servable HF export + tokenizer), README mirrors the table below |
 | hardware | devbox `moe-16exp-1024dim` (h200-sci-k8s-1): rank 0 = 8x H200 capture servers, rank 1 = 8x H200 trainer |
 | started | 2026-10-15 18:52 UTC (causal run; the 13:23 UTC bidirectional run was abandoned at step 4,050) |
@@ -63,13 +63,15 @@ instead of 6. One continuous run: one W&B curve, one checkpoint per epoch, every
 | dtype / kernels | bfloat16, Liger kernels |
 | save_interval / max_checkpoints / log_interval | 11,100 (= one epoch) / 3 / 10 |
 | seed / prompt_seed | 42 / 42 |
+| consumer dispatch / in-flight window | `cost_balanced` (PR #942 layer #966), 4 optimizer quanta in flight (`in_flight_high_watermark` 512, low 384) |
 | capture servers | 8x SGLang 0.5.18 (spec-capture patch), TP1 bf16, triton attention, context 8208, 4 running requests, Mooncake RDMA |
 
 PR #942 layers merged into this branch (stack #957 to #963): streaming-read fix (#957), DDP no_sync around forward+backward and
 `ddp_bucket_cap_mb` (#958), empty qwen3-instruct system prompt (#959), independent attention range/direction, `is_causal` (#960),
 DFlash fused plain head (#961, DFlash only, unused here), selective checkpoint contexts for frozen projections (#962), shared
-Domino/DSpark vocabulary projection controls `cache_vocab_projection` / `flatten_vocab_projection` (#963). Not merged: #965 to #967
-(DSpine, consumer dispatch balancing, RTX PRO5000 recipes).
+Domino/DSpark vocabulary projection controls `cache_vocab_projection` / `flatten_vocab_projection` (#963), DSpine algorithm
+(#965, unused here, dependency of #966), cost-balanced consumer dispatch `runtime.consumer_dispatch` (#966). Not merged: #967
+(RTX PRO5000 recipes).
 
 ## Run log
 
@@ -81,6 +83,8 @@ Domino/DSpark vocabulary projection controls `cache_vocab_projection` / `flatten
 - 2026-10-15 19:55 UTC: branch synced with `spark-Qwen3-8B` c3ff230 (the same PR #942 stack #957-#963 merge the dense-1/8 run uses, plus its DDP draft lookup for MoE metrics and the managed-local NCCL port pin); no effect on the running dense external-layout job, picked up at the next restart. File renamed from exp_readme.md to `exp_read.me` to match the dense-1/8 branch.
 
 - 2026-10-15 ~20:05 UTC (fourth launch, final): restarted from scratch on the synced branch head so the process itself runs the committed code (bc6fcf9 + this note); same recipe as the third launch; W&B run id `dense-same-r4`. The third launch (19:40 UTC, W&B `dense-same-r3`, 51407e5) was stopped about 25 minutes in and archived as `dense-same-r3-abandoned`.
+
+- 2026-10-15 (fifth launch): PR #942 layers #965-#966 merged, `runtime.consumer_dispatch: cost_balanced` enabled with the 4-quanta in-flight window (512/384, unchanged); the fourth launch (20:02 UTC, W&B `dense-same-r4`) was stopped and archived as `dense-same-r4-abandoned`; restarted from scratch as W&B run id `dense-same-r5`.
 
 ## Results per epoch
 

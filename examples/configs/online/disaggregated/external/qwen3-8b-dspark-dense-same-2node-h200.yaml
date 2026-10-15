@@ -73,7 +73,10 @@ tracking:
   wandb_dir: /scratch/dense/outputs/dense-same/wandb
 runtime:
   producer_lease: 8
+  # PR #942 / #966: balance each 128-sample optimizer window across the 8 DDP ranks by estimated cost.
+  consumer_dispatch: cost_balanced
   producer_concurrency: 32
+  # four optimizer quanta (4 x 128 samples) in flight, refill below three
   in_flight_high_watermark: 512
   in_flight_low_watermark: 384
   resident_high_watermark_bytes: 343597383680

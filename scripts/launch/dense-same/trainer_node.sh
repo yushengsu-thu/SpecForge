@@ -1,6 +1,6 @@
 #!/bin/bash
 # dense-same trainer node: render the recipe with the real IPs, make sure mooncake_master runs, wait for the 8
-# capture servers, launch the 12-epoch trainer (one W&B run: fixed WANDB_RUN_ID dense-same-r4, display name
+# capture servers, launch the 12-epoch trainer (one W&B run: fixed WANDB_RUN_ID dense-same-r5, display name
 # dense-same, + WANDB_RESUME=allow, so a
 # restart continues the same curve) and the per-epoch export/upload watcher.
 # usage: bash trainer_node.sh <CAPTURE_IP> <TRAINER_IP> [section.field=value ...]
@@ -17,7 +17,7 @@ log "recipe rendered: $R ($(git log -1 --format=%h))"
 pgrep -f "mooncake_master --enable_http_metadata_server" >/dev/null || { CUDA_VISIBLE_DEVICES= setsid nohup mooncake_master --enable_http_metadata_server=true --http_metadata_server_host=0.0.0.0 --rpc_port=35551 --http_metadata_server_port=35880 --metrics_port=35903 --default_kv_lease_ttl=300000 > $BASE/logs/mooncake_master.log 2>&1 < /dev/null & sleep 3; log "mooncake_master started"; }
 for i in $(seq 0 7); do until curl -sf -m 3 "http://$CAP:$((30000+i))/health" >/dev/null; do log "waiting for capture server $i on $CAP"; sleep 20; done; done; log "all 8 capture servers healthy"
 export HF_HOME=$BASE/../hf-cache HF_HUB_CACHE=/scratch/hf-cache/hub HF_DATASETS_CACHE=/scratch/hf-cache/datasets HF_TOKEN="$(cat $BASE/hf_token)"
-export WANDB_API_KEY="$(cat $BASE/wandb_key)" WANDB_ENTITY=eigent_radixark_training WANDB_RUN_ID=${WANDB_RUN_ID:-dense-same-r4} WANDB_RESUME=allow
+export WANDB_API_KEY="$(cat $BASE/wandb_key)" WANDB_ENTITY=eigent_radixark_training WANDB_RUN_ID=${WANDB_RUN_ID:-dense-same-r5} WANDB_RESUME=allow
 unset RANK LOCAL_RANK WORLD_SIZE MASTER_ADDR MASTER_PORT NODE_RANK
 OV="$*"; [ -n "${RESUME_FROM:-}" ] && OV="$OV training.resume_from=$RESUME_FROM"
 log "launching $RUN_ID ${OV:+overrides: $OV}"
