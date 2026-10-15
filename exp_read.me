@@ -8,7 +8,7 @@ to 1/8, trained for 12 epochs on the Open Perfect Blend regen corpus.
 | Link | |
 | --- | --- |
 | Code / config | this branch: `configs/qwen3-8b-dspark-dense-1-8-noconf-b16.json` + the launch yaml below |
-| W&B (one line for all 12 epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8 |
+| W&B (one line for all 12 epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8-1server-dp7 (display name `dense-1-8`) |
 | Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/dense-1-8 (`epoch-01/` ... `epoch-12/`, each a `specforge export`ed servable directory) |
 | Machine | one 8x H200 node (`specforge-dsv4-h200`, cluster h200-sci-k8s-1), SGLang 0.5.18 + spec-capture patch, torch 2.13.0+cu130 |
 | Launch yaml | `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-1server-dp7-disaggregated.yaml` |
@@ -119,7 +119,8 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
 - 2026-10-15 13:30 UTC: first launch with the dense-arm layout (2 capture servers + 6 ranks, global
   batch 132): 6.0 s per optimizer step (train compute 5.5 s, data wait 0.6 s), i.e. ~18 h per epoch;
   trainer GPUs at 100% while both capture servers sat in backpressure. Stopped at step 230 (13:51 UTC)
-  to switch layouts; its W&B run was deleted so `dense-1-8` stays one line.
-- 2026-10-15 14:0x UTC: relaunched with 1 capture server + 7 trainer ranks (global batch 133,
+  to switch layouts; its W&B run was deleted (W&B then refuses the old id, so the relaunch uses run id
+  `dense-1-8-1server-dp7`, display name `dense-1-8`).
+- 2026-10-15 14:10 UTC: relaunched with 1 capture server + 7 trainer ranks (global batch 133,
   128,201 steps, checkpoints every 1,187 steps). Planned next: FP8 / fused target-head objective
   to cut the lm_head cost, swapped in at a checkpoint boundary via `training.resume_from`.
