@@ -212,11 +212,21 @@ class FSDPTrainingBackend(TrainingBackend):
         all-gather them before every optimizer window without saving optimizer
         memory, which is the wrong trade-off for the current trainer recipes.
         """
+        candidates = [
+            module
+            for name in ("lm_head", "embed_tokens")
+            if isinstance(module := getattr(model, name, None), nn.Module)
+        ]
+        # Submodules that opt in (e.g. frozen MoE experts warm-started from the
+        # target) are replicated as well: sharding tens of GB of frozen weights
+        # would re-gather them on every micro-batch for no optimizer savings.
+        candidates += [
+            module
+            for module in model.modules()
+            if getattr(module, "fsdp_replicate_when_frozen", False)
+        ]
         modules = []
-        for name in ("lm_head", "embed_tokens"):
-            module = getattr(model, name, None)
-            if not isinstance(module, nn.Module):
-                continue
+        for module in candidates:
             parameters = tuple(module.parameters())
             if parameters and not any(
                 parameter.requires_grad for parameter in parameters
@@ -346,7 +356,17 @@ class FSDPTrainingBackend(TrainingBackend):
         FSDP defers reduction here; DDP requires ``accumulation_context``
         around both forward and backward to defer its reducer.
         """
-        if is_boundary or not self._wrapped or self._wrapper_kind == "ddp":
+        # SPECFORGE_FSDP_SHARDED_GRAD_ACCUM=1: reduce-scatter every micro-step and
+        # accumulate the *sharded* gradient instead of FSDP's no_sync() path, which
+        # holds the full unsharded gradient on every rank between boundaries
+        # (41.6 GB for the 20B MoE drafter). Costs one reduce-scatter per micro-step.
+        sharded_accum = os.environ.get("SPECFORGE_FSDP_SHARDED_GRAD_ACCUM", "0") == "1"
+        if (
+            is_boundary
+            or not self._wrapped
+            or sharded_accum
+            or self._wrapper_kind == "ddp"
+        ):
             loss.backward()
         else:
             with self.module.no_sync():
@@ -424,22 +444,30 @@ class FSDPTrainingBackend(TrainingBackend):
         )
 
     def _module_state_dict(self) -> dict:
+        # Checkpoint FILES use the official parameter naming; modules may use
+        # a different native layout (MoE experts). Convert at this boundary:
+        # FSDP's full-state-dict hooks need the module's own FQNs.
+        from specforge.modeling.draft.moe import to_checkpoint_state_dict
+
         if self._wrapper_kind == "ddp":
             if dist.is_initialized() and dist.get_rank() != 0:
                 return {}
-            return self.module.module.state_dict()
+            return to_checkpoint_state_dict(self.module.module.state_dict())
         if self._wrapper_kind != "fsdp":
-            return self.module.state_dict()
+            return to_checkpoint_state_dict(self.module.state_dict())
         from torch.distributed.fsdp import FullStateDictConfig
 
         # gather to rank0 CPU only — materializing the full model on every
         # rank's GPU is wasted memory when only rank0 writes it.
         cfg = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
         with self._full_state_ctx(cfg):
-            return self.module.state_dict()
+            return to_checkpoint_state_dict(self.module.state_dict())
 
     def _load_module_state_dict(self, model_state: dict) -> None:
+        from specforge.modeling.draft.moe import from_checkpoint_state_dict
+
         # every rank loads the full state dict read from the shared file.
+        model_state = from_checkpoint_state_dict(model_state)
         if self._wrapper_kind == "ddp":
             self.module.module.load_state_dict(model_state)
             return
