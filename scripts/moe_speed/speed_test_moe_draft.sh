@@ -38,6 +38,9 @@ EXTRA_SERVER_ARGS=${EXTRA_SERVER_ARGS:-}
 PY=${PY:-python}
 
 mkdir -p "$RESULTS"
+# sglang >= 0.5.21 split --cuda-graph-max-bs into -decode / -prefill (the old spelling became an ambiguous prefix)
+CUDA_GRAPH_BS_FLAG=--cuda-graph-max-bs
+$PY -m sglang.launch_server --help 2>&1 | grep -q -- "--cuda-graph-max-bs-decode" && CUDA_GRAPH_BS_FLAG=--cuda-graph-max-bs-decode
 TSV="$RESULTS/summary.tsv"
 echo -e "label\tquant\tconc\tnum_prompts\toutput_tok_s\tmean_e2e_ms\tmean_tpot_ms\taccept_len" > "$TSV"
 
@@ -83,7 +86,7 @@ for spec in "$@"; do
     --speculative-draft-model-quantization "$quant" \
     --attention-backend triton --speculative-draft-attention-backend triton \
     --moe-runner-backend "$MOE_RUNNER" \
-    --max-running-requests "$MAX_RUNNING" --cuda-graph-max-bs "$MAX_RUNNING" \
+    --max-running-requests "$MAX_RUNNING" $CUDA_GRAPH_BS_FLAG "$MAX_RUNNING" \
     --max-mamba-cache-size "$MAMBA_CACHE" \
     --host 127.0.0.1 --port "$PORT" --log-level warning \
     $EXTRA_SERVER_ARGS > "$LOG" 2>&1 &
