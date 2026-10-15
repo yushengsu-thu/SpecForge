@@ -17,7 +17,8 @@ import re
 import statistics
 import time
 
-STEP_RE = re.compile(r"step (\d+): (\{.*\})")
+# several ranks may print on one physical line; the metric dict is flat, so stop at the first "}"
+STEP_RE = re.compile(r"step (\d+): (\{[^{}]*\})")
 LAUNCH_RE = re.compile(r"^=== (\S+) launch (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)")
 BRANCH = "exp/qwen3-8b-dspark-moe-8expert-1activate-dense-same"
 BASE = "spark-Qwen3-8B @ 7cd9696d, includes the NO_SHARD MoE aux-loss fix c55cdd10"
@@ -43,18 +44,16 @@ def parse_log(path):
                 launches.append(dt.datetime.strptime(m.group(2), "%Y-%m-%dT%H:%M:%SZ")
                                 .replace(tzinfo=dt.timezone.utc).timestamp())
                 continue
-            m = STEP_RE.search(line)
-            if not m:
-                continue
-            step = int(m.group(1))
-            if step in steps:
-                continue
-            try:
-                payload = ast.literal_eval(re.sub(r"\b(nan|inf)\b", "None", m.group(2)))
-            except (ValueError, SyntaxError):
-                continue
-            steps[step] = {k: float(v) for k, v in payload.items()
-                           if isinstance(v, (int, float)) and not isinstance(v, bool)}
+            for step_text, dict_text in STEP_RE.findall(line):
+                step = int(step_text)
+                if step in steps:
+                    continue
+                try:
+                    payload = ast.literal_eval(re.sub(r"\b(nan|inf)\b", "None", dict_text))
+                except (ValueError, SyntaxError):
+                    continue
+                steps[step] = {k: float(v) for k, v in payload.items()
+                               if isinstance(v, (int, float)) and not isinstance(v, bool)}
     return steps, launches
 
 
