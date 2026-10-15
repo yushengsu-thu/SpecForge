@@ -21,7 +21,7 @@ import time
 STEP_RE = re.compile(r"step (\d+): (\{[^{}]*\})")
 LAUNCH_RE = re.compile(r"^=== (\S+) launch (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)")
 BRANCH = "exp/qwen3-8b-dspark-moe-8expert-1activate-dense-same"
-BASE = "spark-Qwen3-8B @ 7cd9696d + upstream PR stack #957-#963 (jiapingW, #942 split layers 1-7 @ f8b74820), as on dense-1/8"
+BASE = "spark-Qwen3-8B @ 7cd9696d + upstream PR stack #957-#963 (as on dense-1/8) + #966 cost-balanced consumer dispatch"
 RECIPE = ("examples/configs/online/disaggregated/managed-local/"
           "qwen3-8b-dspark-moe-8expert-1activate-dense-same-12ep.yaml")
 WANDB = ("specforge-qwen3-8b-dspark", "qwen3-8b-dspark-moe-8expert-1activate-dense-same")
@@ -210,7 +210,7 @@ def main():
     w("| max_grad_norm | 1.0 |")
     w("| num_anchors / loss_decay_gamma / objective_chunk_blocks | 512 / 7.0 / 128 |")
     w("| loss | 0.1 CE + 0.9 L1, confidence loss 0 |")
-    w("| sharding / precision / attention | NO_SHARD (DDP, bucket 128 MB, one gradient sync per accumulation window, PR #958) / bf16 + Liger kernels / flex_attention; flatten_vocab_projection and cache_vocab_projection on (PR #963) |")
+    w("| sharding / precision / attention | NO_SHARD (DDP, bucket 128 MB, one gradient sync per accumulation window, PR #958) / bf16 + Liger kernels / flex_attention; flatten_vocab_projection and cache_vocab_projection on (PR #963); consumer_dispatch cost_balanced (PR #966, same window membership, balanced per-rank cost); four optimizer quanta in flight |")
     w(f"| checkpoints | every 1196 steps, newest 12 kept by the trainer; epoch k = step k x {E:,} (copied out of the rotation, exported, uploaded) |")
     w("| seed / prompt_seed | 42 / 42 |")
     w("| hardware | 1 node x 8 H200: capture servers on GPUs 0-1, trainer ranks on GPUs 2-7 |")
@@ -219,7 +219,7 @@ def main():
     w("")
     w("- Global batch 132 instead of 128: 128 does not divide over 6 trainer ranks; 2 x 11 x 6 = 132 is the branch's standard for the 2-server + 6-rank layout (the dense-1/8 arm runs 1 x 19 x 7 = 133). A 1-server + 7-rank layout was profiled and rejected: the single capture server ran stop-and-go against the producer window and did not beat two servers.")
     w(f"- {N} epochs in one run with one cosine schedule (the dense run planned 6 epochs and stopped at step 40,960).")
-    w("- The upstream PR stack #957-#963 is merged (same stack as the dense-1/8 branch; #965-#967 excluded), so `is_causal: true`, `flatten_vocab_projection`, `cache_vocab_projection`, `ddp_bucket_cap_mb: 128`, one DDP gradient sync per window and the system-prompt removal apply exactly as in the reference run.")
+    w("- The upstream PR stack #957-#963 is merged (same stack as the dense-1/8 branch) plus #966 (cost-balanced consumer dispatch, a scheduling-only change that keeps each optimizer window's sample membership), so `is_causal: true`, `flatten_vocab_projection`, `cache_vocab_projection`, `ddp_bucket_cap_mb: 128`, one DDP gradient sync per window and the system-prompt removal apply exactly as in the reference run.")
     w("- The dense FFN (12288) is replaced by 8 x 1536 top-1 experts (no shared expert); every other draft-config field is the dense skeleton.")
     w("")
     w("## Per-epoch results")
