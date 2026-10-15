@@ -58,6 +58,9 @@ The training plane is the only tensor-carrying side besides the data plane; it
 consumes `TrainBatch.tensors`. `TrainerCore.train_step` divides the loss by
 `accumulation_steps`, uses `no_sync()` only for non-boundary micro-batches, and
 returns `optimizer_stepped` as the single authoritative boundary signal.
+For DDP, the backend accumulation context encloses both forward and backward;
+wrapping backward alone does not disable DDP gradient synchronization. FSDP
+retains its backward-only deferral.
 `TrainerController` increments `global_step` only at that boundary, commits the
 pending sample acknowledgements, emits metrics, and performs configured
 interval saves. The outer `Trainer` owns topology cleanup and the guarded final
@@ -70,6 +73,33 @@ backward is inside FSDP `no_sync`, `fit` fails instead of stepping unreduced
 gradients or reporting a checkpoint as successful. Queue-mode loaders
 terminally settle and clean a short `drop_last` batch without emitting it;
 fixed offline refs keep normal `drop_last` semantics.
+
+## Domino and DSpark performance controls
+
+Both methods honor `model.use_liger_kernel` through their draft providers and
+constructors. This selects the existing explicit RMSNorm/MLP kernel bundle without
+patching Transformers globally or changing parameter layouts.
+
+The methods share two independent projection controls, both disabled by default:
+
+- `training.cache_vocab_projection: true` selectively saves frozen linear
+  vocabulary projections across objective-chunk activation checkpointing.
+  Backward recomputes the remaining objective operations but reuses the saved
+  projection instead of running that matrix multiplication twice. Trainable or
+  non-linear heads retain normal recomputation. With `objective_chunk_blocks: 0`,
+  objective checkpointing is disabled and caching has no effect. Saving logits
+  consumes additional activation memory proportional to batch size, effective
+  anchors, block size, and vocabulary size.
+- `training.flatten_vocab_projection: true` uses the shared projection helper to
+  reshape linear-head inputs to two dimensions and restore the output layout.
+  This also applies to DSpark teacher projections. Non-linear heads retain their
+  original input layout. Flattening can change floating-point rounding and does
+  not guarantee a speedup; benchmark the intended shapes and hardware.
+
+These controls preserve the objectives, gradient normalization, schedules, and
+checkpoint parameter layouts. Enabling either for a strategy other than Domino
+or DSpark is rejected. Check peak memory at the intended maximum sequence length
+before enabling caching; flattening does not require caching or checkpointing.
 
 ## Endpoints
 

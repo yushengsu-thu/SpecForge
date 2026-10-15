@@ -76,6 +76,14 @@ def _write(payload: dict, suffix: str) -> str:
 
 
 class ConfigSchemaTest(unittest.TestCase):
+    def test_ddp_bucket_limit_is_optional_and_positive(self):
+        from specforge.config.schema import TrainingConfig
+
+        self.assertIsNone(TrainingConfig().ddp_bucket_cap_mb)
+        self.assertEqual(TrainingConfig(ddp_bucket_cap_mb=128).ddp_bucket_cap_mb, 128)
+        with self.assertRaises(ValidationError):
+            TrainingConfig(ddp_bucket_cap_mb=0)
+
     def test_liger_kernel_flag_is_typed_and_defaults_off(self):
         default = Config.model_validate(copy.deepcopy(MINIMAL))
         self.assertFalse(default.model.use_liger_kernel)
@@ -502,6 +510,7 @@ class ConfigSchemaTest(unittest.TestCase):
             with self.subTest(dflash_teacher_metrics=enabled):
                 payload = _online_payload("dflash")
                 payload["training"]["dflash_teacher_metrics"] = enabled
+                payload["training"]["dflash_fused_plain_head"] = enabled
                 config = Config.model_validate(payload)
                 # Construction only: the family builder hands the factory its
                 # shared kwargs, and the objective records the config value.
@@ -518,6 +527,7 @@ class ConfigSchemaTest(unittest.TestCase):
                 ):
                     build_training_model(config, None, None, None, None)
                 self.assertIs(enabled, model_cls.call_args.kwargs["teacher_metrics"])
+                self.assertIs(enabled, model_cls.call_args.kwargs["fused_plain_head"])
 
     def test_tv_is_a_supported_acceptance_loss_type(self):
         payload = _online_payload("dflash")
