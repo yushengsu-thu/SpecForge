@@ -718,8 +718,20 @@ class TestPackageArchitecture(unittest.TestCase):
                 "kimi-k3-dspark.json",
                 "ling-3.0-tiny-dspark.json",
                 "qwen3-4b-dspark.json",
+                "qwen3-8b-dspark-moe-noconf-b16.json",
+                "qwen3-8b-dspark-noconf-b16.json",
                 "qwen3-8b-dspark.json",
                 "qwen3.6-27b-dspark.json",
+                "qwen3.8-27b-dspark-moe-aux0.01.json",
+                "qwen3.8-27b-dspark-moe-exp-b-center.json",
+                "qwen3.8-27b-dspark-moe-exp-b2-batchcenter.json",
+                "qwen3.8-27b-dspark-moe-exp-b3-batchnorm.json",
+                "qwen3.8-27b-dspark-moe-exp-c-noise.json",
+                "qwen3.8-27b-dspark-moe-exp-d-noaux.json",
+                "qwen3.8-27b-dspark-moe-exp-g-aux01.json",
+                "qwen3.8-27b-dspark-moe-exp-h-sample-bs2.json",
+                "qwen3.8-27b-dspark-moe-exp-h2-sample-bs2-plain.json",
+                "qwen3.8-27b-dspark-moe-v2.json",
                 "qwen3.8-27b-dspark-moe.json",
             },
         )
@@ -764,6 +776,11 @@ class TestPackageArchitecture(unittest.TestCase):
             Path("examples/disagg/run_offline_2node.sh"),
             Path("examples/disagg/run_qwen3_8b_dflash_disagg_2node.sh"),
             Path("examples/disagg/run_inkling_dspark_disagg_2node.sh"),
+            # Qwen3.8-27B DSpark MoE launchers: shell wrappers around
+            # `python -m specforge.cli train -c <recipe>` for the recorded nodes.
+            Path("scripts/launch/launch-moe-disagg-manual.sh"),
+            Path("scripts/launch/launch-moe-managed-local.sh"),
+            Path("scripts/launch/2node/launch-trainer-on-102.sh"),
         }
         bypasses = []
         train_command = re.compile(r"\btrain\s+(?:--config|-c)\b")

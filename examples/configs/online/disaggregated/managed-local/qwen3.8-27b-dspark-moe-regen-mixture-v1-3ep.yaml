@@ -18,7 +18,7 @@ model:
   # NVFP4 body (matches the regen backend) with the source BF16 lm_head so the
   # trainer can load the frozen target head/embedding directly.
   target_model_path: RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead
-  draft_model_config: /personal/SpecForge-qwen38-moe/configs/qwen3.8-27b-dspark-moe.json
+  draft_model_config: configs/qwen3.8-27b-dspark-moe.json
   target_backend: sglang
   trust_remote_code: true
   embedding_key: model.language_model.embed_tokens.weight

@@ -4,7 +4,7 @@
 # Also dataloader_num_workers 16 (v3: 8) to probe the local Mooncake fetch ceiling seen in the bs4-shardacc smoke (3-6 s wait_fetch at 16 s compute).
 model:
   target_model_path: RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead
-  draft_model_config: /personal/SpecForge-qwen38-moe/configs/qwen3.8-27b-dspark-moe-v2.json
+  draft_model_config: configs/qwen3.8-27b-dspark-moe-v2.json
   target_backend: sglang
   trust_remote_code: true
   embedding_key: model.language_model.embed_tokens.weight

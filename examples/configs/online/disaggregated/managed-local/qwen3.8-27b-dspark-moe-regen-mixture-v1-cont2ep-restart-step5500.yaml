@@ -7,7 +7,7 @@
 # Launched 2026-09-12 15:2x UTC on .102 with scripts/launch/launch-moe-managed-local.sh (default env).
 model:
   target_model_path: RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead
-  draft_model_config: /personal/SpecForge-qwen38-moe/configs/qwen3.8-27b-dspark-moe-v2.json
+  draft_model_config: configs/qwen3.8-27b-dspark-moe-v2.json
   target_backend: sglang
   trust_remote_code: true
   embedding_key: model.language_model.embed_tokens.weight

@@ -8,7 +8,7 @@
 # outputs/launch/2node/launch-capture-on-103.sh then outputs/launch/2node/launch-trainer-on-102.sh.
 model:
   target_model_path: RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead
-  draft_model_config: /personal/SpecForge-qwen38-moe/configs/qwen3.8-27b-dspark-moe-v2.json
+  draft_model_config: configs/qwen3.8-27b-dspark-moe-v2.json
   target_backend: sglang
   trust_remote_code: true
   embedding_key: model.language_model.embed_tokens.weight
