@@ -24,6 +24,8 @@ mkdir -p "$OUT"; rm -f "$SGLANG_STOP_FILE"
 if [ -f "$OUT/launcher.pid" ] && kill -0 "$(cat "$OUT/launcher.pid")" 2>/dev/null; then
   echo "already running: pid $(cat "$OUT/launcher.pid")"; exit 1
 fi
+# managed_local refuses a pre-existing control_dir; a stale one (no live launcher) is moved aside.
+if [ -d "$OUT/control" ]; then mv "$OUT/control" "$OUT/control.stale.$(date -u +%Y%m%dT%H%M%SZ)"; fi
 cd "$REPO"
 echo "=== $RUN launch $(date -u +%FT%TZ) commit $(git rev-parse --short HEAD) overrides: ${EXTRA[*]:-none}" >> "$OUT/launch.log"
 nohup numactl --preferred=1 python -u -m specforge.cli train -c "$RECIPE" \
