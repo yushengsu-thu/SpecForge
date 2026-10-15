@@ -180,9 +180,9 @@ def build_model_bundle(cfg: Config, *, algorithm: AlgorithmRegistration) -> Mode
     """Build the method-specific composite model and frozen target pieces."""
     import torch
 
+    from specforge.modeling.target.target_utils import load_target_config
     from specforge.modeling.target.target_utils import (
-        load_target_config,
-        target_text_config,
+        target_hidden_size as resolve_target_hidden_size,
     )
     from specforge.modeling.target.target_utils import (
         target_vocab_size as resolve_target_vocab_size,
@@ -197,8 +197,7 @@ def build_model_bundle(cfg: Config, *, algorithm: AlgorithmRegistration) -> Mode
         cache_dir=cfg.model.cache_dir,
         trust_remote_code=cfg.model.trust_remote_code,
     )
-    text_config = target_text_config(target_config)
-    target_hidden_size = int(text_config.hidden_size)
+    target_hidden_size = resolve_target_hidden_size(target_config)
     target_vocab_size = resolve_target_vocab_size(target_config)
     draft_vocab_size = int(
         getattr(draft_config, "draft_vocab_size", draft_config.vocab_size)
@@ -292,8 +291,17 @@ def _logger(metrics, step):
 
 
 def _configured_logger(cfg: Config):
-    """Create an external tracker only for a trainer-bearing run."""
+    """Return this process's metric logger.
+
+    Every rank keeps the console logger. An external tracker (W&B, MLflow,
+    SwanLab, TensorBoard) is created on global rank zero only, so a job has one
+    run and one writer instead of world-size copies.
+    """
     if cfg.tracking.report_to == "none" or cfg.training.role == "producer":
+        return _logger
+    import torch.distributed as dist
+
+    if dist.is_available() and dist.is_initialized() and dist.get_rank() != 0:
         return _logger
 
     from types import SimpleNamespace

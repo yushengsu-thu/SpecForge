@@ -1,4 +1,5 @@
 import logging
+import math
 
 import torch
 import torch.distributed as dist
@@ -7,6 +8,27 @@ from specforge.lr_scheduler import ConstantWarmupLR, CosineAnnealingWarmupLR
 from specforge.utils import print_on_rank0
 
 logger = logging.getLogger(__name__)
+
+
+def _sum_of_squares(tensors):
+    """FP32 sum of squared L2 norms of ``tensors``.
+
+    On CUDA one ``_foreach_norm`` launch per (device, dtype) group replaces
+    three kernels per tensor; the result matches up to FP32 summation order.
+    Grouping matters because a mixed-dtype list falls back to one kernel per
+    tensor. Other devices keep the per-tensor reduction.
+    """
+    if all(tensor.is_cuda for tensor in tensors):
+        groups = {}
+        for tensor in tensors:
+            groups.setdefault((tensor.device, tensor.dtype), []).append(tensor)
+        norms = [
+            norm
+            for group in groups.values()
+            for norm in torch._foreach_norm(group, 2.0, dtype=torch.float32)
+        ]
+        return torch.stack(norms).square().sum()
+    return torch.stack([tensor.float().square().sum() for tensor in tensors]).sum()
 
 
 def _pinned_like(model_param, dtype):
@@ -30,6 +52,10 @@ class BF16Optimizer:
     20 GB allocations every step) costs ~14 s per optimizer step, more than
     the forward/backward of the whole accumulation window.
     """
+
+    #: ``step(loss_denominator=...)`` validates the caller's global loss
+    #: denominator in the same host read as the grad norm (see TrainerCore).
+    checks_loss_denominator = True
 
     def __init__(
         self,
@@ -68,6 +94,11 @@ class BF16Optimizer:
             if self.offload_master
             else None
         )
+        # Kernel choice (re-applied after a checkpoint load, see
+        # _restore_adamw_implementation): one fused kernel for CUDA masters,
+        # torch's fused CPU AdamW for offloaded masters, the default elsewhere.
+        self._adamw_fused = None
+        self._adamw_foreach = None
         self.optimizer = self._build_adamw(lr, weight_decay)
         self.last_grad_norm = None
         self._grad_norm_process_group = None
@@ -89,18 +120,26 @@ class BF16Optimizer:
         )
 
     def _build_adamw(self, lr, weight_decay):
+        if self.fp32_params and all(mp.is_cuda for mp in self.fp32_params):
+            self._adamw_fused = True
+            return torch.optim.AdamW(
+                self.fp32_params, lr=lr, weight_decay=weight_decay, fused=True
+            )
         if self.offload_master and self.fp32_params:
             # torch's fused CPU AdamW is one multi-threaded pass over
             # param/grad/moments; the single-tensor path is ~15x slower.
             try:
-                return torch.optim.AdamW(
+                optimizer = torch.optim.AdamW(
                     self.fp32_params, lr=lr, weight_decay=weight_decay, fused=True
                 )
             except (RuntimeError, ValueError) as exc:  # pragma: no cover
                 logger.warning("fused CPU AdamW unavailable (%s); using foreach", exc)
+                self._adamw_foreach = True
                 return torch.optim.AdamW(
                     self.fp32_params, lr=lr, weight_decay=weight_decay, foreach=True
                 )
+            self._adamw_fused = True
+            return optimizer
         return torch.optim.AdamW(self.fp32_params, lr=lr, weight_decay=weight_decay)
 
     def configure_grad_norm_reduction(
@@ -140,9 +179,7 @@ class BF16Optimizer:
         gradients first."""
         grads = [p.grad.detach() for p in self.model_params if p.grad is not None]
         if grads:
-            total_norm_sq = torch.stack(
-                [grad.float().square().sum() for grad in grads]
-            ).sum()
+            total_norm_sq = _sum_of_squares(grads)
         else:
             device = self.model_params[0].device if self.model_params else "cpu"
             total_norm_sq = torch.zeros((), dtype=torch.float32, device=device)
@@ -179,85 +216,140 @@ class BF16Optimizer:
             grad.mul_(coefficient)
         return total_norm
 
-    def step(self):
+    def _clear_grads(self) -> None:
+        with torch.no_grad():
+            for p in self.model_params:
+                p.grad = None
+            for mp in self.fp32_params:
+                mp.grad = None
+
+    def step(self, *, loss_denominator=None):
+        """Clip, update, and return the pre-clip global grad norm.
+
+        The step synchronizes with the host once: the grad norm (plus the CPU
+        clip coefficient when masters are offloaded) and the optional
+        ``loss_denominator`` -- the all-reduced global loss denominator the
+        caller already scaled the gradients by -- are read in one transfer.
+        Either check fails before Adam, scheduler, or copy-back state changes.
+        """
         grad_norm, clip_coefficient = self._grad_norm_and_clip_coefficient()
-        if not bool(torch.isfinite(grad_norm)):
-            # Clipping cannot rescale a non-finite norm and one such Adam step
-            # NaNs the weights permanently. The norm is already all-reduced,
-            # so every rank skips this step deterministically.
-            if not dist.is_initialized() or dist.get_rank() == 0:
-                logger.warning(
-                    "skipping optimizer step: non-finite global grad norm "
-                    f"(max_grad_norm={self.max_grad_norm})"
-                )
-            with torch.no_grad():
-                for p in self.model_params:
-                    p.grad = None
-                for mp in self.fp32_params:
-                    mp.grad = None
-            self.last_grad_norm = grad_norm.detach()
-            return self.last_grad_norm
-        self.last_grad_norm = grad_norm.detach()
+        checked = [grad_norm]
         if self.offload_master:
-            self._offload_step(clip_coefficient)
-        else:
-            self._resident_step(clip_coefficient)
+            checked.append(clip_coefficient)
+        if loss_denominator is not None:
+            checked.append(loss_denominator)
+        # FP32 is exact for the norm and clip coefficient; the denominator
+        # check needs only its sign and finiteness.
+        host_values = torch.stack(
+            [
+                value.detach().reshape(()).to(grad_norm.device, torch.float32)
+                for value in checked
+            ]
+        ).tolist()
+        if loss_denominator is not None:
+            denominator = host_values[-1]
+            if not math.isfinite(denominator) or denominator <= 0:
+                # Gradients were already scaled by an invalid factor.
+                self._clear_grads()
+                raise ValueError("global loss denominator must be finite and positive")
+        if not math.isfinite(host_values[0]):
+            # The norm is already all-reduced, so every rank fails before Adam,
+            # scheduler, global-step, or durable-ack state can advance. Returning
+            # here would make the controller record an optimizer update that did
+            # not happen and permanently discard its training window.
+            self._clear_grads()
+            self.last_grad_norm = grad_norm.detach()
+            raise FloatingPointError(
+                "refusing optimizer step with non-finite global grad norm "
+                f"(max_grad_norm={self.max_grad_norm})"
+            )
+        with torch.no_grad():
+            if self.offload_master:
+                self._stage_offloaded_grads(host_values[1])
+            else:
+                model_grads, master_grads = [], []
+                for p, mp in zip(self.model_params, self.fp32_params):
+                    if p.grad is None:
+                        mp.grad = None
+                        continue
+                    master_grad = torch.empty_like(mp)
+                    model_grads.append(p.grad.detach())
+                    master_grads.append(master_grad)
+                    mp.grad = master_grad
+                if master_grads:
+                    torch._foreach_copy_(master_grads, model_grads)
+                    torch._foreach_mul_(master_grads, clip_coefficient)
+        self.last_grad_norm = grad_norm.detach()
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+        self.scheduler.step()
+        with torch.no_grad():
+            if self.offload_master:
+                self._upload_offloaded_masters()
+            elif self.model_params:
+                torch._foreach_copy_(
+                    [p.data for p in self.model_params],
+                    [mp.data for mp in self.fp32_params],
+                )
+            for p in self.model_params:
+                p.grad = None
         return self.last_grad_norm
 
-    def _resident_step(self, clip_coefficient):
-        with torch.no_grad():
-            for p, mp in zip(self.model_params, self.fp32_params):
-                if p.grad is None:
-                    mp.grad = None
-                    continue
-                master_grad = p.grad.detach().to(device=mp.device, dtype=torch.float32)
-                master_grad.mul_(clip_coefficient)
-                mp.grad = master_grad
-        self.optimizer.step()
-        self.optimizer.zero_grad()
-        self.scheduler.step()
-        with torch.no_grad():
-            for p, mp in zip(self.model_params, self.fp32_params):
-                p.data.copy_(mp.data.to(device=p.device, dtype=p.dtype))
-                p.grad = None
+    def _stage_offloaded_grads(self, clip_coefficient):
+        """Cast, clip and stream every gradient into its pinned host master grad."""
+        for p, mp, grad_buffer in zip(
+            self.model_params, self.fp32_params, self._master_grad_buffers
+        ):
+            if p.grad is None:
+                mp.grad = None
+                continue
+            # Cast and clip on the device (one fused pass on the grad; the
+            # fp32 temporary is stream-ordered with the copy, so it can be
+            # released immediately), then stream the fp32 grad to the host.
+            clipped = p.grad.detach().to(torch.float32)
+            clipped.mul_(clip_coefficient)
+            grad_buffer.copy_(clipped, non_blocking=True)
+            del clipped
+            mp.grad = grad_buffer
+            p.grad = None
+        if self.model_params and self.model_params[0].device.type == "cuda":
+            torch.cuda.current_stream(self.model_params[0].device).synchronize()
 
-    def _offload_step(self, clip_coefficient):
-        """Host round trip through the persistent pinned buffers."""
-        with torch.no_grad():
-            for p, mp, grad_buffer in zip(
-                self.model_params, self.fp32_params, self._master_grad_buffers
-            ):
-                if p.grad is None:
-                    mp.grad = None
-                    continue
-                # Cast and clip on the device (one fused pass on the grad; the
-                # fp32 temporary is stream-ordered with the copy, so it can be
-                # released immediately), then stream the fp32 grad to the host.
-                clipped = p.grad.detach().to(torch.float32)
-                clipped.mul_(clip_coefficient)
-                grad_buffer.copy_(clipped, non_blocking=True)
-                del clipped
-                mp.grad = grad_buffer
-                p.grad = None
-            if self.model_params and self.model_params[0].device.type == "cuda":
-                torch.cuda.current_stream(self.model_params[0].device).synchronize()
-        self.optimizer.step()
-        self.optimizer.zero_grad()
-        self.scheduler.step()
-        with torch.no_grad():
-            for p, mp, staging in zip(
-                self.model_params, self.fp32_params, self._staging_buffers
-            ):
-                if staging.device == p.device:
-                    p.data.copy_(mp.data)
-                    continue
-                # Host-side cast into pinned memory, then an async upload.
-                staging.copy_(mp.data)
-                p.data.copy_(staging, non_blocking=True)
-            if self.model_params and self.model_params[0].device.type == "cuda":
-                # The staging buffers are reused next step; make sure the
-                # uploads have landed before anything else touches them.
-                torch.cuda.current_stream(self.model_params[0].device).synchronize()
+    def _upload_offloaded_masters(self):
+        """Copy the updated host masters back into the model parameters."""
+        for p, mp, staging in zip(
+            self.model_params, self.fp32_params, self._staging_buffers
+        ):
+            if staging.device == p.device:
+                p.data.copy_(mp.data)
+                continue
+            # Host-side cast into pinned memory, then an async upload.
+            staging.copy_(mp.data)
+            p.data.copy_(staging, non_blocking=True)
+        if self.model_params and self.model_params[0].device.type == "cuda":
+            # The staging buffers are reused next step; make sure the
+            # uploads have landed before anything else touches them.
+            torch.cuda.current_stream(self.model_params[0].device).synchronize()
+
+    def _restore_adamw_implementation(self) -> None:
+        """Re-apply this run's AdamW kernel choice after a checkpoint load.
+
+        ``Optimizer.load_state_dict`` adopts the saved param-group flags, so a
+        checkpoint from an unfused run would silently disable ``fused`` here
+        (and a fused one would enable it for CPU masters). Fused AdamW reads
+        its step counters on the parameter device; unfused keeps them on CPU.
+        """
+        for group in self.optimizer.param_groups:
+            group["fused"] = self._adamw_fused
+            group["foreach"] = None if self._adamw_fused else self._adamw_foreach
+        for param, state in self.optimizer.state.items():
+            step = state.get("step")
+            if isinstance(step, torch.Tensor):
+                state["step"] = (
+                    step.to(device=param.device, dtype=torch.float32)
+                    if self._adamw_fused
+                    else step.cpu()
+                )
 
     def load_state_dict(self, state_dict):
         """Restore optimizer/scheduler state and, when present, the rank-local
@@ -283,6 +375,7 @@ class BF16Optimizer:
         # masters and Adam moments are relocated to the current master device,
         # so toggling it on resume is safe and intentionally not gated here.
         self.optimizer.load_state_dict(state_dict["optimizer_state_dict"])
+        self._restore_adamw_implementation()
         print_on_rank0("Successfully loaded optimizer state_dict.")
         self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
         print_on_rank0("Successfully loaded scheduler state_dict.")

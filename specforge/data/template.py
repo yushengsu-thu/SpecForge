@@ -14,8 +14,6 @@ class ChatTemplate(BaseModel):
         system_prompt(str): The system prompt.
         end_of_turn_token(str): The end token of a turn of conversation.
         ignore_token(List[str]): The list of tokens to ignore when parsing the model output, e.g., for thinking token.
-        jinja_chat_template(str): Jinja template applied instead of the tokenizer's
-            own, for checkpoints that ship no chat template.
     """
 
     assistant_header: Optional[str] = None
@@ -24,9 +22,9 @@ class ChatTemplate(BaseModel):
     end_of_turn_token: Optional[str] = None
     parser_type: str = "general"
     assistant_pattern_type: str = "general"
-    enable_thinking: bool = False
+    # None preserves the tokenizer default; booleans explicitly select a mode.
+    enable_thinking: Optional[bool] = None
     ignore_token: Optional[List[str]] = None
-    jinja_chat_template: Optional[str] = None
 
 
 class TemplateRegistry:
@@ -266,7 +264,8 @@ TEMPLATE_REGISTRY.register(
         system_prompt=None,
         end_of_turn_token="<|end_of_msg|>",
         parser_type="thinking",
-        enable_thinking=False,
+        # Keep the XTML renderer default for reasoning stored inline.
+        enable_thinking=None,
         ignore_token=["<|end_of_msg|>"],
     ),
 )
@@ -304,6 +303,41 @@ TEMPLATE_REGISTRY.register(
     ),
 )
 
+# Ling-3.0 (Bailing V3) keeps Ling-2.0's role headers but always emits a think
+# block: an assistant turn renders as
+#   '<role>ASSISTANT</role>\n<think></think>' + content            (no reasoning)
+#   '<role>ASSISTANT</role>\n<think>' + reasoning + '</think>' + content
+# The opening tag (and, with thinking off, the empty block) is part of the
+# generation prompt, so it is never model output and must stay outside the loss
+# mask. Reusing "ling-flash-2.0" here would supervise that boilerplate, so
+# Ling-3.0 gets its own entries with the think tags folded into the header.
+TEMPLATE_REGISTRY.register(
+    name="ling-3.0",
+    template=ChatTemplate(
+        assistant_header="<role>ASSISTANT</role>\n<think></think>",
+        user_header="<role>HUMAN</role>",
+        system_prompt=None,
+        end_of_turn_token="<|role_end|>",
+        parser_type="thinking",
+        enable_thinking=False,
+    ),
+)
+
+# Thinking variant: reasoning is supervised together with the answer, so the
+# header stops right after the opening tag and the loss covers the closing
+# '</think>' the model itself emits.
+TEMPLATE_REGISTRY.register(
+    name="ling-3.0-thinking",
+    template=ChatTemplate(
+        assistant_header="<role>ASSISTANT</role>\n<think>",
+        user_header="<role>HUMAN</role>",
+        system_prompt=None,
+        end_of_turn_token="<|role_end|>",
+        parser_type="thinking",
+        enable_thinking=True,
+    ),
+)
+
 TEMPLATE_REGISTRY.register(
     name="deepseek-v32",
     template=ChatTemplate(
@@ -316,8 +350,6 @@ TEMPLATE_REGISTRY.register(
     ),
 )
 
-# DeepSeek-V4 checkpoints ship no Jinja chat template (prompts come from a
-# reference python encoder), so this template carries its own Jinja mirroring it.
 TEMPLATE_REGISTRY.register(
     name="deepseek-v4",
     template=ChatTemplate(
@@ -325,28 +357,8 @@ TEMPLATE_REGISTRY.register(
         user_header="<｜User｜>",
         system_prompt=None,
         end_of_turn_token="<｜end▁of▁sentence｜>",
-        parser_type="thinking",
+        parser_type="deepseek-v4",
         enable_thinking=False,
-        jinja_chat_template=(
-            "{{ '<｜begin▁of▁sentence｜>' }}"
-            "{% if messages and messages[0]['role'] == 'system' %}"
-            "{{ messages[0]['content'] }}"
-            "{% endif %}"
-            "{% for message in messages %}"
-            "{% if message['role'] == 'user' %}"
-            "{{ '<｜User｜>' + message['content'] }}"
-            "{% elif message['role'] == 'assistant' %}"
-            "{{ '<｜Assistant｜>' }}"
-            "{% if message['reasoning_content'] is defined and message['reasoning_content'] %}"
-            "{{ '<think>' + message['reasoning_content'] + '</think>' }}"
-            "{% else %}"
-            "{{ '</think>' }}"
-            "{% endif %}"
-            "{{ message['content'] + '<｜end▁of▁sentence｜>' }}"
-            "{% endif %}"
-            "{% endfor %}"
-            "{% if add_generation_prompt %}{{ '<｜Assistant｜>' }}{% endif %}"
-        ),
     ),
 )
 

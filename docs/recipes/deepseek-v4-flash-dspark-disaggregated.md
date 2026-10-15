@@ -15,8 +15,9 @@ The flow is the standard disaggregated setup
   with `--spec-capture-method dspark`. The generic DFlash capture is not
   equivalent for V4: the inter-layer residual is the widened mHC tensor, so
   capture must use the model's own `set_dspark_layers_to_capture` hook.
-- **Chat template**: the checkpoint ships no Jinja chat template, so the
-  recipe uses the bundled `deepseek-v4` registry template.
+- **Chat encoding**: the checkpoint ships a Python encoder rather than tokenizer
+  Jinja. The dedicated `DeepSeekV4Parser` uses a vendored copy of the official
+  encoder, pinned to the model release revision, for the recipe's ShareGPT data.
 - **B200 MoE**: `--moe-runner-backend flashinfer_mxfp4` (the routed experts
   are fp4; the default MoE path cannot run them), with
   `FLASHINFER_USE_CUDA_NORM=1 FLASHINFER_USE_CUDA_QUANT=1` exported to work
@@ -105,6 +106,26 @@ magnitude) alongside the usual scalars. Checkpoints keep the official
 per-expert naming (`layers.N.mlp.experts.{i}.w{1,2,3}.weight`,
 `layers.N.mlp.gate.bias`, `layers.N.mlp.shared_experts.w{1,2,3}.weight`), so
 exports load into SGLang's DeepSeek-V4 MoE unchanged.
+
+## On AMD MI355X
+
+Use [`deepseek-v4-flash-dspark-disaggregated-amd.yaml`](https://github.com/sgl-project/SpecForge/blob/main/examples/configs/online/disaggregated/external/deepseek-v4-flash-dspark-disaggregated-amd.yaml),
+this recipe with the capture-server fields changed for ROCm, inside the
+`lmsysorg/sglang:v0.5.18-rocm720-mi35x` container from the
+[AMD ROCm tutorial](../sections/basic_usage/AMD/amd_rocm.md). Everything above
+applies, with three changes to each capture-server command:
+
+- drop `FLASHINFER_USE_CUDA_NORM=1` and `FLASHINFER_USE_CUDA_QUANT=1`;
+- add `export AITER_BF16_FP8_MOE_BOUND=0`, the setting SGLang's own AMD
+  DeepSeek-V4 tests use; without it the server fails on the first MoE batch
+  under 256 tokens;
+- replace `--moe-runner-backend flashinfer_mxfp4` with
+  `--attention-backend dsv4 --page-size 256 --swa-full-tokens-ratio 0.15 --disable-radix-cache`.
+
+Set `HIP_VISIBLE_DEVICES` alongside `CUDA_VISIBLE_DEVICES`. Measured on one
+MI355X node over the full two epochs (1,885 optimizer steps): 6.32 s per
+128-sample step on average, 6.1-6.4 s at steady state (about 3.1 s waiting for
+capture and 3.0 s of trainer compute), 3 h 18 min end to end.
 
 ## Fresh attempts
 
