@@ -78,6 +78,8 @@ Domino/DSpark vocabulary projection controls `cache_vocab_projection` / `flatten
 
 - 2026-10-15 (third launch): PR #942 layers #961-#963 merged; `cache_vocab_projection`, `flatten_vocab_projection` and `ddp_bucket_cap_mb: 128` enabled to match the published run; the causal run was stopped (about 50 minutes in) and restarted from scratch as W&B run id `dense-same-r3`.
 
+- 2026-10-15 19:55 UTC: branch synced with `spark-Qwen3-8B` c3ff230 (the same PR #942 stack #957-#963 merge the dense-1/8 run uses, plus its DDP draft lookup for MoE metrics and the managed-local NCCL port pin); no effect on the running dense external-layout job, picked up at the next restart. File renamed from exp_readme.md to `exp_read.me` to match the dense-1/8 branch.
+
 ## Results per epoch
 
 Filled by `scripts/launch/dense-same/epoch_results.py` from `/scratch/dense/epoch_results.json` as each epoch
