@@ -23,3 +23,12 @@ setsid nohup bash queue_official.sh > logs/eval_one_official.log 2>&1 < /dev/nul
 
 Each `logs/eval_<name>.json` holds, per dataset: conversations, output_tokens, verify_steps, aggregate_accept_length,
 drafts_per_step, tokens_per_s, elapsed_s, errors. `errors` must be 0 for a valid row.
+
+## End-to-end serving throughput (PR 943 protocol)
+
+`bench_e2e_one.sh <label> <draft dir | none> <gpu> <port>` serves the target (optionally with a drafter, `serve_e2e.sh`:
+32 running requests, mamba cache 48, context 8192) and runs `specforge benchmark` on gsm8k and mt-bench at
+concurrency 1 / 8 / 32 (100 prompts at c=1, 200 otherwise, 512 new tokens, greedy); each JSON has output tok/s and,
+with a drafter, the acceptance length. `queue_e2e.sh` runs the no-draft baseline, the dense 4ep drafter and the
+official v1 on three GPUs once the accept-length evals are done. Speed-up = drafter tok/s / baseline tok/s at the same
+concurrency.
