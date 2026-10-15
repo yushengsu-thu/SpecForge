@@ -8,7 +8,7 @@ to 1/8, trained for 12 epochs on the Open Perfect Blend regen corpus.
 | Link | |
 | --- | --- |
 | Code / config | this branch: `configs/qwen3-8b-dspark-dense-1-8-noconf-b16.json` + the launch yaml below |
-| W&B (one line for all 12 epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8-r3 (display name `dense-1-8`) |
+| W&B (one line for all 12 epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8-r4 (display name `dense-1-8`) |
 | Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/dense-1-8 (`epoch-01/` ... `epoch-12/`, each a `specforge export`ed servable directory) |
 | Machine | one 8x H200 node (`specforge-dsv4-h200`, cluster h200-sci-k8s-1), SGLang 0.5.18 + spec-capture patch, torch 2.13.0+cu130 |
 | Launch yaml | `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml` |
@@ -157,3 +157,9 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
   target-head objective (teacher logits computed once per position instead of per anchor
   block, one log-softmax pass, analytic backward) swapped in at a checkpoint boundary via
   `training.resume_from`.
+- 2026-10-15 16:56 UTC: at the first checkpoint (step 1196; the run was at step 1250, 5.95-6.09 s per
+  step, compute 5.3 s, peak 39 GB) the job was stopped to resume with the fast head, but the config
+  validator rejects `training.resume_from` under `deployment.managed_local` (resume is only wired for
+  the external-mode consumer role; the managed producer cannot restart its prompt stream at the
+  checkpoint's position). Restarted from scratch instead with the fast target-head objective
+  (compiled) and a fresh W&B run id `dense-1-8-r4`; the superseded `dense-1-8-r3` run was deleted.
