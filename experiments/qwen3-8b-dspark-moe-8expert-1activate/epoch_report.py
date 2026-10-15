@@ -243,7 +243,7 @@ def main():
     w("## How the numbers are computed")
     w("")
     w(f"- Metrics come from the trainer console log (`step N: {{...}}`, one line every `log_interval` = 10 optimizer steps, rank-deduplicated); the same values are on W&B under `train/*`.")
-    w(f"- Epoch k covers optimizer steps ((k-1) x {E:,}, k x {E:,}]; the last epoch runs to total_steps. Because 1,420,909 prompts / 132 = 10,764.46 steps per epoch, these windows are within 5 steps of the true epoch boundaries.")
+    w(f"- Epoch k covers optimizer steps ((k-1) x {E:,}, k x {E:,}]; the last epoch runs to total_steps. The producer keeps 1,420,903 of the 1,420,909 rows (6 have fewer than 2 trainable tokens), so one epoch is 1,420,903 / 132 = 10,764.42 optimizer steps and total_steps = 129,173; the k x {E:,} windows are within 5 steps of the true epoch boundaries.")
     w("- *epoch mean* averages all logged points in the window; *end of epoch* averages the last 20 logged points (200 optimizer steps, about 26k samples).")
     w("- *wall-clock* is the time between consecutive epoch checkpoints (epoch 1: since launch); it includes the dataset cache build for epoch 1.")
     w("- Exports are `specforge export --to hf` of the epoch checkpoint with the frozen Qwen3-8B embedding, plus the Qwen3-8B tokenizer; the raw training checkpoints (optimizer state included) stay on the box under `/scratch/ckpt-keep/`.")
