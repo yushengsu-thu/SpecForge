@@ -75,3 +75,25 @@ for tsv in glob.glob("/scratch/dense5l-eval/moe_speed*/summary.tsv"):
 for k in ["official-v1", "dense-4ep", "moe2l-4ep", "moe256-4ep", "moe16x-5ep"]:
     if k in rows:
         print("| %s | %s | %s | %s |" % (SG[k], rows[k].get(1, ""), rows[k].get(8, ""), rows[k].get(32, "")))
+
+# --- e2e v2: five datasets, Mamba cache 32 slots (e2e2_<label>_<ds>_c<c>.json) ---
+labels2 = [l for l in ["baseline", "dense-4ep", "official-v1", "moe256-4ep", "moe16x-5ep"] if any(os.path.exists(f"{E}/e2e2_{l}_{d}_c1.json") for d in ("gsm8k", "mt-bench", "math500", "aime26", "traces"))]
+if labels2:
+    print("\n### End-to-end serving throughput, five datasets (`specforge benchmark`, 512 new tokens, greedy; gsm8k and mt-bench non-thinking, math500 / aime26 / traces thinking; aime26 cycles its 30 prompts; servers with 32 running requests and a 32-slot Mamba cache); cell = output tokens/s (speed-up over autoregressive) [acceptance length]\n")
+    def e2e2(label, ds, c):
+        p = f"{E}/e2e2_{label}_{ds}_c{c}.json"
+        try: return json.load(open(p))
+        except Exception: return None
+    for ds, dname in [("gsm8k", "gsm8k (0-shot, non-thinking)"), ("mt-bench", "mt-bench (non-thinking)"), ("math500", "math500 (thinking)"), ("aime26", "aime26 (thinking)"), ("traces", "training traces (thinking)")]:
+        print(f"| {dname} | concurrency 1 (100 prompts) | concurrency 8 (200 prompts) | concurrency 32 (200 prompts) |"); print("|---|---|---|---|")
+        for label in labels2:
+            cells = []
+            for c in (1, 8, 32):
+                d = e2e2(label, ds, c); b = e2e2("baseline", ds, c)
+                if not d: cells.append("-"); continue
+                s = f"{d['throughput_tokens_per_second']:.1f}"
+                if label != "baseline" and b: s += f" ({d['throughput_tokens_per_second']/b['throughput_tokens_per_second']:.2f}x)"
+                if d.get("average_acceptance_length") is not None: s += f" [{d['average_acceptance_length']:.2f}]"
+                cells.append(s)
+            print(f"| {PRETTY[label]} | " + " | ".join(cells) + " |")
+        print()
