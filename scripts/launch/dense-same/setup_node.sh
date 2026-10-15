@@ -16,9 +16,9 @@ python -c "import sglang.srt.spec_capture_sink" && log "spec-capture sink ok"
 log "model: $(du -sh /scratch/models/Qwen3-8B | cut -f1)"
 if [ "$RANK" = 1 ]; then
   python -c "import specforge" 2>/dev/null && [ "$(python -c "import specforge,os;print(os.path.dirname(os.path.dirname(specforge.__file__)))")" = "$SF" ] || { log "pip install -e"; pip install -q -e $SF --no-deps 2>&1 | grep -v -i warning | tail -1; }
-  python -c "import liger_kernel" 2>/dev/null || { log "pip install liger-kernel"; pip install -q liger-kernel 2>&1 | grep -v -i warning | tail -1; }
-  python -c "import mooncake" 2>/dev/null || { log "pip install mooncake-transfer-engine"; pip install -q mooncake-transfer-engine 2>&1 | tail -1; }
-  python -c "import specforge, mooncake, liger_kernel, wandb, accelerate; print('trainer env ok')" || { log "ENV_FAILED"; exit 1; }
+  # the lmsysorg/sglang image ships torch + sglang only; the trainer also needs these (never touches torch)
+  python -c "import wandb, accelerate, zstandard, yaml, liger_kernel, mooncake" 2>/dev/null || { log "pip install trainer deps"; pip install -q wandb accelerate zstandard pyyaml liger-kernel mooncake-transfer-engine 2>&1 | grep -v -i warning | tail -1; }
+  python -c "import specforge, mooncake, liger_kernel, wandb, accelerate, zstandard; print('trainer env ok')" || { log "ENV_FAILED"; exit 1; }
   [ -f $BASE/data/perfectblend_train_regen_temperature0_no_think.jsonl ] || { log "download corpus"; hf download yaro1214/open_data perfectblend_train_regen_temperature0_no_think.jsonl --repo-type dataset --local-dir $BASE/data > $BASE/logs/dl-dataset.log 2>&1; }
   log "corpus: $(du -sh $BASE/data/perfectblend_train_regen_temperature0_no_think.jsonl | cut -f1)"
   for f in hf_token wandb_key; do [ -f $BASE/$f ] || { [ -f /personal/dense-secrets/$f ] && { cp /personal/dense-secrets/$f $BASE/$f; chmod 600 $BASE/$f; log "secret $f restored from /personal"; } || log "MISSING secret $BASE/$f (write it, mode 600)"; }; done
