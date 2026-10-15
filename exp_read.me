@@ -7,7 +7,7 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 
 ## Status
 
-**running** - optimizer step 1,070 / 129,173 (0.8%), epoch 1/12; launched 2026-10-15 20:55Z; 0.8 h elapsed, 1,329 steps/h, ETA 2026-10-19 22:06Z. total_steps from schedule payload, num_prompts 1,420,903.
+**running** - optimizer step 3,890 / 129,173 (3.0%), epoch 1/12; launched 2026-10-15 20:55Z; 2.8 h elapsed, 1,365 steps/h, ETA 2026-10-19 19:31Z. total_steps from schedule payload, num_prompts 1,420,903.
 
 ## Setup
 
@@ -62,7 +62,7 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 
 | epoch | end step | logged points | train/acc (epoch mean) | train/acc (end of epoch) | ce_loss (mean / end) | confidence_loss (mean / end) | l1_loss (mean / end) | loss (mean / end) | moe/aux_loss (mean / end) | lr (end) | wall-clock (h) | checkpoint |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 10,764 | 107 | 0.1808 | 0.3021 | 5.3970 / 4.1307 | 0.0000 / 0.0000 | 1.5915 / 1.3448 | 1.8789 / 1.4699 | 0.0011 / 0.0011 | 0.000124 | - | in progress |
+| 1 | 10,764 | 389 | 0.3979 | 0.5411 | 3.4984 / 2.2576 | 0.0000 / 0.0000 | 1.1361 / 0.8242 | 1.2796 / 0.8934 | 0.0010 / 0.0010 | 0.000452 | - | in progress |
 
 ## How the numbers are computed
 
@@ -72,4 +72,4 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 - *wall-clock* is the time between consecutive epoch checkpoints (epoch 1: since launch); it includes the dataset cache build for epoch 1.
 - Exports are `specforge export --to hf` of the epoch checkpoint with the frozen Qwen3-8B embedding, plus the Qwen3-8B tokenizer; the raw training checkpoints (optimizer state included) stay on the box under `/scratch/ckpt-keep/`.
 
-_Generated 2026-10-15 21:44Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
+_Generated 2026-10-15 23:46Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
