@@ -53,7 +53,42 @@ DATASETS: dict[str, dict[str, Any]] = {
         "format": lambda row: row["prompt"],
         "multi_turn": True,
     },
+    "aime26": {
+        "load_args": ("math-ai/aime26",),
+        "load_kwargs": {"split": "test"},
+        "format": lambda row: (
+            f"{row.get('problem') or row.get('question')}\nPlease reason step by "
+            "step, and put your final answer within \\boxed{}."
+        ),
+    },
+    # first user turn of the first SPECFORGE_TRACES_LIMIT training conversations in SPECFORGE_TRACES_JSONL
+    "traces": {
+        "loader": lambda: _load_traces(),
+        "format": lambda row: row["prompt"],
+    },
 }
+
+
+def _load_traces() -> list[dict[str, str]]:
+    import os
+
+    path = os.environ.get("SPECFORGE_TRACES_JSONL")
+    if not path:
+        raise ValueError("set SPECFORGE_TRACES_JSONL to the training jsonl for --dataset traces")
+    limit = int(os.environ.get("SPECFORGE_TRACES_LIMIT", "512"))
+    rows: list[dict[str, str]] = []
+    with open(path, encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            conv = json.loads(line).get("conversations") or []
+            user = next((m for m in conv if m.get("role") in ("user", "human")), None)
+            text = (user or {}).get("content") or (user or {}).get("value")
+            if text:
+                rows.append({"prompt": text})
+            if len(rows) >= limit:
+                break
+    return rows
 
 
 @dataclass(frozen=True)
@@ -74,10 +109,13 @@ def _load_prompts(name: str, max_samples: Optional[int]) -> list[list[str]]:
     if max_samples is not None and max_samples <= 0:
         raise ValueError("--max-samples must be positive")
     descriptor = DATASETS[name]
-    dataset = load_dataset(
-        *descriptor["load_args"],
-        **descriptor["load_kwargs"],
-    )
+    if "loader" in descriptor:
+        dataset = descriptor["loader"]()
+    else:
+        dataset = load_dataset(
+            *descriptor["load_args"],
+            **descriptor["load_kwargs"],
+        )
     prompts: list[list[str]] = []
     for row in dataset:
         formatted = descriptor["format"](row)

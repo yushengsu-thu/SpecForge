@@ -221,7 +221,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     benchmark.add_argument("--model", required=True)
     benchmark.add_argument(
         "--dataset",
-        choices=("gsm8k", "math500", "humaneval", "mbpp", "mt-bench"),
+        choices=("gsm8k", "math500", "humaneval", "mbpp", "mt-bench", "aime26", "traces"),
         required=True,
     )
     benchmark.add_argument("--max-new-tokens", type=int, default=2048)
