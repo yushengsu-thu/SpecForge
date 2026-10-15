@@ -424,7 +424,8 @@ def build_domino_model(
         lambda common: OnlineDominoModel(
             **common,
             shift_label=bool(getattr(draft_model, "shift_label", False)),
-            cache_projection=cfg.training.domino_cache_projection,
+            cache_vocab_projection=cfg.training.cache_vocab_projection,
+            flatten_vocab_projection=cfg.training.flatten_vocab_projection,
         ),
     )
 
@@ -447,8 +448,8 @@ def build_dspark_model(
             dspark_ce_loss_alpha=cfg.training.dspark_ce_loss_alpha,
             dspark_l1_loss_alpha=cfg.training.dspark_l1_loss_alpha,
             dspark_confidence_head_alpha=(cfg.training.dspark_confidence_head_alpha),
-            flatten_projection=cfg.training.dspark_flatten_projection,
-            cache_projection=cfg.training.dspark_cache_projection,
+            flatten_vocab_projection=cfg.training.flatten_vocab_projection,
+            cache_vocab_projection=cfg.training.cache_vocab_projection,
         ),
     )
 

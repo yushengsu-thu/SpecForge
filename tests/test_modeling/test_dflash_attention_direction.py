@@ -20,7 +20,6 @@ from specforge.modeling.draft.dflash import (
     dflash_attention_resume_contract,
     resolve_dflash_causal_block,
 )
-from specforge.modeling.draft.dspine import DSpineDraftModel
 from tests.test_modeling.test_dflash_sliding import _draft_config
 
 
@@ -280,12 +279,6 @@ class DFlashAttentionDirectionTest(unittest.TestCase):
                 if causal:
                     self.assertIs(contract["dspark_causal_block"], True)
                 self.assertNotIn("draft_attention_mask_semantics", contract)
-
-    def test_dspine_rejects_bidirectional_attention(self):
-        config = _draft_config(["full_attention"])
-        config.is_causal = False
-        with self.assertRaisesRegex(ValueError, "DSpine requires causal"):
-            DSpineDraftModel(config)
 
     def test_export_preserves_direction_and_rejects_unvalidated_serving(self):
         for causal in [False, True]:

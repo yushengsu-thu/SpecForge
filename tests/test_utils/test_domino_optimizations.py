@@ -42,7 +42,14 @@ def draft_config():
     return config
 
 
-def model(cache=False, liger=False, chunk=4, dtype=torch.bfloat16, device="cuda"):
+def model(
+    cache=False,
+    liger=False,
+    chunk=4,
+    dtype=torch.bfloat16,
+    device="cuda",
+    flatten=False,
+):
     torch.manual_seed(33)
     config = draft_config()
     draft = DominoDraftModel(
@@ -62,7 +69,8 @@ def model(cache=False, liger=False, chunk=4, dtype=torch.bfloat16, device="cuda"
         loss_decay_gamma=7,
         objective_chunk_blocks=chunk,
         shift_label=True,
-        cache_projection=cache,
+        cache_vocab_projection=cache,
+        flatten_vocab_projection=flatten,
     ).to(device=device, dtype=dtype)
 
 
@@ -99,61 +107,6 @@ class DominoConfigurationTest(unittest.TestCase):
         self.assertIn("transformers", type(baseline.norm).__module__)
         self.assertEqual(set(draft.state_dict()), set(baseline.state_dict()))
 
-    def test_projection_flag_rejects_other_algorithms(self):
-        for strategy in ("dflash", "dspark", "eagle3"):
-            with (
-                self.subTest(strategy=strategy),
-                self.assertRaisesRegex(ValueError, "requires training.strategy=domino"),
-            ):
-                Config.model_validate(
-                    {
-                        "model": {"target_model_path": "unused"},
-                        "data": {"hidden_states_path": "unused"},
-                        "training": {
-                            "strategy": strategy,
-                            "domino_cache_projection": True,
-                        },
-                    }
-                )
-
-    def test_dispatch_policy_is_domino_only_and_checks_watermark(self):
-        payload = {
-            "model": {"target_model_path": "unused", "target_backend": "sglang"},
-            "data": {"train_data_path": "unused"},
-            "training": {
-                "strategy": "dflash",
-                "batch_size": 2,
-                "accumulation_steps": 2,
-            },
-            "deployment": {
-                "mode": "disaggregated",
-                "trainer": {
-                    "nnodes": 4,
-                    "nproc_per_node": 8,
-                    "master_addr": "localhost",
-                },
-                "disaggregated": {
-                    "backend": "mooncake",
-                    "control_dir": "unused",
-                    "consumer_state_dir": "/tmp/consumer-state",
-                    "server_urls": ["http://localhost:30000"],
-                },
-            },
-            "runtime": {
-                "consumer_dispatch": "domino_balanced",
-                "in_flight_high_watermark": 255,
-            },
-        }
-        with self.assertRaisesRegex(ValueError, "requires training.strategy=domino"):
-            Config.model_validate(payload)
-        payload["training"]["strategy"] = "domino"
-        with self.assertRaisesRegex(ValueError, "at least two global batches"):
-            Config.model_validate(payload)
-        payload["runtime"]["in_flight_high_watermark"] = 256
-        self.assertEqual(
-            Config.model_validate(payload).runtime.consumer_dispatch, "domino_balanced"
-        )
-
 
 @unittest.skipUnless(torch.cuda.is_available(), "requires CUDA")
 class DominoOptimizationParityTest(unittest.TestCase):
@@ -172,10 +125,9 @@ class DominoOptimizationParityTest(unittest.TestCase):
             outputs.append((loss.detach(), accuracy.detach(), metrics))
         tolerance = dict(rtol=0, atol=0) if exact else dict(rtol=0.02, atol=0.02)
         torch.testing.assert_close(outputs[0][0], outputs[1][0], **tolerance)
-        for name in ("base_loss", "final_loss"):
-            torch.testing.assert_close(
-                outputs[0][2][name], outputs[1][2][name], **tolerance
-            )
+        torch.testing.assert_close(outputs[0][1], outputs[1][1], **tolerance)
+        torch.testing.assert_close(outputs[0][2], outputs[1][2], **tolerance)
+        self.assertEqual(baseline.state_dict().keys(), optimized.state_dict().keys())
         gradients = []
         for candidate in (baseline, optimized):
             gradients.append(
@@ -207,8 +159,8 @@ class DominoOptimizationParityTest(unittest.TestCase):
             print(
                 json.dumps(
                     {
-                        "domino_liger_gradient_relative_l2": relative_error,
-                        "domino_liger_gradient_cosine": cosine,
+                        "domino_gradient_relative_l2": relative_error,
+                        "domino_gradient_cosine": cosine,
                         "loss_absolute_difference": float(
                             (outputs[0][0] - outputs[1][0]).abs()
                         ),
@@ -218,6 +170,16 @@ class DominoOptimizationParityTest(unittest.TestCase):
 
     def test_cached_projection_matches_loss_and_all_gradients(self):
         self.compare(model(), model(cache=True), exact=True)
+
+    def test_flattened_projection_matches_with_and_without_cache(self):
+        for chunk in (0, 4):
+            for cache in (False, True):
+                with self.subTest(chunk=chunk, cache=cache):
+                    self.compare(
+                        model(chunk=chunk),
+                        model(chunk=chunk, cache=cache, flatten=True),
+                        exact=False,
+                    )
 
     def test_cached_projection_with_liger_matches(self):
         self.compare(model(liger=True), model(cache=True, liger=True), exact=True)

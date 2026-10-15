@@ -44,13 +44,6 @@ Run any recipe through the one public training entry:
 specforge train --config examples/configs/online/disaggregated/external/qwen3-8b-eagle3-disaggregated.yaml
 ```
 
-The `*-rtx-pro5000*.yaml` PerfectBlend recipes target RTX PRO5000 GPUs.
-Run them from the repository root: all filesystem paths are relative to the
-working directory. Point `shared/` on every node at the same shared storage for
-models, datasets, checkpoints, and control files; `cache/` and `runs/` are local
-to each node. Override service addresses for your cluster. These are example
-run identities, not paths to existing training checkpoints.
-
 `model.draft_model_config` may name a local JSON file, a local model directory,
 or a Hugging Face repository. Fresh EAGLE3, P-EAGLE, and DFlash runs may omit it
 and derive the draft architecture from the target; see the
@@ -229,7 +222,7 @@ should make their training strategy and topology explicit.
 | `model.input_modality` | `text` | The provider modality. The unified runtime supports text only; VLM modalities such as `qwen2_5_vl` are rejected. |
 | `model.shard_target_output` | `false` | Retained for config migration; leave it false on the online disaggregated path. |
 | `model.trust_remote_code` | `false` | Enable only for model repositories that require custom loading code. |
-| `model.use_liger_kernel` | `false` | Enable Liger Qwen3 RMSNorm/SwiGLU kernels for DFlash, Domino, or DSpine training. DSpine keeps its CE/L1, alignment and refinement objectives unchanged. Requires the `specforge[liger]` extra. |
+| `model.use_liger_kernel` | `false` | Enable Liger Qwen3 RMSNorm/SwiGLU kernels for DFlash, Domino, or DSpark training. Requires the `specforge[liger]` extra. |
 | `model.embedding_key` | `model.embed_tokens.weight` | Target checkpoint key copied into or used by the draft embedding. |
 | `model.lm_head_key` | `lm_head.weight` | Target checkpoint key used for the frozen output head. |
 | `model.vocab_mapping_path` | `""` | Target-to-draft vocabulary mapping. EAGLE3 disaggregated runs require an explicit shared file. |
@@ -326,9 +319,8 @@ Common fields:
 | `training.compact_teacher_chunk_size` | `null` | Positive vocabulary chunk size; requires `compact_teacher: true`. |
 | `training.trim_loss_positions` | `false` | EAGLE3 only. Compute the teacher target_p, draft logits, and loss only at supervised positions (batch size 1, plain KL loss); mathematically equivalent to the full-length path. |
 | `training.dflash_teacher_metrics` | `true` | DFlash/DFlash 2 only. `false` stops online capture of the target's final hidden state, which only feeds the `dflash/teacher/*` diagnostics; the loss is unchanged. |
-| `training.dspark_flatten_projection` | `false` | DSpark only. Flatten draft and teacher vocabulary projections to 2-D GEMMs, preserving the objective with possible floating-point rounding differences. |
-| `training.domino_cache_projection` | `false` | Domino only. Cache frozen vocabulary projections during objective-chunk recomputation, trading memory for speed without changing the objective. Has no effect when `objective_chunk_blocks: 0`. |
-| `training.dspark_cache_projection` | `false` | DSpark only. Retain frozen-head projection results across objective-chunk recomputation, trading additional memory for speed. CE/L1 weights and gradients remain unchanged; trainable heads retain normal recomputation. Has no effect when `objective_chunk_blocks: 0`. |
+| `training.cache_vocab_projection` | `false` | Domino/DSpark. Cache frozen linear vocabulary projections during objective-chunk recomputation, trading additional activation memory for less computation. Trainable or non-linear heads retain normal recomputation. Has no effect when `objective_chunk_blocks: 0`. |
+| `training.flatten_vocab_projection` | `false` | Domino/DSpark. Flatten inputs to linear vocabulary heads into 2-D GEMMs, including DSpark teacher projections. Non-linear heads retain their input layout. Preserves the objective with possible floating-point rounding differences. Independent of caching. |
 | `training.role` | `all` | Use `all` for offline colocated training; disaggregated entrypoints select `auto`, `producer`, or `consumer`. |
 | `training.seed` | `42` | Run and per-rank RNG seed. |
 | `training.prompt_seed` | `null` | Optional online prompt-shuffle seed. `null` preserves the historical behavior of using `training.seed`. |
@@ -494,7 +486,6 @@ unless tuning throughput or memory pressure.
 | Field | Default | What to write |
 | --- | --- | --- |
 | `runtime.producer_lease` | `8` | Prompts leased to a rollout worker at once. |
-| `runtime.consumer_dispatch` | `round_robin` | Online consumer distribution: `round_robin` or experimental `cost_balanced`. The latter balances padded anchor/context costs within each complete optimizer window. Strategy-specific `domino_balanced` buckets across two windows; `dspine_balanced` jointly balances two windows and falls back to single-window balancing unless the estimated total critical path improves. Both can change sample grouping and require a high watermark of at least two global batches. All preserve per-rank batch counts, durable acknowledgements and tail handling. Server capture includes valid-anchor counts; older refs fall back to token length. |
 | `runtime.producer_concurrency` | `1` | Concurrent capture calls maintained by each server's logical producer. Increase to keep ingress full without duplicating producers. |
 | `runtime.in_flight_high_watermark` | `256` | Pause production at this many committed, unacknowledged refs. |
 | `runtime.in_flight_low_watermark` | `192` | Resume production at or below this count; it cannot exceed the high watermark. |

@@ -1,15 +1,11 @@
 import copy
 import unittest
 from itertools import product
-from unittest import mock
 
 import torch
 import torch.nn.functional as functional
 
-from specforge.algorithms.common.dflash_family_model import OnlineDSparkModel
 from specforge.algorithms.dspark.providers import resume_contract
-from specforge.algorithms.model_providers import build_dspark_model
-from specforge.config import Config
 from tests.test_modeling.test_dspark_causal import build_model
 
 
@@ -36,8 +32,8 @@ class DSparkOptimizationsTest(unittest.TestCase):
                 baseline.objective_chunk_blocks = chunk_size
                 baseline.loss_decay_gamma = 7.0
                 optimized = copy.deepcopy(baseline)
-                optimized.flatten_projection = flatten
-                optimized.cache_projection = cache
+                optimized.flatten_vocab_projection = flatten
+                optimized.cache_vocab_projection = cache
                 tokens = torch.randint(0, 62, (2, 32), device=device)
                 hidden = torch.randn(2, 32, 256, device=device, dtype=dtype)
                 target = torch.randn(2, 64, 128, device=device, dtype=dtype)[:, ::2]
@@ -106,15 +102,15 @@ class DSparkOptimizationsTest(unittest.TestCase):
                 if not torch.cuda.is_available():
                     self.skipTest("requires CUDA kernel events")
                 model = build_model(device="cuda")
-                model.flatten_projection = True
-                model.cache_projection = True
+                model.flatten_vocab_projection = True
+                model.cache_vocab_projection = True
                 model.lm_head.requires_grad_(trainable_head)
                 tokens = torch.randint(0, 62, (2, 12), device="cuda")
                 hidden = torch.randn(2, 12, 256, device="cuda")
                 target = torch.randn(2, 12, 128, device="cuda")
                 counts = []
                 for enabled in (False, True):
-                    model.cache_projection = enabled
+                    model.cache_vocab_projection = enabled
                     model.zero_grad(set_to_none=True)
                     torch.manual_seed(71)
                     with torch.profiler.profile(
@@ -146,41 +142,6 @@ class DSparkOptimizationsTest(unittest.TestCase):
                 self.assertEqual(
                     counts[1], counts[0] if trainable_head else counts[0] // 2
                 )
-
-    def test_config_flags_are_dspark_only_and_reach_model(self):
-        for option in ["dspark_flatten_projection", "dspark_cache_projection"]:
-            with self.subTest(option=option):
-                payload = {
-                    "model": {"target_model_path": "unused"},
-                    "data": {"hidden_states_path": "unused"},
-                    "training": {"strategy": "dspark", option: True},
-                }
-                config = Config.model_validate(payload)
-                reference = build_model()
-                common = {
-                    "draft_model": reference.draft_model,
-                    "target_lm_head": reference.lm_head,
-                    "target_embed_tokens": reference.embed_tokens,
-                    "mask_token_id": 63,
-                    "block_size": 4,
-                }
-                with mock.patch(
-                    "specforge.algorithms.model_providers._build_dflash_family_model",
-                    side_effect=lambda config, draft, tokenizer, factory: factory(
-                        common
-                    ),
-                ):
-                    model = build_dspark_model(
-                        config, reference.draft_model, None, None, None
-                    )
-                self.assertTrue(isinstance(model, OnlineDSparkModel))
-                self.assertIs(getattr(model, option.removeprefix("dspark_")), True)
-                for strategy in ("dflash", "domino", "dspine", "eagle3"):
-                    payload["training"]["strategy"] = strategy
-                    with self.assertRaisesRegex(
-                        ValueError, "require training.strategy=dspark"
-                    ):
-                        Config.model_validate(payload)
 
 
 if __name__ == "__main__":

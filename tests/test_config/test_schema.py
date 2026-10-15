@@ -24,40 +24,6 @@ MINIMAL = {
     "data": {"hidden_states_path": "/features"},
 }
 
-
-class ConsumerOptimizationConfigTest(unittest.TestCase):
-    def test_dspine_dispatch_requires_matching_strategy_and_two_windows(self):
-        payload = _online_payload("dspine")
-        payload["runtime"] = {"consumer_dispatch": "dspine_balanced"}
-        self.assertEqual(Config(**payload).runtime.consumer_dispatch, "dspine_balanced")
-        payload["training"]["strategy"] = "dflash"
-        with self.assertRaisesRegex(
-            ValidationError, "requires training.strategy=dspine"
-        ):
-            Config(**payload)
-        payload["training"]["strategy"] = "dspine"
-        payload["training"]["batch_size"] = 128
-        payload["training"]["accumulation_steps"] = 2
-        with self.assertRaisesRegex(ValidationError, "at least two global batches"):
-            Config(**payload)
-
-    def test_opt_in_fields_and_validation(self):
-        from specforge.config.schema import RuntimeConfig, TrainingConfig
-
-        self.assertEqual(RuntimeConfig().consumer_dispatch, "round_robin")
-        self.assertFalse(TrainingConfig().dflash_fused_plain_head)
-        self.assertIsNone(TrainingConfig().ddp_bucket_cap_mb)
-        self.assertEqual(
-            RuntimeConfig(consumer_dispatch="cost_balanced").consumer_dispatch,
-            "cost_balanced",
-        )
-        self.assertEqual(TrainingConfig(ddp_bucket_cap_mb=128).ddp_bucket_cap_mb, 128)
-        with self.assertRaises(ValidationError):
-            RuntimeConfig(consumer_dispatch="random")
-        with self.assertRaises(ValidationError):
-            TrainingConfig(ddp_bucket_cap_mb=0)
-
-
 ONLINE_DEPLOYMENT = {
     "mode": "disaggregated",
     "disaggregated": {
@@ -110,6 +76,14 @@ def _write(payload: dict, suffix: str) -> str:
 
 
 class ConfigSchemaTest(unittest.TestCase):
+    def test_ddp_bucket_limit_is_optional_and_positive(self):
+        from specforge.config.schema import TrainingConfig
+
+        self.assertIsNone(TrainingConfig().ddp_bucket_cap_mb)
+        self.assertEqual(TrainingConfig(ddp_bucket_cap_mb=128).ddp_bucket_cap_mb, 128)
+        with self.assertRaises(ValidationError):
+            TrainingConfig(ddp_bucket_cap_mb=0)
+
     def test_liger_kernel_flag_is_typed_and_defaults_off(self):
         default = Config.model_validate(copy.deepcopy(MINIMAL))
         self.assertFalse(default.model.use_liger_kernel)
