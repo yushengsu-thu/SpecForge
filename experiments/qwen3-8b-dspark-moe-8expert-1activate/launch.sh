@@ -10,7 +10,7 @@ RUN=${RUN:-qwen3-8b-dspark-moe-8expert-1activate-dense-same}
 RECIPE=examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-8expert-1activate-dense-same-12ep.yaml
 DATA=${DATA:-/scratch/data/perfectblend/perfectblend_train_regen_temperature0_no_think.jsonl}
 TARGET=${TARGET:-/scratch/models/Qwen3-8B}
-CACHE=${CACHE:-/scratch/cache/qwen3-8b-dspark-perfectblend-8192}
+CACHE=${CACHE:-/scratch/cache/qwen3-8b-dspark-perfectblend-8192-pr942}  # new dir: PR #942 drops the template system prompt
 OUT=${OUT:-/scratch/outputs/$RUN}
 EXTRA=("$@")
 

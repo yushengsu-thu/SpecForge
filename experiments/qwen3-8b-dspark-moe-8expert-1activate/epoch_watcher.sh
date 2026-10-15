@@ -18,7 +18,7 @@ HF_REPO=${HF_REPO:-yushengsu/qwen3-8b-dspark-moe-8expert-1activate}
 EPOCH_STEPS=${EPOCH_STEPS:-10764}   # checkpoint step of epoch 1; epoch k <-> step k*EPOCH_STEPS
 NUM_EPOCHS=${NUM_EPOCHS:-12}
 TARGET=${TARGET:-/scratch/models/Qwen3-8B}
-DRAFT_CONFIG=configs/qwen3-8b-dspark-moe-8x1536-top1-noconf-b16.json
+DRAFT_CONFIG=configs/qwen3-8b-dspark-moe-8x1536-top1-causal-noconf-b16.json
 STOP=${STOP:-$OUT/watcher.stop}
 LOG=${LOG:-/scratch/logs/$RUN.watcher.log}
 GIT_NAME=${GIT_NAME:-Yusheng Su}; GIT_EMAIL=${GIT_EMAIL:-yushengsu.thu@gmail.com}
