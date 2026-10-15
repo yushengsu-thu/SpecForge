@@ -61,7 +61,7 @@ for ds in ["gsm8k", "mt-bench"]:
         print("| %s | %s |" % (PRETTY.get(label, label), " | ".join(cells)))
 
 print()
-print("### Speed gate at a pinned acceptance length of 5.0 (SGLANG_SIMULATE_ACC_LEN, sglang.bench_serving, random 512 input / 512 output tokens, one server at a time on one H200); cell = output tokens/s (mean TPOT)")
+print("### Speed gate at a pinned acceptance length of 5.0 (SGLANG_SIMULATE_ACC_LEN, sglang.bench_serving, random 512 input / 512 output tokens, one server at a time on one H200; at this Mamba cache size the server caps running requests at 9, so the c=32 column is 32 offered / 9 running for every drafter); cell = output tokens/s (mean TPOT)")
 print()
 print("| drafter | concurrency 1 | concurrency 8 | concurrency 32 |")
 print("|---|---|---|---|")
