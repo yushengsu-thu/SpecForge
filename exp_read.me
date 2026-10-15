@@ -1,6 +1,6 @@
 # Qwen3-8B DSpark MoE drafter: 8 experts, top-1, dense-same hyperparameters
 
-Branch `exp/qwen3-8b-dspark-moe-8expert-1activate-dense-same` (base `spark-Qwen3-8B @ 5b806190`). Recipe `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-8expert-1activate-dense-same-12ep.yaml`.  
+Branch `exp/qwen3-8b-dspark-moe-8expert-1activate-dense-same` (base `spark-Qwen3-8B @ 7cd9696d, includes the NO_SHARD MoE aux-loss fix c55cdd10`). Recipe `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-8expert-1activate-dense-same-12ep.yaml`.  
 Checkpoints: https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate (private; one folder `<k>ep/` per epoch, HF layout + tokenizer).  
 W&B: project `specforge-qwen3-8b-dspark`, run `qwen3-8b-dspark-moe-8expert-1activate-dense-same` (one run for all 12 epochs, so the curves are continuous).  
 Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (training/launch.yaml, step 39,000 checkpoint).
@@ -71,4 +71,4 @@ Not launched yet.
 - *wall-clock* is the time between consecutive epoch checkpoints (epoch 1: since launch); it includes the dataset cache build for epoch 1.
 - Exports are `specforge export --to hf` of the epoch checkpoint with the frozen Qwen3-8B embedding, plus the Qwen3-8B tokenizer; the raw training checkpoints (optimizer state included) stay on the box under `/scratch/ckpt-keep/`.
 
-_Generated 2026-10-15 13:15Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
+_Generated 2026-10-15 13:24Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._

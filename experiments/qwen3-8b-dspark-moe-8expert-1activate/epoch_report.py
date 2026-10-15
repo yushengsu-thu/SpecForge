@@ -20,7 +20,7 @@ import time
 STEP_RE = re.compile(r"step (\d+): (\{.*\})")
 LAUNCH_RE = re.compile(r"^=== (\S+) launch (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)")
 BRANCH = "exp/qwen3-8b-dspark-moe-8expert-1activate-dense-same"
-BASE = "spark-Qwen3-8B @ 5b806190"
+BASE = "spark-Qwen3-8B @ 7cd9696d, includes the NO_SHARD MoE aux-loss fix c55cdd10"
 RECIPE = ("examples/configs/online/disaggregated/managed-local/"
           "qwen3-8b-dspark-moe-8expert-1activate-dense-same-12ep.yaml")
 WANDB = ("specforge-qwen3-8b-dspark", "qwen3-8b-dspark-moe-8expert-1activate-dense-same")
