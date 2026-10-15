@@ -3,15 +3,18 @@
 # with the draft MLP hidden dim cut to 1/8 (intermediate_size 12288 -> 1536). Residual hidden
 # stays 4096 (= target hidden, required by the shared projector / target embed_tokens / target
 # lm_head), attention stays GQA 32/8 x 128, 5 layers, block 16, no confidence head:
-# ~0.47B parameters vs ~1.05B for the dense arm. Everything else (corpus, template, GPU
-# layout, global batch 132, lr schedule, DSpark loss) is identical to the dense arm so the
-# curves are directly comparable. Trained for 12 epochs = 129,173 optimizer steps
-# ((1,420,909 x 12) // 132); one checkpoint every 10,764 steps (= one epoch to within 6 steps),
-# all retained, so epoch k is the <run_id>-step{10764*k} checkpoint.
+# ~0.47B parameters vs ~1.05B for the dense arm. Corpus, template, lr schedule and DSpark loss
+# are identical to the dense arm. GPU layout differs: the trainers are the bottleneck for this
+# small drafter (the capture servers idle in backpressure), so ONE TP1 capture server (GPU 0)
+# feeds SEVEN DDP trainer ranks (GPUs 1-7); batch_size 1 x accumulation 19 x 7 ranks = global
+# batch 133 (dense arm: 132). Trained for 12 epochs = 128,201 optimizer steps
+# ((1,420,903 x 12) // 133). A checkpoint every 1,187 steps (9 per epoch; resume points for
+# swapping in kernel optimizations), all retained: epoch k is the <run_id>-step{10683*k}
+# checkpoint (one epoch to within 6 steps).
 #
 # Launch (8x H200, see exp_read.me at the repo root for the run log):
 #   WANDB_API_KEY=... WANDB_RUN_ID=dense-1-8 WANDB_RESUME=allow \
-#   specforge train -c examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml \
+#   specforge train -c examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-1server-dp7-disaggregated.yaml \
 #     model.target_model_path=/path/to/Qwen3-8B data.train_data_path=/path/to/perfectblend_train_regen_temperature0_no_think.jsonl
 # WANDB_RUN_ID + WANDB_RESUME=allow keep every (re)launch on one W&B line.
 model:
@@ -26,8 +29,8 @@ model:
   sglang_mem_fraction_static: 0.85
   sglang_disable_radix_cache: true
   sglang_context_length: 8208
-  sglang_max_running_requests: 4
-  sglang_max_total_tokens: 65536
+  sglang_max_running_requests: 8
+  sglang_max_total_tokens: 131072
 data:
   train_data_path: ./cache/dataset/perfectblend_train_regen_temperature0_no_think.jsonl
   max_length: 8192
@@ -41,8 +44,8 @@ training:
   total_steps: null
   max_steps: null
   tp_size: 1
-  batch_size: 2
-  accumulation_steps: 11
+  batch_size: 1
+  accumulation_steps: 19
   fsdp_sharding: NO_SHARD
   optimizer_cpu_offload: false
   learning_rate: 0.0006
@@ -56,7 +59,7 @@ training:
   dspark_ce_loss_alpha: 0.1
   dspark_l1_loss_alpha: 0.9
   dspark_confidence_head_alpha: 0.0
-  save_interval: 10764
+  save_interval: 1187
   max_checkpoints: 0
   log_interval: 10
   dist_timeout: 30
@@ -66,30 +69,31 @@ tracking:
   report_to: wandb
   wandb_project: specforge-qwen3-8b-dspark-dense
   wandb_name: dense-1-8
-  wandb_dir: outputs/qwen3-8b-dspark-dense-1-8-perfectblend-2server-dp6/wandb
+  wandb_dir: outputs/qwen3-8b-dspark-dense-1-8-perfectblend-1server-dp7/wandb
 runtime:
   producer_lease: 8
   producer_concurrency: 8
-  # 1.5 optimizer quanta (132 samples) in flight; Qwen3-8B features are ~5 x 4096 x
+  # 2 optimizer quanta (133 samples) in flight; Qwen3-8B features are ~5 x 4096 x
   # tokens x 2 bytes per sample, so 200 GiB resident is ~2,000 full-length samples.
-  in_flight_high_watermark: 264
-  in_flight_low_watermark: 132
+  in_flight_high_watermark: 266
+  in_flight_low_watermark: 133
   resident_high_watermark_bytes: 214748364800
   resident_low_watermark_bytes: 128849018880
   feature_store_max_resident_bytes: 274877906944
-run_id: qwen3-8b-dspark-dense-1-8-perfectblend-2server-dp6
-output_dir: outputs/qwen3-8b-dspark-dense-1-8-perfectblend-2server-dp6
+run_id: qwen3-8b-dspark-dense-1-8-perfectblend-1server-dp7
+output_dir: outputs/qwen3-8b-dspark-dense-1-8-perfectblend-1server-dp7
 deployment:
   mode: disaggregated
   trainer:
     nnodes: 1
-    nproc_per_node: 6
+    nproc_per_node: 7
   disaggregated:
-    control_dir: outputs/qwen3-8b-dspark-dense-1-8-perfectblend-2server-dp6/control
+    control_dir: outputs/qwen3-8b-dspark-dense-1-8-perfectblend-1server-dp7/control
     backend: mooncake
     client_buffer_size: 1073741824
     managed_local:
       trainer_cuda_visible_devices:
+        - "1"
         - "2"
         - "3"
         - "4"
@@ -105,8 +109,4 @@ deployment:
         - port: 30000
           cuda_visible_devices:
             - "0"
-          tp_size: 1
-        - port: 30001
-          cuda_visible_devices:
-            - "1"
           tp_size: 1
