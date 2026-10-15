@@ -118,3 +118,32 @@ overrides for the one-epoch run; `specforge export` materialises the
 python -m pytest -q tests/test_modeling/test_moe_qwen3_8b.py tests/test_modeling/test_moe_qwen3_5.py \
   tests/test_runtime/test_launch_plan.py tests/test_config/test_recipe_readme.py
 ```
+
+## Smoke results (2026-10-15, one 8x H200 node, SGLang 0.5.18 with the capture patch)
+
+Three optimizer steps on the 2,000-row slice with the overrides above
+(`max_steps 3` leaves no warmup, so the learning rate starts at its peak and
+the step-2 loss spike is expected); both arms exit 0, save `*-step3` and
+export to HF format.
+
+| Arm | step 1 loss (CE / L1) | step 2 | step 3 | trainer peak memory / rank | optimizer step (steps 2-3) | export |
+| --- | --- | --- | --- | --- | --- | --- |
+| dense, block 16, no confidence head | acc 0.000 | acc 0.037 | acc 0.014 | ~40 GB | ~5 s | 2.25 GB, `config.json` block 16 |
+| MoE 8 x 4096 top-1, block 16, no confidence head | 3.23 (14.27 / 2.00) | 7.10 (53.5 / 1.93) | 3.34 (15.4 / 1.97) | 78 GB | 6.5-7.9 s | 5.02 GB, 8 experts, top-1, `norm_topk_prob` false |
+
+MoE routing on the MoE arm: `moe/aux_loss` 0.0010 -> 0.0015,
+`moe/experts_unused_frac` 0.000 -> 0.025, `moe/load_frac_max` 0.29 -> 0.43
+over the three steps (sample router centering active).
+
+One finding from these smokes: with `fsdp_sharding: NO_SHARD` the backend
+wraps the training model in DDP, which does not forward attribute access the
+way FSDP does, so the MoE helpers that read `wrapper.draft_model` found
+nothing and NO_SHARD MoE runs trained without the balance loss and logged no
+`moe/*` metrics. `_wrapped_draft_model` in
+`specforge/training/strategies/base.py` now resolves the draft through
+`.module`; `tests/test_modeling/test_moe_qwen3_8b.py` covers it.
+
+Throughput note: at global batch 132 the MoE arm's steady optimizer step is
+about 7 s on six H200 ranks, i.e. roughly 21 hours per epoch of the full
+corpus (10,765 steps); the dense arm is faster. The capture servers were not
+the bottleneck after warm-up (`perf/data_wait_time_s` < 1 s).

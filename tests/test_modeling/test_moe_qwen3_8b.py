@@ -27,6 +27,7 @@ from specforge.modeling.draft.moe import (
     to_checkpoint_state_dict,
 )
 from specforge.modeling.draft.moe.aux_loss import AuxLossController
+from specforge.training.strategies.base import _moe_metrics, _with_moe_aux_loss
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_PATH = REPO_ROOT / "configs" / "qwen3-8b-dspark-moe-noconf-b16.json"
@@ -301,6 +302,51 @@ class TestDSparkIntegration(unittest.TestCase):
         # a second step is a plain forward (aux-loss policy keeps no deferred state)
         self._forward(model)
         self.assertIsNotNone(collect_moe_aux_loss(model))
+
+
+class TestMoEHooksThroughParallelWrappers(unittest.TestCase):
+    """The NO_SHARD backend wraps the training model in DDP, which (unlike
+    FSDP) does not forward attribute access to ``.module``; the MoE aux loss
+    and metrics must still find the draft behind it."""
+
+    class _TrainingModel(nn.Module):
+        def __init__(self, draft):
+            super().__init__()
+            self.draft_model = draft
+
+    class _DDPLike(nn.Module):
+        def __init__(self, module):
+            super().__init__()
+            self.module = module
+
+    def _forward_draft(self):
+        torch.manual_seed(3)
+        draft = DSparkDraftModel(_draft_config()).train()
+        hidden = draft.config.hidden_size
+        block = draft.config.block_size
+        anchors = 4
+        draft(
+            position_ids=torch.arange(anchors + block).expand(2, -1),
+            noise_embedding=torch.randn(2, block, hidden),
+            target_hidden=torch.randn(2, anchors, draft.fc.in_features),
+            attention_mask=torch.ones(2, 1, block, anchors + block, dtype=torch.bool),
+        )
+        return draft
+
+    def test_aux_loss_and_metrics_reach_through_a_ddp_style_wrapper(self):
+        draft = self._forward_draft()
+        wrapped = self._DDPLike(self._TrainingModel(draft))
+        self.assertFalse(hasattr(wrapped, "draft_model"))
+        loss = torch.zeros((), dtype=torch.float32)
+        with_aux = _with_moe_aux_loss(wrapped, loss)
+        self.assertGreater(float(with_aux), 0.0)
+        metrics = _moe_metrics(wrapped)
+        self.assertIn("moe/aux_loss", metrics)
+        self.assertIn("moe/load_frac_max", metrics)
+        # an unwrapped training model still works, and a dense wrapper is a no-op
+        self.assertGreater(float(_with_moe_aux_loss(self._TrainingModel(draft), loss)), 0.0)
+        self.assertEqual(_moe_metrics(self._DDPLike(nn.Linear(2, 2))), {})
+        self.assertIs(_with_moe_aux_loss(self._DDPLike(nn.Linear(2, 2)), loss), loss)
 
 
 if __name__ == "__main__":

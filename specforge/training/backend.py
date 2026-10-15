@@ -361,7 +361,12 @@ class FSDPTrainingBackend(TrainingBackend):
         # holds the full unsharded gradient on every rank between boundaries
         # (41.6 GB for the 20B MoE drafter). Costs one reduce-scatter per micro-step.
         sharded_accum = os.environ.get("SPECFORGE_FSDP_SHARDED_GRAD_ACCUM", "0") == "1"
-        if is_boundary or not self._wrapped or sharded_accum or self._wrapper_kind == "ddp":
+        if (
+            is_boundary
+            or not self._wrapped
+            or sharded_accum
+            or self._wrapper_kind == "ddp"
+        ):
             loss.backward()
         else:
             with self.module.no_sync():

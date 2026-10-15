@@ -56,11 +56,26 @@ class StepContext:
     collect_detailed_metrics: bool = True
 
 
+def _wrapped_draft_model(model_wrapper: nn.Module) -> Optional[nn.Module]:
+    """The ``draft_model`` behind a training model, whatever wraps it.
+
+    FSDP forwards attribute access to the wrapped module, but DDP (the
+    ``NO_SHARD`` backend) does not: its ``draft_model`` lives on
+    ``.module``. Returns ``None`` for training models without a draft.
+    """
+    draft_model = getattr(model_wrapper, "draft_model", None)
+    if draft_model is None:
+        inner = getattr(model_wrapper, "module", None)
+        if inner is not None:
+            draft_model = getattr(inner, "draft_model", None)
+    return draft_model
+
+
 def _moe_metrics(model_wrapper: nn.Module) -> Dict[str, Any]:
     """``moe/...`` load diagnostics of the wrapped draft; ``{}`` for dense drafts."""
     from specforge.modeling.draft.moe import collect_moe_metrics
 
-    draft_model = getattr(model_wrapper, "draft_model", None)
+    draft_model = _wrapped_draft_model(model_wrapper)
     if draft_model is None:
         return {}
     return collect_moe_metrics(draft_model)
@@ -70,7 +85,7 @@ def _with_moe_aux_loss(model_wrapper: nn.Module, loss: torch.Tensor) -> torch.Te
     """Add the MoE balance policies' auxiliary loss (if any) for this forward."""
     from specforge.modeling.draft.moe import collect_moe_aux_loss
 
-    draft_model = getattr(model_wrapper, "draft_model", None)
+    draft_model = _wrapped_draft_model(model_wrapper)
     if draft_model is None:
         return loss
     aux = collect_moe_aux_loss(draft_model)
