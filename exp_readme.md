@@ -13,7 +13,7 @@ instead of 6. One continuous run: one W&B curve, one checkpoint per epoch, every
 | W&B | entity `eigent_radixark_training`, project `qwen3-8b-dspark`, run `dense-same` (fixed run id, `WANDB_RESUME=allow`) |
 | HF | `yushengsu/dense-same`, folders `1ep/` ... `12ep/` (servable HF export + tokenizer), README mirrors the table below |
 | hardware | devbox `moe-16exp-1024dim` (h200-sci-k8s-1): rank 0 = 8x H200 capture servers, rank 1 = 8x H200 trainer |
-| started | 2026-10-15 (UTC) |
+| started | 2026-10-15 18:52 UTC (causal run; the 13:23 UTC bidirectional run was abandoned at step 4,050) |
 
 ## Data
 
@@ -71,7 +71,7 @@ Not used: `dspark_flatten_projection`, `dspark_cache_projection`, `ddp_bucket_ca
 ## Run log
 
 - 2026-10-15 13:23 UTC: first launch (bidirectional draft block, template with the implicit "You are a helpful assistant." system prompt).
-- 2026-10-15: PR #942 stack #957-#960 merged; config switched to `is_causal: true` and the empty system prompt; run restarted from scratch (see the next entry).
+- 2026-10-15 18:52 UTC: first run stopped at step 4,050 (train/acc 0.624) and its outputs archived as `dense-same-bidir-abandoned`; PR #942 layers #957-#960 merged (commit f2650d2), config switched to `configs/qwen3-8b-dspark-causal-noconf-b16.json` (`is_causal: true`) and the empty system prompt (new cache dir `qwen3-8b-dspark-perfectblend-nosys-8192`); run restarted from scratch under the same W&B run id (the old W&B run was deleted) and the same output dir.
 
 ## Results per epoch
 
