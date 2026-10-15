@@ -7,7 +7,7 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 
 ## Status
 
-**running** - optimizer step 0 / 129,173 (0.0%), epoch 1/12; launched 2026-10-15 13:41Z; 0.0 h elapsed. total_steps from schedule payload, num_prompts 1,420,903.
+**running** - optimizer step 0 / 129,168 (0.0%), epoch 1/12; launched 2026-10-15 14:30Z; 0.0 h elapsed. total_steps from estimate (num_epochs x epoch_steps).
 
 ## Setup
 
@@ -40,8 +40,8 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 | item | setting |
 |---|---|
 | strategy | dspark, online disaggregated capture (Mooncake TCP) |
-| epochs / optimizer steps | 12 in one run / 129,173 (schedule payload) |
-| global batch | 132 = batch_size 2 x accumulation_steps 11 x 6 DDP ranks |
+| epochs / optimizer steps | 12 in one run / 129,168 (estimate (num_epochs x epoch_steps)) |
+| global batch | 132 = batch_size 2 x accumulation_steps 11 x 6 DDP ranks (the dense-1/8 arm uses 133 = 1 x 19 x 7) |
 | optimizer | AdamW, lr 6e-4, cosine over the whole run, warmup 4%, FP32 master params |
 | max_grad_norm | 1.0 |
 | num_anchors / loss_decay_gamma / objective_chunk_blocks | 512 / 7.0 / 128 |
@@ -53,7 +53,7 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 
 ### Deviations from the dense run
 
-- Global batch 132 instead of 128: 128 does not divide over 6 trainer ranks, and 132 is this branch's standard for the 2-server + 6-rank layout.
+- Global batch 132 instead of 128: 128 does not divide over 6 trainer ranks; 2 x 11 x 6 = 132 is the branch's standard for the 2-server + 6-rank layout (the dense-1/8 arm runs 1 x 19 x 7 = 133). A 1-server + 7-rank layout was profiled and rejected: the single capture server ran stop-and-go against the producer window and did not beat two servers.
 - 12 epochs in one run with one cosine schedule (the dense run planned 6 epochs and stopped at step 40,960).
 - Draft attention stays bidirectional inside the block: `is_causal`, `dspark_flatten_projection`, `dspark_cache_projection` and `ddp_bucket_cap_mb` (unmerged PR #942) are not used on this branch.
 - The dense FFN (12288) is replaced by 8 x 1536 top-1 experts (no shared expert); every other draft-config field is the dense skeleton.
@@ -67,9 +67,9 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 ## How the numbers are computed
 
 - Metrics come from the trainer console log (`step N: {...}`, one line every `log_interval` = 10 optimizer steps, rank-deduplicated); the same values are on W&B under `train/*`.
-- Epoch k covers optimizer steps ((k-1) x 10,764, k x 10,764]; the last epoch runs to total_steps. The producer keeps 1,420,903 of the 1,420,909 rows (6 have fewer than 2 trainable tokens), so one epoch is 1,420,903 / 132 = 10,764.42 optimizer steps and total_steps = 129,173; the k x 10,764 windows are within 5 steps of the true epoch boundaries.
+- Epoch k covers optimizer steps ((k-1) x 10,764, k x 10,764]; the last epoch runs to total_steps. The producer keeps 1,420,903 of the 1,420,909 rows (6 have fewer than 2 trainable tokens), so one epoch is 1,420,903 / 132 = 10,764.42 optimizer steps and total_steps = 129,173; the k x 10,764 windows end at most 5 steps before the true epoch boundaries.
 - *epoch mean* averages all logged points in the window; *end of epoch* averages the last 20 logged points (200 optimizer steps, about 26k samples).
 - *wall-clock* is the time between consecutive epoch checkpoints (epoch 1: since launch); it includes the dataset cache build for epoch 1.
 - Exports are `specforge export --to hf` of the epoch checkpoint with the frozen Qwen3-8B embedding, plus the Qwen3-8B tokenizer; the raw training checkpoints (optimizer state included) stay on the box under `/scratch/ckpt-keep/`.
 
-_Generated 2026-10-15 13:44Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
+_Generated 2026-10-15 14:30Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
