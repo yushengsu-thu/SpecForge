@@ -26,15 +26,15 @@ for ep in $(seq "$FIRST" "$LAST"); do
     until complete "$ck" "$step"; do sleep 120; done; sleep 60
   fi
   log "epoch $ep: exporting -> $dst"; rm -rf "$dst"; mkdir -p "$EXPORTS"
-  specforge export --to hf --checkpoint "$ck" --draft-config "$DRAFT_CONFIG" --output-dir "$dst" --embedding-source "$TARGET" > "$EXPORTS/export-ep$ep.log" 2>&1 || { log "epoch $ep: EXPORT_FAILED"; tail -5 "$EXPORTS/export-ep$ep.log"; continue; }
+  python3 -m specforge.cli export --to hf --checkpoint "$ck" --draft-config "$DRAFT_CONFIG" --output-dir "$dst" --embedding-source "$TARGET" > "$EXPORTS/export-ep$ep.log" 2>&1 || { log "epoch $ep: EXPORT_FAILED"; tail -5 "$EXPORTS/export-ep$ep.log"; continue; }
   python3 scripts/gates/normalize_dflash_export.py --config "$dst/config.json" --block-size 16 2>&1 | tail -1
   python3 -c "from transformers import AutoTokenizer; AutoTokenizer.from_pretrained('$TARGET').save_pretrained('$dst')" 2>&1 | tail -1
   du -sh "$dst" | tail -1
   for try in 1 2 3 4 5 6; do
-    if hf upload "$REPO" "$dst" "${ep}ep" --private --repo-type model --commit-message "epoch $ep export (step $step)" > "$EXPORTS/upload-ep$ep.log" 2>&1; then
+    if python3 -m huggingface_hub.cli.hf upload "$REPO" "$dst" "${ep}ep" --private --repo-type model --commit-message "epoch $ep export (step $step)" > "$EXPORTS/upload-ep$ep.log" 2>&1; then
       url="https://huggingface.co/$REPO/tree/main/${ep}ep"; log "epoch $ep: EPOCH_EXPORT_DONE $url"
       python3 $TOOLS record --results "$RESULTS" --launch-log "$OUT/launch.log" --epoch "$ep" --step "$step" --steps-per-epoch "$STEPS_PER_EPOCH" --hf-url "$url" 2>&1 | tail -1
-      python3 $TOOLS hf-readme --results "$RESULTS" --out "$EXPORTS/README.md" && hf upload "$REPO" "$EXPORTS/README.md" README.md --repo-type model --commit-message "README: epoch $ep" > /dev/null 2>&1 && log "epoch $ep: HF README updated"
+      python3 $TOOLS hf-readme --results "$RESULTS" --out "$EXPORTS/README.md" && python3 -m huggingface_hub.cli.hf upload "$REPO" "$EXPORTS/README.md" README.md --repo-type model --commit-message "README: epoch $ep" > /dev/null 2>&1 && log "epoch $ep: HF README updated"
       break
     fi
     log "epoch $ep: upload attempt $try failed"; sleep 600
