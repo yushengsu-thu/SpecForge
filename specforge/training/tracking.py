@@ -11,6 +11,7 @@ trackers to that seam without putting tracker-specific branches in the trainer.
 
 from __future__ import annotations
 
+import os
 import numbers
 from typing import Any, Callable, Dict, Mapping, Optional
 
@@ -83,6 +84,12 @@ class TrackerLogger:
         self.tracker = tracker
         self.console_logger = console_logger
         self._closed = False
+        # SPECFORGE_TRACKING_STEP_OFFSET: added to the step sent to the tracker
+        # (not to the console log or checkpoints), so a warm-started
+        # continuation that resumes the same tracker run (e.g. WANDB_RUN_ID +
+        # WANDB_RESUME=allow) extends the original curve instead of starting
+        # again at step 0, which W&B would drop as non-monotonic.
+        self.step_offset = int(os.environ.get("SPECFORGE_TRACKING_STEP_OFFSET", "0") or 0)
 
     def __call__(self, metrics: Mapping[str, Any], step: int) -> None:
         if self._closed:
@@ -90,10 +97,13 @@ class TrackerLogger:
         values = training_metric_names(scalar_metrics(metrics))
         # Use the controller's optimizer step as an explicit join key for
         # checkpoint/eval comparisons, independent of a tracker's row counter.
-        values["train/optimizer_step"] = float(step)
+        tracked_step = step + self.step_offset
+        values["train/optimizer_step"] = float(tracked_step)
+        if self.step_offset:
+            values["train/segment_optimizer_step"] = float(step)
         if self.console_logger is not None:
             self.console_logger(values, step)
-        self.tracker.log(values, step=step)
+        self.tracker.log(values, step=tracked_step)
 
     def close(self) -> None:
         if not self._closed:
