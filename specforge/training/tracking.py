@@ -11,6 +11,8 @@ trackers to that seam without putting tracker-specific branches in the trainer.
 
 from __future__ import annotations
 
+import os
+
 import numbers
 from typing import Any, Callable, Dict, Mapping, Optional
 
@@ -66,6 +68,24 @@ def training_metric_names(metrics: Mapping[str, float]) -> Dict[str, float]:
     }
 
 
+def _tracker_step_offset() -> int:
+    """Read ``SPECFORGE_TRACKER_STEP_OFFSET`` (a non-negative int, default 0)."""
+    raw = os.environ.get("SPECFORGE_TRACKER_STEP_OFFSET", "").strip()
+    if not raw:
+        return 0
+    try:
+        offset = int(raw)
+    except ValueError as exc:
+        raise ValueError(
+            f"SPECFORGE_TRACKER_STEP_OFFSET must be an integer, got {raw!r}"
+        ) from exc
+    if offset < 0:
+        raise ValueError(
+            f"SPECFORGE_TRACKER_STEP_OFFSET must be non-negative, got {offset}"
+        )
+    return offset
+
+
 class TrackerLogger:
     """Callable tracker adapter with an idempotent lifecycle.
 
@@ -83,6 +103,13 @@ class TrackerLogger:
         self.tracker = tracker
         self.console_logger = console_logger
         self._closed = False
+        # A warm-started continuation run (model.draft_checkpoint_path) restarts
+        # its optimizer step at 0. SPECFORGE_TRACKER_STEP_OFFSET shifts the step
+        # reported to the experiment tracker so the continuation extends the
+        # previous run's curve (same tracker run id) instead of being dropped as
+        # out-of-order steps. Checkpoint names and the console log keep the
+        # run-local step.
+        self.step_offset = _tracker_step_offset()
 
     def __call__(self, metrics: Mapping[str, Any], step: int) -> None:
         if self._closed:
@@ -90,10 +117,13 @@ class TrackerLogger:
         values = training_metric_names(scalar_metrics(metrics))
         # Use the controller's optimizer step as an explicit join key for
         # checkpoint/eval comparisons, independent of a tracker's row counter.
-        values["train/optimizer_step"] = float(step)
+        tracker_step = step + self.step_offset
+        values["train/optimizer_step"] = float(tracker_step)
+        if self.step_offset:
+            values["train/run_optimizer_step"] = float(step)
         if self.console_logger is not None:
             self.console_logger(values, step)
-        self.tracker.log(values, step=step)
+        self.tracker.log(values, step=tracker_step)
 
     def close(self) -> None:
         if not self._closed:
