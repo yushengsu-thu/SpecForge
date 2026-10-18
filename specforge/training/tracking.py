@@ -11,6 +11,8 @@ trackers to that seam without putting tracker-specific branches in the trainer.
 
 from __future__ import annotations
 
+import os
+
 import numbers
 from typing import Any, Callable, Dict, Mapping, Optional
 
@@ -87,6 +89,10 @@ class TrackerLogger:
     def __call__(self, metrics: Mapping[str, Any], step: int) -> None:
         if self._closed:
             raise RuntimeError("cannot log after TrackerLogger.close()")
+        # A warm-started continuation can append to an earlier run's curves
+        # (same W&B run id, WANDB_RESUME=allow) by shifting its optimizer steps
+        # past the earlier run's last step.
+        step = int(step) + int(os.environ.get("SPECFORGE_LOG_STEP_OFFSET", "0") or 0)
         values = training_metric_names(scalar_metrics(metrics))
         # Use the controller's optimizer step as an explicit join key for
         # checkpoint/eval comparisons, independent of a tracker's row counter.

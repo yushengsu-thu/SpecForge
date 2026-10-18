@@ -16,7 +16,10 @@ KEEP=${KEEP:-/scratch/ckpt-keep/$RUN}
 EXPORTS=${EXPORTS:-/scratch/exports/$RUN}
 HF_REPO=${HF_REPO:-yushengsu/qwen3-8b-dspark-moe-8expert-1activate}
 EPOCH_STEPS=${EPOCH_STEPS:-10764}   # checkpoint step of epoch 1; epoch k <-> step k*EPOCH_STEPS
-NUM_EPOCHS=${NUM_EPOCHS:-12}
+NUM_EPOCHS=${NUM_EPOCHS:-12}       # epochs in THIS run
+EPOCH_OFFSET=${EPOCH_OFFSET:-0}    # a continuation run labels its epoch k as k+EPOCH_OFFSET (13ep, ...)
+REPORT_ARGS=${REPORT_ARGS:-}       # extra epoch_report.py arguments (continuation segment)
+REPORT_RUN=${REPORT_RUN:-}; REPORT_OUT=${REPORT_OUT:-}  # first run of the experiment (the report is always built from it)
 TARGET=${TARGET:-/scratch/models/Qwen3-8B}
 DRAFT_CONFIG=configs/qwen3-8b-dspark-moe-8x1536-top1-2layer-causal-noconf-b16.json
 STOP=${STOP:-$OUT/watcher.stop}
@@ -30,8 +33,8 @@ mkdir -p "$(dirname "$LOG")" "$KEEP" "$EXPORTS"
 log(){ echo "[$(date -u +%FT%TZ)] $*" >> "$LOG"; }
 complete(){ [ -f "$1/training_state.pt" ] && ! ls "$1" 2>/dev/null | grep -q "\.tmp$"; }
 
-process_epoch(){  # $1 = epoch number; returns 1 when the epoch is not ready yet or a step failed
-  local k=$1 step=$(( $1 * EPOCH_STEPS )) ck keep ex
+process_epoch(){  # $1 = epoch number within this run; returns 1 when not ready yet or a step failed
+  local k=$(( $1 + EPOCH_OFFSET )) step=$(( $1 * EPOCH_STEPS )) ck keep ex
   ck=$OUT/$RUN-step$step; keep=$KEEP/$RUN-step$step; ex=$EXPORTS/${k}ep
   if ! complete "$keep"; then
     complete "$ck" || return 1
@@ -58,8 +61,8 @@ process_epoch(){  # $1 = epoch number; returns 1 when the epoch is not ready yet
 }
 
 report(){  # regenerate exp_read.me, commit when it changed, mirror it as the HF README
-  (cd "$REPO" && python3 "$REPORT" --run "$RUN" --out "$OUT" --exports "$EXPORTS" --epoch-steps "$EPOCH_STEPS" \
-     --num-epochs "$NUM_EPOCHS" --hf-repo "$HF_REPO" --write exp_read.me) >> "$LOG" 2>&1 || { log "REPORT FAILED"; return 1; }
+  (cd "$REPO" && python3 "$REPORT" --run "${REPORT_RUN:-$RUN}" --out "${REPORT_OUT:-$OUT}" --exports "$EXPORTS" --epoch-steps "$EPOCH_STEPS" \
+     --num-epochs "$(( NUM_EPOCHS + EPOCH_OFFSET ))" --hf-repo "$HF_REPO" $REPORT_ARGS --write exp_read.me) >> "$LOG" 2>&1 || { log "REPORT FAILED"; return 1; }
   (cd "$REPO" && if ! git diff --quiet -- exp_read.me; then
      git add exp_read.me && git -c user.name="$GIT_NAME" -c user.email="$GIT_EMAIL" commit -q -F - <<MSG && echo committed
 exp_read.me: results update ($1)
@@ -70,16 +73,16 @@ MSG
   hf upload "$HF_REPO" "$REPO/exp_read.me" README.md --commit-message "README: $1" >> "$LOG" 2>&1 || log "WARN README upload failed"
 }
 
-log "watcher started: run=$RUN epoch_steps=$EPOCH_STEPS epochs=$NUM_EPOCHS hf=$HF_REPO"
+log "watcher started: run=$RUN epoch_steps=$EPOCH_STEPS epochs=$NUM_EPOCHS offset=$EPOCH_OFFSET hf=$HF_REPO"
 first=1
 while true; do
   [ -f "$STOP" ] && { log "stop file seen, exiting"; exit 0; }
   changed=0; done_epochs=0
   for k in $(seq 1 "$NUM_EPOCHS"); do
-    if [ -f "$EXPORTS/${k}ep/.uploaded" ]; then done_epochs=$((done_epochs+1)); continue; fi
+    if [ -f "$EXPORTS/$(( k + EPOCH_OFFSET ))ep/.uploaded" ]; then done_epochs=$((done_epochs+1)); continue; fi
     if process_epoch "$k"; then changed=1; done_epochs=$((done_epochs+1)); else break; fi
   done
-  if [ "$changed" = 1 ]; then report "epoch $done_epochs"; elif [ "$first" = 1 ]; then report "launch"; fi
+  if [ "$changed" = 1 ]; then report "epoch $(( done_epochs + EPOCH_OFFSET ))"; elif [ "$first" = 1 ]; then report "launch"; fi
   first=0
   if [ "$done_epochs" -ge "$NUM_EPOCHS" ]; then log "all $NUM_EPOCHS epochs exported and uploaded; exiting"; exit 0; fi
   sleep 300
