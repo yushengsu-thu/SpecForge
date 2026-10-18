@@ -87,6 +87,23 @@ Also on this branch: the `--nccl-port` pin for managed-local capture servers
 (`specforge/launch_plan.py`), so two servers started in the same second cannot
 collide on the torch.distributed TCPStore port.
 
+## Continuation: epochs 13-18
+
+At the user's request the run continues to 18 epochs. `deployment.managed_local` cannot resume a run, and the
+12-epoch cosine schedule has decayed to 0, so epochs 13-18 are a separate launch on the same corpus and layout:
+
+| | |
+| --- | --- |
+| start | weights-only warm start from the epoch-12 checkpoint (`<run_id>-step129168`); AdamW state is reset |
+| LR schedule | 1% warmup to **2e-4** (1/3 of the original peak), cosine to 0 over the 6 epochs (64,586 steps) |
+| prompt order | `training.prompt_seed: 54` (the first 12 epochs used 42) |
+| run id / output | `qwen3-8b-dspark-dense-1-8-ep13-18`, checkpoint every 1,196 steps |
+| W&B | the same run (`dense-1-8-r8`, `WANDB_RESUME=allow`) with `SPECFORGE_TRACKING_STEP_OFFSET=129168`, so the curve continues at step 129,168 = 12 x 10,764 instead of restarting; `train/segment_optimizer_step` holds the continuation's own step |
+| launch | `launch_dense18.sh continue` (overrides on top of the recipe yaml); started automatically on the node once the 12-epoch run has finished cleanly |
+
+Epoch 12+k is the continuation's step 10764*k checkpoint, listed below at global step 129168 + 10764*k. Expect a small
+dip in train/acc right after epoch 12 while the LR warms up again.
+
 ## Results per epoch
 
 Training metrics are the values logged at (or just before) the epoch's checkpoint step (W&B `train/acc`,
@@ -107,7 +124,13 @@ D16/V8) are run on every epoch checkpoint after the 12 epochs finish.
 | 9 | 96876 | 0.6768 | 0.3870 | `epoch-09/` | | | | | | |
 | 10 | 107640 | | | `epoch-10/` | | | | | | |
 | 11 | 118404 | | | `epoch-11/` | | | | | | |
-| 12 | 129168 | | | `epoch-12/` | | | | | | |
+| 12 | 129168 | | | `epoch-12/` |
+| 13 | 139932 | | | `epoch-13/` |
+| 14 | 150696 | | | `epoch-14/` |
+| 15 | 161460 | | | `epoch-15/` |
+| 16 | 172224 | | | `epoch-16/` |
+| 17 | 182988 | | | `epoch-17/` |
+| 18 | 193752 | | | `epoch-18/` | | | | | | |
 
 Reference (published dense drafter, FFN 12288, jiapingW/Qwen3-8b-dspark-SpecForge step 39,000
 ~3.5 epochs, global batch 128): train/acc 0.71 / 0.75 / 0.78 at the end of epochs 1 / 2 / 3;
@@ -156,6 +179,7 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
 - epoch 7 done at 2026-10-17T23:37:28Z: step 75348, train/acc 0.6784, train/loss 0.2554, uploaded to HF epoch-07/
 - epoch 8 done at 2026-10-18T06:47:46Z: step 86112, train/acc 0.6868, train/loss 0.7436, uploaded to HF epoch-08/
 - epoch 9 done at 2026-10-18T14:08:04Z: step 96876, train/acc 0.6768, train/loss 0.3870, uploaded to HF epoch-09/
+- 2026-10-18 20:21 UTC: decided to continue to 18 epochs (see "Continuation: epochs 13-18"); `SPECFORGE_TRACKING_STEP_OFFSET` added to the tracker (3375bc93); a chain script on the node launches the continuation after epoch 12.
 
 - 2026-10-15 13:24 UTC: branch created, draft config + launch yaml added, corpus and Qwen3-8B
   downloaded to the node. 3-step smoke on a 2,000-row slice (`training.max_steps=3`, no warmup):
