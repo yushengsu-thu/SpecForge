@@ -1,0 +1,10 @@
+{
+  "average_acceptance_length": 4.160801984966935,
+  "backend": "sglang",
+  "dataset": "mt-bench",
+  "latency_seconds": 25.24951087892987,
+  "output_tokens": 64193,
+  "samples": 200,
+  "spec_verify_count": 19495,
+  "throughput_tokens_per_second": 2542.3462778270123
+}
