@@ -106,6 +106,26 @@ waiting until the 12-epoch run has finished cleanly):
 
 Expect a small dip in train/acc right after epoch 12 while the LR warms up again.
 
+## Acceptance-length benchmark (protocol of jiapingW/Qwen3-8b-dspark-SpecForge)
+
+Run on the capture node (rank 0) next to the capture servers, which are idle most of the time (training speed was
+checked to be unchanged): `scripts/launch/dense-same/bench_all.sh` / `bench_node.sh` / `bench_accept.py`.
+
+| | |
+| --- | --- |
+| requests per mode | 2400: GSM8K 1319, MATH500 500, HumanEval 164, MBPP (sanitized test) 257, MT-Bench 80 two-turn conversations (160 requests, turn 2 carries the model's own turn-1 answer) |
+| prompts | SpecForge benchmark formats, Qwen3 chat template, thinking off, no system prompt, max_new_tokens 2048 |
+| server | SGLang 0.5.18 (image `lmsysorg/sglang:v0.5.18-cu130` + spec-capture patch; jiapingW used 0.5.21 with his own adapter), DSPARK, bf16, TP1, flashinfer target attention, context 16384, max_running_requests 1, CUDA graphs and radix cache off, one server per GPU |
+| widths | D16/V16 = anchor + 15 candidates (`--speculative-dspark-block-size 15`), D16/V8 = anchor + 7 (`7`); with the causal draft block the first k candidates equal the first k of the 16-token block |
+| temperature 1 | top_p 1, top_k -1, `sampling_seed = 42 + uint32_le(SHA256(dataset:sample_id:turn)[:4])`; SGLang's own DSpark sampling verification (jiapingW used a process-local overlay), so t=1 numbers are comparable between checkpoints run here, less so to his published t=1 values |
+| metric | per request tau = completion_tokens / spec_verify_ct; request macro = mean over requests, micro = total tokens / total verify rounds |
+
+Checkpoints: jiapingW's published step-39000 drafter (also re-measured here to validate the harness) and our epoch-12 export.
+
+<!-- BENCH_TABLE_START -->
+(pending: runs after epoch 12)
+<!-- BENCH_TABLE_END -->
+
 ## Results per epoch
 
 Filled by `scripts/launch/dense-same/epoch_results.py` from `/scratch/dense/epoch_results.json` as each epoch
