@@ -44,22 +44,52 @@ for w in (16, 8):
     L.append("\n" + "; ".join(eq) + "\n")
 if e2e:
     L.append("\n## End-to-end serving throughput (SGLang, CUDA graphs on, 512 new tokens, greedy)\n")
+    L.append("Output tokens/s of `specforge benchmark`: c = concurrent requests (100 prompts at c=1, 200 at c=8 and c=32, "
+             "a smaller dataset wraps around); MT-Bench sends the first turn only. Speed-up = tok/s over the no-draft "
+             "baseline on the same task and concurrency.\n")
     labels = sorted({k[0] for k in e2e}, key=lambda x: (x != "baseline", x))
-    for ds in ("gsm8k", "mt-bench"):
-        L.append(f"\n### {ds}\n")
+    e2e_ds = [(k, n) for k, n in DS if any(kk[1] == k for kk in e2e)]
+    tp = lambda lab, ds, c: (e2e.get((lab, ds, c)) or {}).get("throughput_tokens_per_second")
+    for ds, dname in e2e_ds:
+        L.append(f"\n### {dname}\n")
         L.append("| Config | " + " | ".join(f"c={c} tok/s | c={c} speed-up" for c in (1, 8, 32)) + " | accept len (c=1) |")
         L.append("|" + "---|" * 8)
         for lab in labels:
             cells = []
             for c in (1, 8, 32):
-                r = e2e.get((lab, ds, c)); b = e2e.get(("baseline", ds, c))
-                if r:
-                    cells.append(f"{r['throughput_tokens_per_second']:.1f}")
-                    cells.append(f"{r['throughput_tokens_per_second'] / b['throughput_tokens_per_second']:.2f}x" if b else "-")
-                else:
-                    cells += ["-", "-"]
-            r1 = e2e.get((lab, ds, 1)); al = (r1 or {}).get("average_acceptance_length")
-            L.append(f"| {lab} | " + " | ".join(cells) + f" | {al:.2f} |" if al else f"| {lab} | " + " | ".join(cells) + " | - |")
+                r, b = tp(lab, ds, c), tp("baseline", ds, c)
+                cells += [f"{r:.1f}" if r else "-", f"{r / b:.2f}x" if r and b else "-"]
+            al = (e2e.get((lab, ds, 1)) or {}).get("average_acceptance_length")
+            L.append(f"| {lab} | " + " | ".join(cells) + (f" | {al:.2f} |" if al else " | - |"))
+    spec = [lab for lab in labels if lab != "baseline"]
+    if len(e2e_ds) > 1 and spec:
+        names = ", ".join(n for _, n in e2e_ds)
+        L.append(f"\n### Mean over the {len(e2e_ds)} tasks ({names}), equal weight\n")
+        L.append("| Config | c=1 speed-up | c=8 speed-up | c=32 speed-up | accept len (c=1) |")
+        L.append("|---|---|---|---|---|")
+        for lab in spec:
+            cells = []
+            for c in (1, 8, 32):
+                sp = [tp(lab, d, c) / tp("baseline", d, c) for d, _ in e2e_ds if tp(lab, d, c) and tp("baseline", d, c)]
+                cells.append((f"{sum(sp) / len(sp):.2f}x" + ("" if len(sp) == len(e2e_ds) else f" ({len(sp)} tasks)")) if sp else "-")
+            als = [x for x in ((e2e.get((lab, d, 1)) or {}).get("average_acceptance_length") for d, _ in e2e_ds) if x]
+            L.append(f"| {lab} | " + " | ".join(cells) + (f" | {sum(als) / len(als):.2f} |" if als else " | - |"))
+    pairs = [(f"V{w}", f"moe-v{w}", f"dense18-v{w}") for w in (16, 8) if f"moe-v{w}" in labels and f"dense18-v{w}" in labels]
+    if pairs:
+        L.append("\n### MoE / dense-1/8 throughput ratio (same width, task and concurrency)\n")
+        L.append("| Task | " + " | ".join(f"{v} c={c}" for v, _, _ in pairs for c in (1, 8, 32)) + " |")
+        L.append("|" + "---|" * (1 + 3 * len(pairs)))
+        rows = e2e_ds + ([("__mean__", "**Mean**")] if len(e2e_ds) > 1 else [])
+        for ds, dname in rows:
+            cells = []
+            for v, m, d in pairs:
+                for c in (1, 8, 32):
+                    if ds == "__mean__":
+                        rs = [tp(m, x, c) / tp(d, x, c) for x, _ in e2e_ds if tp(m, x, c) and tp(d, x, c)]
+                        cells.append(f"{sum(rs) / len(rs):.3f}" if rs else "-")
+                    else:
+                        cells.append(f"{tp(m, ds, c) / tp(d, ds, c):.3f}" if tp(m, ds, c) and tp(d, ds, c) else "-")
+            L.append(f"| {dname} | " + " | ".join(cells) + " |")
 text = "\n".join(L) + "\n"
 print(text)
 if a.md: open(a.md, "w").write(text)
