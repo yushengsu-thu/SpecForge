@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-"""Tables for the epoch-12 MoE vs dense-1/8 benchmark:  summarize.py <results dir> [--md out.md] [--json out.json]"""
+"""Tables for the epoch-12 MoE vs dense-1/8 benchmark:  summarize.py <results dir> [--md out.md] [--json out.json]
+   [--e2e-note TEXT] [--compare-e2e DIR --compare-name NAME]  (DIR = an earlier e2e run, tabulated as a cross-check)"""
 import argparse, glob, json, os
 DS = [("gsm8k", "GSM8K"), ("math500", "MATH500"), ("humaneval", "HumanEval"), ("mbpp", "MBPP"), ("mt-bench", "MT-Bench")]
 ap = argparse.ArgumentParser(); ap.add_argument("dir"); ap.add_argument("--md"); ap.add_argument("--json")
+ap.add_argument("--e2e-note"); ap.add_argument("--compare-e2e"); ap.add_argument("--compare-name", default="the earlier run")
 a = ap.parse_args()
 acc = {}
 for f in sorted(glob.glob(os.path.join(a.dir, "accept_*.json"))):
     r = json.load(open(f)); acc[(r["model"], int(r["width"]))] = r
-e2e = {}
-for f in sorted(glob.glob(os.path.join(a.dir, "e2e_*.json"))):
-    name = os.path.basename(f)[4:-5]                      # <label>_<dataset>_c<c>
-    label, rest = name.split("_", 1); ds, c = rest.rsplit("_c", 1)
-    e2e[(label, ds, int(c))] = json.load(open(f))
+def load_e2e(d):
+    out = {}
+    for f in sorted(glob.glob(os.path.join(d, "e2e_*.json"))):
+        name = os.path.basename(f)[4:-5]                  # <label>_<dataset>_c<c>
+        label, rest = name.split("_", 1); ds, c = rest.rsplit("_c", 1)
+        out[(label, ds, int(c))] = json.load(open(f))
+    return out
+e2e = load_e2e(a.dir)
 models = [m for m in ("dense-1/8", "MoE") if any(k[0] == m for k in acc)]
 L = []
 L.append("## Acceptance length (temperature 0, jiapingW protocol)\n")
@@ -47,6 +52,7 @@ if e2e:
     L.append("Output tokens/s of `specforge benchmark`: c = concurrent requests (100 prompts at c=1, 200 at c=8 and c=32, "
              "a smaller dataset wraps around); MT-Bench sends the first turn only. Speed-up = tok/s over the no-draft "
              "baseline on the same task and concurrency.\n")
+    if a.e2e_note: L.append(a.e2e_note + "\n")
     labels = sorted({k[0] for k in e2e}, key=lambda x: (x != "baseline", x))
     e2e_ds = [(k, n) for k, n in DS if any(kk[1] == k for kk in e2e)]
     tp = lambda lab, ds, c: (e2e.get((lab, ds, c)) or {}).get("throughput_tokens_per_second")
@@ -90,6 +96,23 @@ if e2e:
                     else:
                         cells.append(f"{tp(m, ds, c) / tp(d, ds, c):.3f}" if tp(m, ds, c) and tp(d, ds, c) else "-")
             L.append(f"| {dname} | " + " | ".join(cells) + " |")
+if e2e and a.compare_e2e:
+    old = load_e2e(a.compare_e2e)
+    both = sorted({(k[0], k[1]) for k in old if (k[0], k[1], k[2]) in e2e},
+                  key=lambda x: (x[0] != "baseline", x[0], [k for k, _ in DS].index(x[1]) if x[1] in dict(DS) else 99))
+    if both:
+        L.append(f"\n### Cross-check against {a.compare_name}\n")
+        L.append("tok/s of this run, with the ratio this run / earlier run in brackets.\n")
+        L.append("| Config | Task | c=1 | c=8 | c=32 |"); L.append("|---|---|---|---|---|")
+        rs = []
+        for lab, ds in both:
+            cells = []
+            for c in (1, 8, 32):
+                n_, o_ = (e2e.get((lab, ds, c)) or {}).get("throughput_tokens_per_second"), (old.get((lab, ds, c)) or {}).get("throughput_tokens_per_second")
+                if n_ and o_: rs.append(n_ / o_); cells.append(f"{n_:.1f} ({n_ / o_:.3f})")
+                else: cells.append("-")
+            L.append(f"| {lab} | {dict(DS).get(ds, ds)} | " + " | ".join(cells) + " |")
+        if rs: L.append(f"\nRatio range {min(rs):.3f} to {max(rs):.3f}, mean {sum(rs) / len(rs):.3f} over {len(rs)} cells.\n")
 text = "\n".join(L) + "\n"
 print(text)
 if a.md: open(a.md, "w").write(text)
