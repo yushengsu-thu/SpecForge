@@ -1,0 +1,598 @@
+{
+  "accept": {
+    "dense-1/8/V16": {
+      "label": "accept-dense18-v16",
+      "elapsed_s": 1710.009600162506,
+      "servers": [
+        "http://127.0.0.1:23104",
+        "http://127.0.0.1:23105"
+      ],
+      "errors": [],
+      "protocol": {
+        "temperature": 0,
+        "enable_thinking": false,
+        "system_prompt": "",
+        "max_new_tokens": 2048,
+        "max_running_requests_per_server": 1,
+        "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+        "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+      },
+      "datasets": {
+        "gsm8k": {
+          "requests": 1319,
+          "request_macro_tau": 7.589831765462957,
+          "micro_tau": 7.119706440058993,
+          "output_tokens": 405510,
+          "verify_count": 56956,
+          "length_limited_requests": 4
+        },
+        "math500": {
+          "requests": 500,
+          "request_macro_tau": 7.015359984418876,
+          "micro_tau": 6.290601645161818,
+          "output_tokens": 384664,
+          "verify_count": 61149,
+          "length_limited_requests": 50
+        },
+        "humaneval": {
+          "requests": 164,
+          "request_macro_tau": 5.211470053572154,
+          "micro_tau": 5.1430514005983134,
+          "output_tokens": 75644,
+          "verify_count": 14708,
+          "length_limited_requests": 0
+        },
+        "mbpp": {
+          "requests": 257,
+          "request_macro_tau": 5.0929437907893655,
+          "micro_tau": 4.754496097726501,
+          "output_tokens": 84069,
+          "verify_count": 17682,
+          "length_limited_requests": 0
+        },
+        "mt-bench": {
+          "requests": 160,
+          "request_macro_tau": 3.8534478009399584,
+          "micro_tau": 3.1664150505167807,
+          "output_tokens": 81798,
+          "verify_count": 25833,
+          "length_limited_requests": 2
+        }
+      },
+      "pooled": {
+        "requests": 2400,
+        "request_macro_tau": 6.7911614091767385,
+        "micro_tau": 5.850942561589765,
+        "output_tokens": 1031685,
+        "verify_count": 176328,
+        "length_limited_requests": 56,
+        "benchmark_equal_weight_macro_tau": 5.752610679036662,
+        "benchmark_equal_weight_micro_tau": 5.294854126812481
+      },
+      "model": "dense-1/8",
+      "width": 16,
+      "draft_dir": "/scratch/bench12/epoch12/drafts/dense18-12ep"
+    },
+    "dense-1/8/V8": {
+      "label": "accept-dense18-v8",
+      "elapsed_s": 1980.0100536346436,
+      "servers": [
+        "http://127.0.0.1:23106",
+        "http://127.0.0.1:23107"
+      ],
+      "errors": [],
+      "protocol": {
+        "temperature": 0,
+        "enable_thinking": false,
+        "system_prompt": "",
+        "max_new_tokens": 2048,
+        "max_running_requests_per_server": 1,
+        "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+        "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+      },
+      "datasets": {
+        "gsm8k": {
+          "requests": 1319,
+          "request_macro_tau": 5.759441897409739,
+          "micro_tau": 5.6025439874481675,
+          "output_tokens": 399932,
+          "verify_count": 71384,
+          "length_limited_requests": 1
+        },
+        "math500": {
+          "requests": 500,
+          "request_macro_tau": 5.5625923229399605,
+          "micro_tau": 5.2808460473468495,
+          "output_tokens": 385243,
+          "verify_count": 72951,
+          "length_limited_requests": 49
+        },
+        "humaneval": {
+          "requests": 164,
+          "request_macro_tau": 4.611236042068924,
+          "micro_tau": 4.5740584258812165,
+          "output_tokens": 75783,
+          "verify_count": 16568,
+          "length_limited_requests": 0
+        },
+        "mbpp": {
+          "requests": 257,
+          "request_macro_tau": 4.473254062509298,
+          "micro_tau": 4.28539778449144,
+          "output_tokens": 85108,
+          "verify_count": 19860,
+          "length_limited_requests": 0
+        },
+        "mt-bench": {
+          "requests": 160,
+          "request_macro_tau": 3.4913728372881736,
+          "micro_tau": 3.0204194463897385,
+          "output_tokens": 81947,
+          "verify_count": 27131,
+          "length_limited_requests": 1
+        }
+      },
+      "pooled": {
+        "requests": 2400,
+        "request_macro_tau": 5.351036951284886,
+        "micro_tau": 4.944890184420907,
+        "output_tokens": 1028013,
+        "verify_count": 207894,
+        "length_limited_requests": 51,
+        "benchmark_equal_weight_macro_tau": 4.779579432443219,
+        "benchmark_equal_weight_micro_tau": 4.5526531383114826
+      },
+      "model": "dense-1/8",
+      "width": 8,
+      "draft_dir": "/scratch/bench12/epoch12/drafts/dense18-12ep"
+    },
+    "MoE/V16": {
+      "label": "accept-moe-v16",
+      "elapsed_s": 1800.0087819099426,
+      "servers": [
+        "http://127.0.0.1:23100",
+        "http://127.0.0.1:23101"
+      ],
+      "errors": [],
+      "protocol": {
+        "temperature": 0,
+        "enable_thinking": false,
+        "system_prompt": "",
+        "max_new_tokens": 2048,
+        "max_running_requests_per_server": 1,
+        "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+        "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+      },
+      "datasets": {
+        "gsm8k": {
+          "requests": 1319,
+          "request_macro_tau": 7.613152677471567,
+          "micro_tau": 7.144669379988372,
+          "output_tokens": 405510,
+          "verify_count": 56757,
+          "length_limited_requests": 4
+        },
+        "math500": {
+          "requests": 500,
+          "request_macro_tau": 7.227947424476804,
+          "micro_tau": 6.490904795653201,
+          "output_tokens": 384664,
+          "verify_count": 59262,
+          "length_limited_requests": 50
+        },
+        "humaneval": {
+          "requests": 164,
+          "request_macro_tau": 5.422490653752538,
+          "micro_tau": 5.335684559497778,
+          "output_tokens": 75644,
+          "verify_count": 14177,
+          "length_limited_requests": 0
+        },
+        "mbpp": {
+          "requests": 257,
+          "request_macro_tau": 5.400920344070754,
+          "micro_tau": 4.995483985976588,
+          "output_tokens": 84069,
+          "verify_count": 16829,
+          "length_limited_requests": 0
+        },
+        "mt-bench": {
+          "requests": 160,
+          "request_macro_tau": 3.9667896434977807,
+          "micro_tau": 3.2896842951940477,
+          "output_tokens": 81798,
+          "verify_count": 24865,
+          "length_limited_requests": 2
+        }
+      },
+      "pooled": {
+        "requests": 2400,
+        "request_macro_tau": 6.903222263510268,
+        "micro_tau": 6.0020070975623945,
+        "output_tokens": 1031685,
+        "verify_count": 171890,
+        "length_limited_requests": 56,
+        "benchmark_equal_weight_macro_tau": 5.926260148653889,
+        "benchmark_equal_weight_micro_tau": 5.451285403261997
+      },
+      "model": "MoE",
+      "width": 16,
+      "draft_dir": "/scratch/bench12/epoch12/drafts/moe-12ep"
+    },
+    "MoE/V8": {
+      "label": "accept-moe-v8",
+      "elapsed_s": 2040.0091223716736,
+      "servers": [
+        "http://127.0.0.1:23102",
+        "http://127.0.0.1:23103"
+      ],
+      "errors": [],
+      "protocol": {
+        "temperature": 0,
+        "enable_thinking": false,
+        "system_prompt": "",
+        "max_new_tokens": 2048,
+        "max_running_requests_per_server": 1,
+        "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+        "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+      },
+      "datasets": {
+        "gsm8k": {
+          "requests": 1319,
+          "request_macro_tau": 5.779168220296138,
+          "micro_tau": 5.6247644229416895,
+          "output_tokens": 399932,
+          "verify_count": 71102,
+          "length_limited_requests": 1
+        },
+        "math500": {
+          "requests": 500,
+          "request_macro_tau": 5.644979119685617,
+          "micro_tau": 5.380188257639238,
+          "output_tokens": 385243,
+          "verify_count": 71604,
+          "length_limited_requests": 49
+        },
+        "humaneval": {
+          "requests": 164,
+          "request_macro_tau": 4.739371944486435,
+          "micro_tau": 4.707311013106404,
+          "output_tokens": 75783,
+          "verify_count": 16099,
+          "length_limited_requests": 0
+        },
+        "mbpp": {
+          "requests": 257,
+          "request_macro_tau": 4.648819594705885,
+          "micro_tau": 4.432708333333333,
+          "output_tokens": 85108,
+          "verify_count": 19200,
+          "length_limited_requests": 0
+        },
+        "mt-bench": {
+          "requests": 160,
+          "request_macro_tau": 3.557139433665759,
+          "micro_tau": 3.1187014766326686,
+          "output_tokens": 81947,
+          "verify_count": 26276,
+          "length_limited_requests": 1
+        }
+      },
+      "pooled": {
+        "requests": 2400,
+        "request_macro_tau": 5.410982661056302,
+        "micro_tau": 5.032347599629921,
+        "output_tokens": 1028013,
+        "verify_count": 204281,
+        "length_limited_requests": 51,
+        "benchmark_equal_weight_macro_tau": 4.873895662567967,
+        "benchmark_equal_weight_micro_tau": 4.652734700730667
+      },
+      "model": "MoE",
+      "width": 8,
+      "draft_dir": "/scratch/bench12/epoch12/drafts/moe-12ep"
+    }
+  },
+  "e2e": {
+    "baseline/gsm8k/c1": {
+      "average_acceptance_length": null,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 156.47805923805572,
+      "output_tokens": 30261,
+      "samples": 100,
+      "spec_verify_count": null,
+      "throughput_tokens_per_second": 193.38813471582523
+    },
+    "baseline/gsm8k/c32": {
+      "average_acceptance_length": null,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 13.302193349925801,
+      "output_tokens": 59491,
+      "samples": 200,
+      "spec_verify_count": null,
+      "throughput_tokens_per_second": 4472.2699809751175
+    },
+    "baseline/gsm8k/c8": {
+      "average_acceptance_length": null,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 44.76141857588664,
+      "output_tokens": 60553,
+      "samples": 200,
+      "spec_verify_count": null,
+      "throughput_tokens_per_second": 1352.7944807500007
+    },
+    "baseline/mt-bench/c1": {
+      "average_acceptance_length": null,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 163.5226161009632,
+      "output_tokens": 31668,
+      "samples": 100,
+      "spec_verify_count": null,
+      "throughput_tokens_per_second": 193.66128524049137
+    },
+    "baseline/mt-bench/c32": {
+      "average_acceptance_length": null,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 14.725977604044601,
+      "output_tokens": 65779,
+      "samples": 200,
+      "spec_verify_count": null,
+      "throughput_tokens_per_second": 4466.868127107113
+    },
+    "baseline/mt-bench/c8": {
+      "average_acceptance_length": null,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 47.44366488116793,
+      "output_tokens": 64909,
+      "samples": 200,
+      "spec_verify_count": null,
+      "throughput_tokens_per_second": 1368.127866229927
+    },
+    "dense18-v16/gsm8k/c1": {
+      "average_acceptance_length": 7.653418690861483,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 33.995180209865794,
+      "output_tokens": 30135,
+      "samples": 100,
+      "spec_verify_count": 4233,
+      "throughput_tokens_per_second": 886.4491911489993
+    },
+    "dense18-v16/gsm8k/c32": {
+      "average_acceptance_length": 7.680268768432813,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 6.373906883178279,
+      "output_tokens": 59545,
+      "samples": 200,
+      "spec_verify_count": 8410,
+      "throughput_tokens_per_second": 9341.994022088465
+    },
+    "dense18-v16/gsm8k/c8": {
+      "average_acceptance_length": 7.63773941185655,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 12.382893032161519,
+      "output_tokens": 60357,
+      "samples": 200,
+      "spec_verify_count": 8533,
+      "throughput_tokens_per_second": 4874.22445168811
+    },
+    "dense18-v16/mt-bench/c1": {
+      "average_acceptance_length": 3.5821488469662093,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 84.28380474098958,
+      "output_tokens": 31353,
+      "samples": 100,
+      "spec_verify_count": 10801,
+      "throughput_tokens_per_second": 371.9931734969738
+    },
+    "dense18-v16/mt-bench/c32": {
+      "average_acceptance_length": 4.014189604569141,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 14.05886766104959,
+      "output_tokens": 65467,
+      "samples": 200,
+      "spec_verify_count": 20406,
+      "throughput_tokens_per_second": 4656.633918062818
+    },
+    "dense18-v16/mt-bench/c8": {
+      "average_acceptance_length": 4.031205188780337,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 25.711092785932124,
+      "output_tokens": 64287,
+      "samples": 200,
+      "spec_verify_count": 20267,
+      "throughput_tokens_per_second": 2500.360468349084
+    },
+    "dense18-v8/gsm8k/c1": {
+      "average_acceptance_length": 5.765187902424536,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 41.49277199804783,
+      "output_tokens": 30088,
+      "samples": 100,
+      "spec_verify_count": 5379,
+      "throughput_tokens_per_second": 725.138344611336
+    },
+    "dense18-v8/gsm8k/c32": {
+      "average_acceptance_length": 5.770711977085264,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 5.223254662938416,
+      "output_tokens": 59706,
+      "samples": 200,
+      "spec_verify_count": 10735,
+      "throughput_tokens_per_second": 11430.803943687391
+    },
+    "dense18-v8/gsm8k/c8": {
+      "average_acceptance_length": 5.736980323492112,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 13.496189903933555,
+      "output_tokens": 60574,
+      "samples": 200,
+      "spec_verify_count": 10930,
+      "throughput_tokens_per_second": 4488.229673053526
+    },
+    "dense18-v8/mt-bench/c1": {
+      "average_acceptance_length": 3.263751398292421,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 84.15517789497972,
+      "output_tokens": 31470,
+      "samples": 100,
+      "spec_verify_count": 11157,
+      "throughput_tokens_per_second": 373.95203464809435
+    },
+    "dense18-v8/mt-bench/c32": {
+      "average_acceptance_length": 3.6002060470027897,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 9.738100862130523,
+      "output_tokens": 65261,
+      "samples": 200,
+      "spec_verify_count": 21162,
+      "throughput_tokens_per_second": 6701.614711528266
+    },
+    "dense18-v8/mt-bench/c8": {
+      "average_acceptance_length": 3.5760996620440113,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 23.437725433846936,
+      "output_tokens": 64535,
+      "samples": 200,
+      "spec_verify_count": 21058,
+      "throughput_tokens_per_second": 2753.4668490827007
+    },
+    "moe-v16/gsm8k/c1": {
+      "average_acceptance_length": 7.590726329127289,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 34.80529110482894,
+      "output_tokens": 30135,
+      "samples": 100,
+      "spec_verify_count": 4242,
+      "throughput_tokens_per_second": 865.8166342938308
+    },
+    "moe-v16/gsm8k/c32": {
+      "average_acceptance_length": 7.644022178559471,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 6.274907130049542,
+      "output_tokens": 59487,
+      "samples": 200,
+      "spec_verify_count": 8391,
+      "throughput_tokens_per_second": 9480.140306001682
+    },
+    "moe-v16/gsm8k/c8": {
+      "average_acceptance_length": 7.6239751430145555,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 12.457204839913175,
+      "output_tokens": 60430,
+      "samples": 200,
+      "spec_verify_count": 8508,
+      "throughput_tokens_per_second": 4851.007973023039
+    },
+    "moe-v16/mt-bench/c1": {
+      "average_acceptance_length": 3.6774093512596875,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 82.53827670705505,
+      "output_tokens": 31353,
+      "samples": 100,
+      "spec_verify_count": 10366,
+      "throughput_tokens_per_second": 379.86012370088736
+    },
+    "moe-v16/mt-bench/c32": {
+      "average_acceptance_length": 4.138289239174093,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 13.501845265040174,
+      "output_tokens": 65342,
+      "samples": 200,
+      "spec_verify_count": 19657,
+      "throughput_tokens_per_second": 4839.486656626676
+    },
+    "moe-v16/mt-bench/c8": {
+      "average_acceptance_length": 4.160801984966935,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 25.24951087892987,
+      "output_tokens": 64193,
+      "samples": 200,
+      "spec_verify_count": 19495,
+      "throughput_tokens_per_second": 2542.3462778270123
+    },
+    "moe-v8/gsm8k/c1": {
+      "average_acceptance_length": 5.7899172320636145,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 42.51770723215304,
+      "output_tokens": 30088,
+      "samples": 100,
+      "spec_verify_count": 5374,
+      "throughput_tokens_per_second": 707.6581019694928
+    },
+    "moe-v8/gsm8k/c32": {
+      "average_acceptance_length": 5.794225340878478,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 5.252679708180949,
+      "output_tokens": 59667,
+      "samples": 200,
+      "spec_verify_count": 10653,
+      "throughput_tokens_per_second": 11359.34481348059
+    },
+    "moe-v8/gsm8k/c8": {
+      "average_acceptance_length": 5.794465177595859,
+      "backend": "sglang",
+      "dataset": "gsm8k",
+      "latency_seconds": 13.549093130044639,
+      "output_tokens": 60007,
+      "samples": 200,
+      "spec_verify_count": 10691,
+      "throughput_tokens_per_second": 4428.857298717401
+    },
+    "moe-v8/mt-bench/c1": {
+      "average_acceptance_length": 3.3029691630409213,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 84.08179682586342,
+      "output_tokens": 31470,
+      "samples": 100,
+      "spec_verify_count": 10847,
+      "throughput_tokens_per_second": 374.2783954198262
+    },
+    "moe-v8/mt-bench/c32": {
+      "average_acceptance_length": 3.636179300370972,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 9.625690401997417,
+      "output_tokens": 65296,
+      "samples": 200,
+      "spec_verify_count": 20612,
+      "throughput_tokens_per_second": 6783.513418055758
+    },
+    "moe-v8/mt-bench/c8": {
+      "average_acceptance_length": 3.5988069708170207,
+      "backend": "sglang",
+      "dataset": "mt-bench",
+      "latency_seconds": 23.809196582995355,
+      "output_tokens": 64461,
+      "samples": 200,
+      "spec_verify_count": 20596,
+      "throughput_tokens_per_second": 2707.399209179463
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "label": "accept-moe-v8",
+  "elapsed_s": 2040.0091223716736,
+  "servers": [
+    "http://127.0.0.1:23102",
+    "http://127.0.0.1:23103"
+  ],
+  "errors": [],
+  "protocol": {
+    "temperature": 0,
+    "enable_thinking": false,
+    "system_prompt": "",
+    "max_new_tokens": 2048,
+    "max_running_requests_per_server": 1,
+    "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+    "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+  },
+  "datasets": {
+    "gsm8k": {
+      "requests": 1319,
+      "request_macro_tau": 5.779168220296138,
+      "micro_tau": 5.6247644229416895,
+      "output_tokens": 399932,
+      "verify_count": 71102,
+      "length_limited_requests": 1
+    },
+    "math500": {
+      "requests": 500,
+      "request_macro_tau": 5.644979119685617,
+      "micro_tau": 5.380188257639238,
+      "output_tokens": 385243,
+      "verify_count": 71604,
+      "length_limited_requests": 49
+    },
+    "humaneval": {
+      "requests": 164,
+      "request_macro_tau": 4.739371944486435,
+      "micro_tau": 4.707311013106404,
+      "output_tokens": 75783,
+      "verify_count": 16099,
+      "length_limited_requests": 0
+    },
+    "mbpp": {
+      "requests": 257,
+      "request_macro_tau": 4.648819594705885,
+      "micro_tau": 4.432708333333333,
+      "output_tokens": 85108,
+      "verify_count": 19200,
+      "length_limited_requests": 0
+    },
+    "mt-bench": {
+      "requests": 160,
+      "request_macro_tau": 3.557139433665759,
+      "micro_tau": 3.1187014766326686,
+      "output_tokens": 81947,
+      "verify_count": 26276,
+      "length_limited_requests": 1
+    }
+  },
+  "pooled": {
+    "requests": 2400,
+    "request_macro_tau": 5.410982661056302,
+    "micro_tau": 5.032347599629921,
+    "output_tokens": 1028013,
+    "verify_count": 204281,
+    "length_limited_requests": 51,
+    "benchmark_equal_weight_macro_tau": 4.873895662567967,
+    "benchmark_equal_weight_micro_tau": 4.652734700730667
+  },
+  "model": "MoE",
+  "width": 8,
+  "draft_dir": "/scratch/bench12/epoch12/drafts/moe-12ep"
+}

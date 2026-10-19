@@ -1,0 +1,73 @@
+{
+  "label": "accept-dense18-v8",
+  "elapsed_s": 1980.0100536346436,
+  "servers": [
+    "http://127.0.0.1:23106",
+    "http://127.0.0.1:23107"
+  ],
+  "errors": [],
+  "protocol": {
+    "temperature": 0,
+    "enable_thinking": false,
+    "system_prompt": "",
+    "max_new_tokens": 2048,
+    "max_running_requests_per_server": 1,
+    "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+    "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+  },
+  "datasets": {
+    "gsm8k": {
+      "requests": 1319,
+      "request_macro_tau": 5.759441897409739,
+      "micro_tau": 5.6025439874481675,
+      "output_tokens": 399932,
+      "verify_count": 71384,
+      "length_limited_requests": 1
+    },
+    "math500": {
+      "requests": 500,
+      "request_macro_tau": 5.5625923229399605,
+      "micro_tau": 5.2808460473468495,
+      "output_tokens": 385243,
+      "verify_count": 72951,
+      "length_limited_requests": 49
+    },
+    "humaneval": {
+      "requests": 164,
+      "request_macro_tau": 4.611236042068924,
+      "micro_tau": 4.5740584258812165,
+      "output_tokens": 75783,
+      "verify_count": 16568,
+      "length_limited_requests": 0
+    },
+    "mbpp": {
+      "requests": 257,
+      "request_macro_tau": 4.473254062509298,
+      "micro_tau": 4.28539778449144,
+      "output_tokens": 85108,
+      "verify_count": 19860,
+      "length_limited_requests": 0
+    },
+    "mt-bench": {
+      "requests": 160,
+      "request_macro_tau": 3.4913728372881736,
+      "micro_tau": 3.0204194463897385,
+      "output_tokens": 81947,
+      "verify_count": 27131,
+      "length_limited_requests": 1
+    }
+  },
+  "pooled": {
+    "requests": 2400,
+    "request_macro_tau": 5.351036951284886,
+    "micro_tau": 4.944890184420907,
+    "output_tokens": 1028013,
+    "verify_count": 207894,
+    "length_limited_requests": 51,
+    "benchmark_equal_weight_macro_tau": 4.779579432443219,
+    "benchmark_equal_weight_micro_tau": 4.5526531383114826
+  },
+  "model": "dense-1/8",
+  "width": 8,
+  "draft_dir": "/scratch/bench12/epoch12/drafts/dense18-12ep"
+}
