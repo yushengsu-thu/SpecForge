@@ -7,6 +7,7 @@
 #    optimizer step shifted by the first run's total steps, so the curves continue without a gap;
 # 3. once the first run's watcher has finished epoch 12, starts a watcher for epochs 13-18 (HF folders 13ep..18ep)
 #    whose exp_read.me covers all 18 epochs.
+# Between 1 and 2 it runs the epoch-12 benchmark (bench/bench_epoch12.sh, MoE vs dense-1/8; RUN_BENCH12=0 skips it).
 # Log: /scratch/logs/<run>.chain18.log. Stop file: /scratch/outputs/<run>/chain18.stop
 set -u
 REPO=${REPO:-/scratch/SpecForge-spark8b}
@@ -20,6 +21,14 @@ LOG=/scratch/logs/$RUN.chain18.log; STOP=$OUT/chain18.stop
 log(){ echo "[$(date -u +%FT%TZ)] $*" >> "$LOG"; }
 alive(){ [ -f "$1/launcher.pid" ] && kill -0 "$(cat "$1/launcher.pid")" 2>/dev/null; }
 complete(){ [ -f "$1/training_state.pt" ] && ! ls "$1" 2>/dev/null | grep -q "\.tmp$"; }
+listening(){ python3 -c "
+import sys
+ports = {int(p) for p in sys.argv[1:]}
+for f in ('/proc/net/tcp', '/proc/net/tcp6'):
+    for line in open(f).readlines()[1:]:
+        x = line.split()
+        if x[3] == '0A' and int(x[1].split(':')[1], 16) in ports: sys.exit(0)
+sys.exit(1)" "$@"; }
 cd "$REPO" || exit 1
 log "chain started; waiting for $RUN to finish"
 while alive "$OUT"; do [ -f "$STOP" ] && { log "stop file seen"; exit 0; }; sleep 120; done
@@ -46,20 +55,30 @@ if [ ! -d "/scratch/ckpt-keep/$RUN/$RUN-step$LAST" ]; then cp -a "$CK" "/scratch
 CK=/scratch/ckpt-keep/$RUN/$RUN-step$LAST
 log "warm-start checkpoint: $CK"
 sleep 60
-for i in $(seq 1 30); do ss -ltn 2>/dev/null | grep -qE ":(3000[01]|35551|35880) " || break; sleep 10; done
-LEFT=$(pgrep -f "sglang::|[s]glang.launch_server|[m]ooncake_master|[s]pecforge.cli|torch.[d]istributed.run")
-[ -n "$LEFT" ] && { log "killing leftovers $LEFT"; kill -KILL $LEFT 2>/dev/null; sleep 10; }
-[ -e "$CONT_OUT" ] && mv "$CONT_OUT" "$CONT_OUT.stale.$(date -u +%Y%m%dT%H%M%SZ)"
+if [ "${RUN_BENCH12:-1}" = 1 ] && [ -f "$EXP/bench/bench_epoch12.sh" ]; then
+  log "epoch-12 benchmark start (log /scratch/bench12/epoch12/bench.log)"
+  timeout 21600 bash "$EXP/bench/bench_epoch12.sh" >> "$LOG" 2>&1; log "epoch-12 benchmark finished (exit $?)"
+fi
 export SPECFORGE_LOG_STEP_OFFSET=$MAIN_TOTAL WANDB_RUN_ID=1ia117wn WANDB_RESUME=allow
-RUN=$CONT_RUN OUT=$CONT_OUT $EXP/launch.sh training.num_epochs=6 training.prompt_seed=54 \
-  model.draft_checkpoint_path="$CK" >> "$LOG" 2>&1 || { log "ABORT: launch failed"; exit 1; }
-log "continuation launched (step offset $MAIN_TOTAL)"
-for i in $(seq 1 60); do
-  sleep 60
-  s=$(grep -oE "step [0-9]+:" "$CONT_OUT/launch.log" 2>/dev/null | tail -1 | tr -dc 0-9)
-  if [ -n "$s" ]; then log "continuation logging at global step $s"; break; fi
-  alive "$CONT_OUT" || { log "ABORT: continuation launcher died before its first step"; exit 1; }
+LAUNCHED=0
+for attempt in 1 2 3; do
+  for i in $(seq 1 30); do listening 30000 30001 35551 35880 || break; sleep 10; done
+  LEFT=$(pgrep -f "sglang::|[s]glang.launch_server|[m]ooncake_master|[s]pecforge.cli|torch.[d]istributed.run")
+  [ -n "$LEFT" ] && { log "killing leftovers $LEFT"; kill -KILL $LEFT 2>/dev/null; sleep 10; }
+  [ -e "$CONT_OUT" ] && mv "$CONT_OUT" "$CONT_OUT.stale.$(date -u +%Y%m%dT%H%M%SZ)"
+  RUN=$CONT_RUN OUT=$CONT_OUT $EXP/launch.sh training.num_epochs=6 training.prompt_seed=54 \
+    model.draft_checkpoint_path="$CK" >> "$LOG" 2>&1 || { log "launch attempt $attempt failed to start"; sleep 120; continue; }
+  log "continuation launched, attempt $attempt (step offset $MAIN_TOTAL)"
+  for i in $(seq 1 60); do
+    sleep 60
+    s=$(grep -oE "step [0-9]+:" "$CONT_OUT/launch.log" 2>/dev/null | tail -1 | tr -dc 0-9)
+    if [ -n "$s" ]; then log "continuation logging at global step $s"; LAUNCHED=1; break; fi
+    alive "$CONT_OUT" || { log "attempt $attempt: launcher died before its first step: $(grep -E "Error|error" "$CONT_OUT/launch.log" | tail -1 | cut -c1-200)"; break; }
+  done
+  [ "$LAUNCHED" = 1 ] && break
+  sleep 120
 done
+[ "$LAUNCHED" = 1 ] || { log "ABORT: continuation did not start after 3 attempts"; exit 1; }
 while pgrep -f "^bash $EXP/epoch_watcher[.]sh$" >/dev/null && [ ! -f "$STOP" ]; do sleep 120; done
 RUN=$CONT_RUN OUT=$CONT_OUT KEEP=/scratch/ckpt-keep/$CONT_RUN EXPORTS=/scratch/exports/$MAIN_RUN \
   NUM_EPOCHS=6 EPOCH_OFFSET=12 REPORT_RUN=$MAIN_RUN REPORT_OUT=/scratch/outputs/$MAIN_RUN \
