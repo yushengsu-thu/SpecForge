@@ -77,7 +77,7 @@ if [ ! -f "$CFGD/$TV/E=8,N=1536,device_name=NVIDIA_H200.json" ] && [ -f "$CFGD/t
   log "installed the E=8,N=1792 H200 tile config as $TV/E=8,N=1536"
 fi
 # ---- 1c. served-vs-trained MoE check on the epoch-12 weights (GPU 0) ------------------------------------------
-CK12=$(ls -d /scratch/ckpt-keep/$RUN/$RUN-step* 2>/dev/null | sort -t p -k2 | tail -1)
+CK12=/scratch/ckpt-keep/$RUN/$RUN-step$((12 * 10764))   # the epoch-12 checkpoint behind the 12ep export
 CUDA_VISIBLE_DEVICES=0 timeout 900 python $BS/check_served_moe.py --ckpt "$CK12" --export "$DR/moe-12ep" \
   --draft-config configs/qwen3-8b-dspark-moe-8x1536-top1-2layer-causal-noconf-b16.json > "$R/served_moe_check.txt" 2>&1
 log "served-vs-trained MoE check: $(grep RESULT "$R/served_moe_check.txt")"
