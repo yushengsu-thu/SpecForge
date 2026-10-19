@@ -124,7 +124,7 @@ D16/V8) are run on every epoch checkpoint after the 12 epochs finish.
 | 9 | 96876 | 0.6768 | 0.3870 | `epoch-09/` | | | | | | |
 | 10 | 107640 | 0.6541 | 0.1954 | `epoch-10/` | | | | | | |
 | 11 | 118404 | 0.6927 | 0.3210 | `epoch-11/` | | | | | | |
-| 12 | 129168 | | | `epoch-12/` |
+| 12 | 129168 | 0.6771 | 0.5111 | `epoch-12/` | | | | | | |
 | 13 | 139932 | | | `epoch-13/` |
 | 14 | 150696 | | | `epoch-14/` |
 | 15 | 161460 | | | `epoch-15/` |
@@ -181,7 +181,14 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
 - epoch 9 done at 2026-10-18T14:08:04Z: step 96876, train/acc 0.6768, train/loss 0.3870, uploaded to HF epoch-09/
 - epoch 10 done at 2026-10-18T21:18:21Z: step 107640, train/acc 0.6541, train/loss 0.1954, uploaded to HF epoch-10/
 - epoch 11 done at 2026-10-19T04:38:41Z: step 118404, train/acc 0.6927, train/loss 0.3210, uploaded to HF epoch-11/
+- epoch 12 done at 2026-10-19T11:48:58Z: step 129168, train/acc 0.6771, train/loss 0.5111, uploaded to HF epoch-12/ (end of the 12-epoch schedule; last step 129170, LR ~0)
 - 2026-10-18 20:21 UTC: decided to continue to 18 epochs (see "Continuation: epochs 13-18"); `SPECFORGE_TRACKING_STEP_OFFSET` added to the tracker (3375bc93); a chain script on the node launches the continuation after epoch 12.
+- 2026-10-19 11:46-12:14 UTC: the 12-epoch run finished training and W&B synced, but the job did not exit: the managed
+  producer stayed blocked in `streaming_ref_channel.poll` (`disaggregated.py:761`, after "drive_producer returning ...
+  closing channel"), so the launcher, both capture servers and the Mooncake master stayed up and the chain never saw the
+  run as finished. The producer stack (py-spy) and the final launch log were saved on the node
+  (`/scratch/logs/dense18_producer_hang_pyspy.txt`), the process tree was killed by hand, and the chain launched the
+  epochs 13-18 continuation at 12:14 UTC (warm start from step 129168, W&B `dense-1-8-r8` with step offset 129168).
 
 - 2026-10-15 13:24 UTC: branch created, draft config + launch yaml added, corpus and Qwen3-8B
   downloaded to the node. 3-step smoke on a 2,000-row slice (`training.max_steps=3`, no warmup):
