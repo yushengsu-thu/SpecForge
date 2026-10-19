@@ -66,6 +66,21 @@ from huggingface_hub import snapshot_download; snapshot_download('$DENSE_REPO', 
   python scripts/gates/normalize_dflash_export.py --config "$DR/dense18-12ep/config.json" --block-size 16 >> "$LOG" 2>&1 || DENSE_OK=0
 fi
 log "drafts ready: MoE yes, dense-1/8 $([ $DENSE_OK = 1 ] && echo yes || echo NO)"
+# ---- 1b. fused-MoE tile config ------------------------------------------------------------------------------
+# SGLang ships no tuned Triton config for this drafter's expert shape (E=8, N=1536, K=4096) and a full tuning sweep is
+# ~2 h per batch size; Mixtral-8x7B at TP8 has the near-identical E=8, N=1792, K=4096 shape with a tuned H200 config,
+# which is installed under our shape's name (the server log then says "Using MoE kernel config from ...").
+CFGD=$(python -c "import os, sglang; print(os.path.join(os.path.dirname(sglang.__file__), 'srt/layers/moe/moe_runner/triton_utils/configs'))")
+TV=triton_$(python -c "import triton; print(triton.__version__.split('+')[0].replace('.', '_'))")
+if [ ! -f "$CFGD/$TV/E=8,N=1536,device_name=NVIDIA_H200.json" ] && [ -f "$CFGD/triton_3_1_0/E=8,N=1792,device_name=NVIDIA_H200.json" ]; then
+  mkdir -p "$CFGD/$TV" && cp "$CFGD/triton_3_1_0/E=8,N=1792,device_name=NVIDIA_H200.json" "$CFGD/$TV/E=8,N=1536,device_name=NVIDIA_H200.json"
+  log "installed the E=8,N=1792 H200 tile config as $TV/E=8,N=1536"
+fi
+# ---- 1c. served-vs-trained MoE check on the epoch-12 weights (GPU 0) ------------------------------------------
+CK12=$(ls -d /scratch/ckpt-keep/$RUN/$RUN-step* 2>/dev/null | sort -t p -k2 | tail -1)
+CUDA_VISIBLE_DEVICES=0 timeout 900 python $BS/check_served_moe.py --ckpt "$CK12" --export "$DR/moe-12ep" \
+  --draft-config configs/qwen3-8b-dspark-moe-8x1536-top1-2layer-causal-noconf-b16.json > "$R/served_moe_check.txt" 2>&1
+log "served-vs-trained MoE check: $(grep RESULT "$R/served_moe_check.txt")"
 # ---- 2. acceptance length ----------------------------------------------------------------------------------
 stop_servers >> "$LOG" 2>&1
 declare -a CFG=()      # model:draftdir:width:gpuA:gpuB
