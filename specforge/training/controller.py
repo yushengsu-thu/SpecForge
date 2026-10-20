@@ -28,6 +28,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import torch
 
+from specforge.modeling.draft.moe import finalize_step_output
 from specforge.runtime.contracts import TrainBatch
 from specforge.training.backend import TrainingBackend
 from specforge.training.strategies.base import (
@@ -427,7 +428,9 @@ class TrainerCore:
     def train_step(
         self, batch: TrainBatch, ctx: Optional[StepContext] = None
     ) -> StepResult:
-        out: StepOutput = self.strategy.forward_loss(batch, ctx)
+        out: StepOutput = finalize_step_output(
+            self.strategy.trainable_module(), self.strategy.forward_loss(batch, ctx)
+        )
         loss = out.loss
         ratio_metrics = dict(out.ratio_metrics)
         if out.loss_terms is not None:
@@ -1160,7 +1163,10 @@ class TrainerController:
         ctx = StepContext(global_step=self.global_step, total_steps=self.total_steps)
         try:
             return Evaluator().run(
-                lambda batch: self.core.strategy.forward_loss(batch, ctx), data
+                lambda batch: finalize_step_output(
+                    module, self.core.strategy.forward_loss(batch, ctx)
+                ),
+                data,
             )
         finally:
             module.train(was_training)
