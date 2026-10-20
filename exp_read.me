@@ -123,51 +123,55 @@ checked to be unchanged): `scripts/launch/dense-same/bench_all.sh` / `bench_node
 Checkpoints: jiapingW's published step-39000 drafter (also re-measured here to validate the harness) and our epoch-12 export.
 
 <!-- BENCH_TABLE_START -->
-Harness check (2026-10-19): jiapingW's step-39000 checkpoint re-measured here vs his published values; pooled macro tau
-agrees within 0.02 in all four modes. Our epoch-12 column is added automatically after epoch 12.
+Epoch 12 vs jiapingW (2026-10-20): our epoch-12 export (https://huggingface.co/yushengsu/dense-same/tree/main/12ep)
+and jiapingW's step-39000 checkpoint, both measured here with the same harness, next to his published values.
+Pooled request macro tau, ours minus jiapingW re-measured: +0.035 (t0 V16), +0.012 (t0 V8), +0.025 (t1 V16), +0.009 (t1 V8).
+Ours is ahead on HumanEval, MBPP and MT-Bench, level on MATH500, and 0.01-0.03 behind on GSM8K.
+Harness check (2026-10-19): the re-measured jiapingW pooled macro tau matches his published values within 0.02 in all four modes.
+
 #### temperature 0, D16/V16 (request macro tau)
 
-| benchmark | jiapingW-step39000 | jiapingW published |
-|---|---|---|
-| gsm8k | 9.719 | 9.721 |
-| math500 | 9.342 | 9.376 |
-| humaneval | 7.463 | 7.482 |
-| mbpp | 6.939 | 6.989 |
-| mt-bench | 5.197 | 5.159 |
-| pooled | 8.887 | 8.899 |
+| benchmark | ours, epoch 12 | jiapingW step-39000, re-measured here | jiapingW published |
+|---|---|---|---|
+| gsm8k | 9.696 | 9.719 | 9.721 |
+| math500 | 9.383 | 9.342 | 9.376 |
+| humaneval | 7.582 | 7.463 | 7.482 |
+| mbpp | 7.109 | 6.939 | 6.989 |
+| mt-bench | 5.388 | 5.197 | 5.159 |
+| **pooled** | 8.922 | 8.887 | 8.899 |
 
 #### temperature 0, D16/V8 (request macro tau)
 
-| benchmark | jiapingW-step39000 | jiapingW published |
-|---|---|---|
-| gsm8k | 6.459 | 6.452 |
-| math500 | 6.346 | 6.356 |
-| humaneval | 5.633 | 5.608 |
-| mbpp | 5.410 | 5.400 |
-| mt-bench | 4.240 | 4.233 |
-| pooled | 6.119 | 6.114 |
+| benchmark | ours, epoch 12 | jiapingW step-39000, re-measured here | jiapingW published |
+|---|---|---|---|
+| gsm8k | 6.439 | 6.459 | 6.452 |
+| math500 | 6.360 | 6.346 | 6.356 |
+| humaneval | 5.698 | 5.633 | 5.608 |
+| mbpp | 5.490 | 5.410 | 5.400 |
+| mt-bench | 4.359 | 4.240 | 4.233 |
+| **pooled** | 6.131 | 6.119 | 6.114 |
 
 #### temperature 1, D16/V16 (request macro tau)
 
-| benchmark | jiapingW-step39000 | jiapingW published |
-|---|---|---|
-| gsm8k | 8.968 | 8.984 |
-| math500 | 8.108 | 8.186 |
-| humaneval | 6.686 | 6.683 |
-| mbpp | 6.533 | 6.427 |
-| mt-bench | 4.814 | 4.658 |
-| pooled | 8.095 | 8.099 |
+| benchmark | ours, epoch 12 | jiapingW step-39000, re-measured here | jiapingW published |
+|---|---|---|---|
+| gsm8k | 8.959 | 8.968 | 8.984 |
+| math500 | 8.123 | 8.108 | 8.186 |
+| humaneval | 6.883 | 6.686 | 6.683 |
+| mbpp | 6.574 | 6.533 | 6.427 |
+| mt-bench | 4.945 | 4.814 | 4.658 |
+| **pooled** | 8.120 | 8.095 | 8.099 |
 
 #### temperature 1, D16/V8 (request macro tau)
 
-| benchmark | jiapingW-step39000 | jiapingW published |
-|---|---|---|
-| gsm8k | 6.243 | 6.234 |
-| math500 | 5.872 | 5.859 |
-| humaneval | 5.265 | 5.346 |
-| mbpp | 5.182 | 5.141 |
-| mt-bench | 3.995 | 3.972 |
-| pooled | 5.836 | 5.828 |
+| benchmark | ours, epoch 12 | jiapingW step-39000, re-measured here | jiapingW published |
+|---|---|---|---|
+| gsm8k | 6.216 | 6.243 | 6.234 |
+| math500 | 5.905 | 5.872 | 5.859 |
+| humaneval | 5.315 | 5.265 | 5.346 |
+| mbpp | 5.254 | 5.182 | 5.141 |
+| mt-bench | 4.091 | 3.995 | 3.972 |
+| **pooled** | 5.845 | 5.836 | 5.828 |
 <!-- BENCH_TABLE_END -->
 
 ## Results per epoch
