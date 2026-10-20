@@ -17,7 +17,7 @@ code, so it is imported by training entry points, not at package load.
 from __future__ import annotations
 
 import abc
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Optional, Tuple
 
 import torch
@@ -115,6 +115,42 @@ class DraftTrainStrategy(abc.ABC):
     def checkpoint_state_filter(self, state_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Select the keys this strategy persists as draft weights."""
         return state_dict
+
+
+def finalize_step_output(strategy: Any, out: StepOutput) -> StepOutput:
+    """Fold draft-architecture terms into one training ``forward_loss`` result.
+
+    Strategies own their objective. MoE draft layers contribute per-layer
+    load-balancing aux losses and ``moe/*`` metrics identically for every
+    method, so they join the step here once and no strategy carries MoE code.
+    With ``loss_terms`` the aux objective is weighted by the micro-batch's
+    loss denominator, so the trainer's global normalization yields its
+    token-weighted mean; otherwise it adds to the scalar loss.
+    """
+
+    from specforge.modeling.draft.moe import pop_moe_step_terms
+
+    terms = pop_moe_step_terms(strategy.trainable_module())
+    if terms is None:
+        return out
+    ratio_metrics = {**out.ratio_metrics, **terms.ratio_metrics}
+    if terms.objective is None:
+        return replace(out, ratio_metrics=ratio_metrics)
+    if out.loss_terms is None:
+        return replace(
+            out,
+            loss=out.loss + terms.objective.to(out.loss.dtype),
+            ratio_metrics=ratio_metrics,
+        )
+    numerator, denominator = out.loss_terms
+    denominator = denominator.detach()
+    numerator = numerator + terms.objective.to(numerator.dtype) * denominator
+    return replace(
+        out,
+        loss=numerator / denominator.clamp_min(torch.finfo(denominator.dtype).tiny),
+        loss_terms=(numerator, denominator),
+        ratio_metrics=ratio_metrics,
+    )
 
 
 def _prepare_eagle_target(
@@ -769,6 +805,7 @@ class DominoTrainStrategy(DraftTrainStrategy):
 
 __all__ = [
     "DraftTrainStrategy",
+    "finalize_step_output",
     "Eagle3TrainStrategy",
     "PEagleTrainStrategy",
     "DFlashTrainStrategy",

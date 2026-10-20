@@ -34,6 +34,7 @@ from specforge.training.strategies.base import (
     DraftTrainStrategy,
     StepContext,
     StepOutput,
+    finalize_step_output,
 )
 
 logger = logging.getLogger(__name__)
@@ -427,7 +428,9 @@ class TrainerCore:
     def train_step(
         self, batch: TrainBatch, ctx: Optional[StepContext] = None
     ) -> StepResult:
-        out: StepOutput = self.strategy.forward_loss(batch, ctx)
+        out: StepOutput = finalize_step_output(
+            self.strategy, self.strategy.forward_loss(batch, ctx)
+        )
         loss = out.loss
         ratio_metrics = dict(out.ratio_metrics)
         if out.loss_terms is not None:
@@ -763,6 +766,7 @@ class TrainerController:
         data_prepositioned: bool = False,
         checkpoint_manager: Optional[Any] = None,
         checkpoint_extra: Optional[Dict[str, Any]] = None,
+        draft_state_codec: Optional[Any] = None,
         profiling_options=None,
         async_ack: bool = False,
     ) -> None:
@@ -784,6 +788,9 @@ class TrainerController:
         # Extra entries merged into the shared checkpoint payload at save
         # (e.g. dataset_size / accumulation_steps, validated on resume).
         self.checkpoint_extra = dict(checkpoint_extra or {})
+        # Renames module-named draft weights to their checkpoint layout (MoE
+        # presets); None writes module names.
+        self.draft_state_codec = draft_state_codec
         self.max_steps = max_steps
         # Schedule horizon for step-dependent losses (Domino's lambda_base decay);
         # distinct from max_steps, an optional early-stop CAP. Falls back to
@@ -1201,10 +1208,11 @@ class TrainerController:
         )
         shared = None
         if mgr.is_rank0():
+            draft_state = self.core.strategy.checkpoint_state_filter(full["model"])
+            if self.draft_state_codec is not None:
+                draft_state = dict(self.draft_state_codec.encode(draft_state))
             shared = {
-                "draft_state_dict": self.core.strategy.checkpoint_state_filter(
-                    full["model"]
-                ),
+                "draft_state_dict": draft_state,
                 "global_step": step,
                 "epoch": self.epoch,
                 "epoch_batch": self._epoch_batch,

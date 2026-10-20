@@ -286,6 +286,11 @@ class Trainer:
                 f"{sorted(reserved)}"
             )
         persisted_contract = {**standard_checkpoint_extra, **custom_checkpoint_extra}
+        from specforge.modeling.draft.moe import MoEStateCodec
+
+        # Built before the wrap: checkpoints name MoE weights in the preset's
+        # upstream layout, the live module in the fused HF layout.
+        draft_state_codec = MoEStateCodec.for_model(model.draft_model)
         # Resume: draft weights load BEFORE the FSDP wrap so the optimizer's fp32
         # masters (cloned at build) start from them; this rank's own optimizer/RNG
         # shard (``state['backend']``) loads after the wrap builds the optimizer.
@@ -351,7 +356,7 @@ class Trainer:
                         f"{key}={comparison_current}; "
                         f"resume with the original configuration"
                     )
-            saved_weights = state["draft_state_dict"]
+            saved_weights = draft_state_codec.decode(state["draft_state_dict"])
             load_result = model.draft_model.load_state_dict(saved_weights, strict=False)
             loaded = len(saved_weights) - len(load_result.unexpected_keys)
             missing_keys = set(load_result.missing_keys)
@@ -475,6 +480,7 @@ class Trainer:
                 output_dir, run_id, max_checkpoints=max_checkpoints
             ),
             checkpoint_extra=persisted_contract,
+            draft_state_codec=draft_state_codec,
             start_step=resume["global_step"] if resume else 0,
             start_epoch=resume["epoch"] if resume else 0,
             start_batch=resume["epoch_batch"] if resume else 0,

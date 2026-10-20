@@ -45,6 +45,8 @@ def export_to_hf(
     the checkpoint itself carries ``embed_tokens.weight``. A randomly
     initialized embedding would silently break serving, so its absence raises.
     """
+    from specforge.modeling.draft.moe import MoEStateCodec
+
     state = resolve_training_state(checkpoint_path)
     model = materialize_draft(
         state, draft_config_path, vocab_mapping_path=vocab_mapping_path
@@ -77,14 +79,16 @@ def export_to_hf(
         )[embedding_key]
     # Preserve checkpoint weights at their original precision, but keep the
     # mapping explicitly loaded by materialize_draft when one was requested.
+    codec = MoEStateCodec.for_model(model)
     full_state.update(
         {
             key: value
-            for key, value in state["draft_state_dict"].items()
+            for key, value in codec.decode(state["draft_state_dict"]).items()
             if not (vocab_mapping_path and key in {"t2d", "d2t"})
         }
     )
-    model.save_pretrained(output_dir, state_dict=full_state)
+    # MoE weights leave in their preset's upstream layout.
+    model.save_pretrained(output_dir, state_dict=dict(codec.encode(full_state)))
     apply_legacy_rope_scaling(output_dir)
     return output_dir
 
