@@ -32,8 +32,15 @@ def utc(ts):
     return dt.datetime.fromtimestamp(ts, dt.timezone.utc).strftime("%Y-%m-%d %H:%MZ")
 
 
-def parse_log(path):
-    """Return ({step: {metric: value}}, [launch timestamps]) from the console log."""
+def parse_log(path, plain_step_offset=0):
+    """Return ({step: {metric: value}}, [launch timestamps]) from the console log.
+
+    Every logged step is printed twice: the trainer's console dict (`acc`, `lr`, `ce_loss`, ... at the run's own
+    step) and the tracker's dict (`train/acc`, ..., `perf/*` at the W&B step, which a warm-started continuation
+    offsets by SPECFORGE_LOG_STEP_OFFSET). Both are merged per step with the `train/` prefix stripped (first value
+    wins, as several ranks may print the same step); `plain_step_offset` moves a continuation's console dicts onto
+    the W&B step axis.
+    """
     steps, launches = {}, []
     if not os.path.exists(path):
         return steps, launches
@@ -45,15 +52,15 @@ def parse_log(path):
                                 .replace(tzinfo=dt.timezone.utc).timestamp())
                 continue
             for step_text, dict_text in STEP_RE.findall(line):
-                step = int(step_text)
-                if step in steps:
-                    continue
                 try:
                     payload = ast.literal_eval(re.sub(r"\b(nan|inf)\b", "None", dict_text))
                 except (ValueError, SyntaxError):
                     continue
-                steps[step] = {k: float(v) for k, v in payload.items()
-                               if isinstance(v, (int, float)) and not isinstance(v, bool)}
+                tracker = any(k.startswith("train/") for k in payload)
+                merged = steps.setdefault(int(step_text) + (0 if tracker else plain_step_offset), {})
+                for k, v in payload.items():
+                    if isinstance(v, (int, float)) and not isinstance(v, bool):
+                        merged.setdefault(k[len("train/"):] if k.startswith("train/") else k, float(v))
     return steps, launches
 
 
@@ -114,8 +121,9 @@ def main():
     total_src = "schedule payload" if sched.get("total_steps") else "estimate (num_epochs x epoch_steps)"
     cont_total = 0
     if args.cont_out:
-        c_steps, c_launches = parse_log(os.path.join(args.cont_out, "launch.log"))
-        steps.update({s: v for s, v in c_steps.items() if s not in steps})  # continuation logs are already step-offset
+        # the continuation's tracker dicts are logged at main_total + its own step; move its console dicts there too
+        c_steps, c_launches = parse_log(os.path.join(args.cont_out, "launch.log"), plain_step_offset=main_total)
+        steps.update({s: v for s, v in c_steps.items() if s not in steps})
         launches += c_launches
         c_sched = schedule_payload(args.cont_out)
         cont_total = int(c_sched.get("total_steps") or (N - M) * E)
