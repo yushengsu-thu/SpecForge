@@ -24,6 +24,7 @@ from specforge.export.checkpoint_io import (
     materialize_draft,
     resolve_training_state,
 )
+from specforge.modeling.draft.moe.checkpoint import normalize_moe_checkpoint_state
 from specforge.modeling.target.checkpoint import load_checkpoint_tensors
 
 
@@ -80,7 +81,9 @@ def export_to_hf(
     full_state.update(
         {
             key: value
-            for key, value in state["draft_state_dict"].items()
+            for key, value in normalize_moe_checkpoint_state(
+                model, state["draft_state_dict"]
+            ).items()
             if not (vocab_mapping_path and key in {"t2d", "d2t"})
         }
     )

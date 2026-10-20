@@ -213,6 +213,10 @@ class Trainer:
             allowed_missing_checkpoint_keys = set()
             resolved_strategy_kwargs = dict(strategy_kwargs or {})
 
+        from specforge.modeling.draft.moe.runtime import moe_resume_contract
+
+        algorithm_checkpoint_extra.update(moe_resume_contract(model))
+
         if allowed_missing_checkpoint_keys:
             draft_state_keys = set(model.draft_model.state_dict())
             unknown_allowed_missing = allowed_missing_checkpoint_keys - draft_state_keys

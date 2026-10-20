@@ -27,6 +27,8 @@ from .dflash_mask import (
 )
 from .flex_attention import compile_friendly_flex_attention
 from .flex_attention_backend import flex_attention_backend
+from .moe import MoELayer, apply_pending_balance_updates, build_ffn
+from .moe.checkpoint import prepare_hf_moe_load
 from .registry import register_draft
 
 FULL_ATTENTION = "full_attention"
@@ -566,7 +568,7 @@ class Qwen3DFlashDecoderLayer(GradientCheckpointingLayer):
             layer_idx=layer_idx,
             kernels=kernels,
         )
-        self.mlp = kernels.make_mlp(config)
+        self.mlp = build_ffn(config, dense=kernels.make_mlp)
         self.input_layernorm = kernels.make_rms_norm(
             config.hidden_size, config.rms_norm_eps
         )
@@ -731,6 +733,35 @@ class DFlashDraftModel(Qwen3PreTrainedModel):
         self.register_load_state_dict_pre_hook(normalize_draft_head_checkpoint_keys)
         self.post_init()
 
+    @torch.no_grad()
+    def _init_weights(self, module: nn.Module) -> None:
+        super()._init_weights(module)
+        if isinstance(module, MoELayer):
+            module.reset_parameters(self.config.initializer_range)
+
+    def gradient_checkpointing_enable(self, gradient_checkpointing_kwargs=None):
+        if getattr(self.config, "moe_preset", None) is not None:
+            options = dict(gradient_checkpointing_kwargs or {})
+            if options.get("use_reentrant", False):
+                raise ValueError(
+                    "MoE auxiliary objectives require non-reentrant activation "
+                    "checkpointing; set use_reentrant=False"
+                )
+            options["use_reentrant"] = False
+            gradient_checkpointing_kwargs = options
+        return super().gradient_checkpointing_enable(gradient_checkpointing_kwargs)
+
+    @staticmethod
+    def _load_pretrained_model(
+        model, state_dict, checkpoint_files, load_config, expected_keys=None
+    ):
+        load_config = prepare_hf_moe_load(
+            model, state_dict, checkpoint_files, load_config
+        )
+        return Qwen3PreTrainedModel._load_pretrained_model(
+            model, state_dict, checkpoint_files, load_config, expected_keys
+        )
+
     def _build_decoder_layer(
         self,
         config: Qwen3Config,
@@ -868,6 +899,7 @@ class DFlashDraftModel(Qwen3PreTrainedModel):
         use_cache: bool = False,
         **kwargs,
     ) -> CausalLMOutputWithPast:
+        apply_pending_balance_updates(self)
         hidden_states = noise_embedding
         target_hidden = self.hidden_norm(self.fc(target_hidden))
         position_embeddings = self.rotary_emb(hidden_states, position_ids)

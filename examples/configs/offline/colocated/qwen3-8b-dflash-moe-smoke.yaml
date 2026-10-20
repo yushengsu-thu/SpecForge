@@ -1,0 +1,34 @@
+# Capture real Qwen3-8B layer-18 features first; see docs/draft_moe.md.
+model:
+  target_model_path: Qwen/Qwen3-8B
+  draft_model_config: configs/qwen3-8b-dflash-moe-smoke.json
+  embedding_key: model.embed_tokens.weight
+  torch_dtype: bfloat16
+  use_liger_kernel: false
+data:
+  hidden_states_path: ./cache/hidden_states/qwen3-8b-moe-smoke
+  max_length: 256
+  cache_dir: ./cache
+training:
+  strategy: dflash
+  num_epochs: 1
+  max_steps: 4
+  batch_size: 1
+  accumulation_steps: 2
+  fsdp_sharding: FULL_SHARD
+  learning_rate: 0.0001
+  attention_backend: sdpa
+  num_anchors: 4
+  objective_chunk_blocks: 1
+  save_interval: 2
+  log_interval: 1
+  seed: 42
+tracking:
+  report_to: none
+run_id: qwen3-8b-dflash-moe-smoke
+output_dir: ./outputs/qwen3-8b-dflash-moe-smoke
+deployment:
+  mode: local_colocated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 8
