@@ -34,6 +34,7 @@ from specforge.training.strategies.base import (
     DraftTrainStrategy,
     StepContext,
     StepOutput,
+    finalize_step_output,
 )
 
 logger = logging.getLogger(__name__)
@@ -427,7 +428,9 @@ class TrainerCore:
     def train_step(
         self, batch: TrainBatch, ctx: Optional[StepContext] = None
     ) -> StepResult:
-        out: StepOutput = self.strategy.forward_loss(batch, ctx)
+        out = finalize_step_output(
+            self.strategy.forward_loss(batch, ctx), self.strategy.trainable_module()
+        )
         loss = out.loss
         ratio_metrics = dict(out.ratio_metrics)
         if out.loss_terms is not None:

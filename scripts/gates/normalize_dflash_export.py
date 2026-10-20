@@ -132,6 +132,16 @@ def normalize_export(config_path: str, expected_block_size: int) -> Dict[str, An
         _normalize_dflash2(config, method_config)
     else:
         config["architectures"] = ["DFlashDraftModel"]
+    if (
+        config.get("moe_preset") is not None
+        or "n_routed_experts" in config
+        or "num_experts" in config
+    ):
+        # Persist resolved dimensions for serving loaders that do not know
+        # SpecForge presets. Qwen's runtime tensors already use official names.
+        from specforge.modeling.draft.moe.config import resolve_moe_config
+
+        resolve_moe_config(config)
     config.pop("auto_map", None)
     with path.open("w", encoding="utf-8") as handle:
         json.dump(config, handle, indent=2)

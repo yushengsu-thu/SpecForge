@@ -84,6 +84,12 @@ def export_to_hf(
             if not (vocab_mapping_path and key in {"t2d", "d2t"})
         }
     )
+    if getattr(model.config, "moe_preset", None) is not None:
+        from specforge.modeling.draft.moe.layout import canonicalize_moe_state_dict
+
+        full_state = canonicalize_moe_state_dict(
+            full_state, layout=model.config.moe_layout
+        )
     model.save_pretrained(output_dir, state_dict=full_state)
     apply_legacy_rope_scaling(output_dir)
     return output_dir

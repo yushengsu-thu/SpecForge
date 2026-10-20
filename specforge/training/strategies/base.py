@@ -17,7 +17,7 @@ code, so it is imported by training entry points, not at package load.
 from __future__ import annotations
 
 import abc
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Optional, Tuple
 
 import torch
@@ -54,6 +54,34 @@ class StepContext:
     global_step: int = 0
     total_steps: Optional[int] = None
     collect_detailed_metrics: bool = True
+
+
+def finalize_step_output(out: StepOutput, module: nn.Module) -> StepOutput:
+    """Add model-owned auxiliary objectives at the common trainer boundary.
+
+    MoE losses are already coefficient-weighted. For objectives expressed as
+    additive numerator/denominator terms, weight the auxiliary mean by the
+    detached denominator so accumulation and data-parallel normalization apply
+    to the complete objective. Strategies keep their existing loss contracts.
+    """
+    from specforge.modeling.draft.moe import collect_moe_auxiliary_loss
+
+    auxiliary_loss, moe_metrics = collect_moe_auxiliary_loss(module)
+    if auxiliary_loss is None:
+        return out
+    loss_terms = out.loss_terms
+    if loss_terms is not None:
+        numerator, denominator = loss_terms
+        loss_terms = (
+            numerator + auxiliary_loss * denominator.detach(),
+            denominator,
+        )
+    return replace(
+        out,
+        loss=out.loss + auxiliary_loss,
+        metrics={**out.metrics, **moe_metrics},
+        loss_terms=loss_terms,
+    )
 
 
 def linear_lambda_base(
@@ -776,5 +804,6 @@ __all__ = [
     "DominoTrainStrategy",
     "StepOutput",
     "StepContext",
+    "finalize_step_output",
     "linear_lambda_base",
 ]
