@@ -99,4 +99,10 @@ class PackedExperts(nn.Module):
         hidden = swiglu(gate, up, self.config.swiglu_limit)
         output = grouped_mm(hidden, self.down_proj.transpose(-2, -1), offs=offsets)
         output = output * weights.flatten()[order, None].to(output.dtype)
-        return torch.zeros_like(x).index_add(0, token, output.to(x.dtype))
+        # Restore unique (token, top-k slot) assignments before reduction.
+        # A single CUDA index_add over repeated token IDs has nondeterministic
+        # BF16 atomic accumulation; a fixed top-k reduction avoids that race.
+        per_slot = output[order.argsort()].reshape(
+            x.shape[0], indices.shape[-1], x.shape[-1]
+        )
+        return per_slot.sum(dim=1, dtype=x.dtype)

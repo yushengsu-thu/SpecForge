@@ -347,3 +347,66 @@ def test_grouped_mm_matches_reference_with_empty_and_odd_expert_groups():
         grouped.experts.parameters(), reference.experts.parameters()
     ):
         assert_close(actual.grad, expected.grad, atol=0.002, rtol=0.02)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA grouped_mm")
+def test_grouped_top10_repeats_exactly_and_preserves_all_gradient_paths():
+    torch.manual_seed(20261020)
+    topology = dict(
+        hidden_size=256,
+        n_routed_experts=16,
+        num_experts_per_tok=10,
+        moe_intermediate_size=64,
+        shared_expert_intermediate_size=64,
+    )
+    reference = (
+        MoELayer(resolve_moe_config(moe_config(**topology)), 256).cuda().bfloat16()
+    )
+    grouped_config = moe_config(
+        **topology,
+        dflash_config={"moe_dispatch": "grouped_mm", "moe_aux_loss_coeff": 0.03},
+    )
+    grouped = MoELayer(resolve_moe_config(grouped_config), 256).cuda().bfloat16()
+    with torch.no_grad():
+        for expert in range(16):
+            reference.gate.weight[expert].fill_(0.001 * (expert - 8))
+    grouped.load_state_dict(reference.state_dict())
+    x = (
+        1 + 0.1 * torch.randn(17, 256, device="cuda", dtype=torch.bfloat16)
+    ).requires_grad_()
+    other_x = x.detach().clone().requires_grad_()
+    expected, actual = reference(x), grouped(other_x)
+    for module, output in ((reference, expected), (grouped, actual)):
+        finalized = finalize_step_output(
+            module, StepOutput(output.float().square().mean(), {})
+        )
+        finalized.loss.backward()
+
+    def close_bf16(value, control):
+        value, control = value.float(), control.float()
+        assert torch.isfinite(value).all() and torch.isfinite(control).all()
+        difference = (value - control).abs()
+        # BF16 GEMMs and fixed-K reduction can round differently from sequential
+        # per-expert BF16 addition. Bound both whole-tensor and peak errors.
+        assert difference.norm() <= 0.02 * control.norm().clamp_min(1e-12)
+        assert difference.max() <= 0.03 * control.abs().max().clamp_min(1e-12)
+
+    close_bf16(actual, expected)
+    close_bf16(other_x.grad, x.grad)
+    for parameter, control in zip(grouped.parameters(), reference.parameters()):
+        close_bf16(parameter.grad, control.grad)
+    assert grouped.experts.gate_up_proj.grad[:6].count_nonzero() == 0
+    assert grouped.experts.down_proj.grad[:6].count_nonzero() == 0
+    was_deterministic = torch.are_deterministic_algorithms_enabled()
+    was_warn_only = torch.is_deterministic_algorithms_warn_only_enabled()
+    try:
+        torch.use_deterministic_algorithms(False)
+        with torch.no_grad():
+            outputs = []
+            for _ in range(32):
+                grouped.begin_forward()
+                outputs.append(grouped(other_x))
+                grouped.take_auxiliary_records()
+        assert all(torch.equal(output, outputs[0]) for output in outputs[1:])
+    finally:
+        torch.use_deterministic_algorithms(was_deterministic, warn_only=was_warn_only)
