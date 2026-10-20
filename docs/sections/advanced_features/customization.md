@@ -177,3 +177,46 @@ step provider may construct a `DraftTrainStrategy`, while its model and data
 providers own algorithm-specific assembly. Add builtin registrations to the
 explicit catalog used by the application composition root; do not add a
 method-specific launcher or a second mutable registry.
+
+## Draft MoE FFNs
+
+DFlash, DFlash2, DSpark and Domino can replace only their draft FFNs with a
+Qwen3-Next / Qwen3.5 / Qwen3.8-style MoE. Select the preset in the draft JSON;
+structural values override the preset at the top level, and execution/training
+controls live under `dflash_config`:
+
+```json
+{
+  "moe_preset": "qwen3_5_moe",
+  "n_routed_experts": 512,
+  "num_experts_per_tok": 10,
+  "moe_intermediate_size": 512,
+  "shared_expert_intermediate_size": 2048,
+  "dflash_config": {
+    "moe_aux_loss_coeff": 0.001,
+    "moe_dispatch": "grouped_mm"
+  }
+}
+```
+
+Merge these fields into an existing draft JSON and preserve its other
+`dflash_config` settings. Without a preset the dense FFN is unchanged; expert
+counts without a preset are errors. `grouped_mm` requires CUDA BF16;
+`reference` is the portable default. The trainer includes the auxiliary
+objective and `moe/*` diagnostics automatically.
+
+Start with `configs/qwen3-8b-dflash-moe.json` and
+`examples/configs/offline/colocated/qwen3-8b-dflash-moe.yaml`. This example uses a
+Qwen3-8B teacher and 16 top-2 experts per draft layer. Use the existing offline
+feature preparation workflow and set `data.hidden_states_path` before running:
+
+```bash
+specforge train \
+  --config examples/configs/offline/colocated/qwen3-8b-dflash-moe.yaml \
+  data.hidden_states_path=/datasets/qwen3-8b-features
+```
+
+See `specforge/modeling/draft/moe/DESIGN.md` for the contracts, native fused
+checkpoint schema, optional router centering and future family boundaries.
+The preset supplies the FFN; it does not supply another model's attention,
+hyper-connections or quantization.
