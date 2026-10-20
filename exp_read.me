@@ -128,7 +128,7 @@ D16/V8) are run on every epoch checkpoint after the 12 epochs finish.
 | 13 | 139932 | 0.6839 | 0.1609 | `epoch-13/` | | | | | | |
 | 14 | 150696 | 0.6817 | 0.6246 | `epoch-14/` | | | | | | |
 | 15 | 161460 | 0.7147 | 0.4838 | `epoch-15/` | | | | | | |
-| 16 | 172224 | | | `epoch-16/` |
+| 16 | 172224 | 0.6734 | 0.3467 | `epoch-16/` | | | | | | |
 | 17 | 182988 | | | `epoch-17/` |
 | 18 | 193752 | | | `epoch-18/` | | | | | | |
 
@@ -185,6 +185,7 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
 - epoch 13 done at 2026-10-19T19:44:23Z: step 139932, train/acc 0.6839, train/loss 0.1609, uploaded to HF epoch-13/
 - epoch 14 done at 2026-10-20T02:54:41Z: step 150696, train/acc 0.6817, train/loss 0.6246, uploaded to HF epoch-14/
 - epoch 15 done at 2026-10-20T10:04:59Z: step 161460, train/acc 0.7147, train/loss 0.4838, uploaded to HF epoch-15/
+- epoch 16 done at 2026-10-20T17:15:17Z: step 172224, train/acc 0.6734, train/loss 0.3467, uploaded to HF epoch-16/
 - 2026-10-18 20:21 UTC: decided to continue to 18 epochs (see "Continuation: epochs 13-18"); `SPECFORGE_TRACKING_STEP_OFFSET` added to the tracker (3375bc93); a chain script on the node launches the continuation after epoch 12.
 - 2026-10-19 11:46-12:14 UTC: the 12-epoch run finished training and W&B synced, but the job did not exit: the managed
   producer stayed blocked in `streaming_ref_channel.poll` (`disaggregated.py:761`, after "drive_producer returning ...
