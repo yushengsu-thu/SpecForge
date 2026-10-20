@@ -157,6 +157,53 @@ captured samples for that fixed window. Change the JSON dispatch to `grouped_mm`
 to test native expert execution on H200. This is a runnable configuration,
 not evidence of convergence, serving quality, speedup, or completed GPU testing.
 
+## One H200 node: four capture servers and four DSpark MoE trainers
+
+`configs/qwen3-8b-dspark-moe.json` and
+`examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-h200-disaggregated.yaml`
+provide the larger requested execution pattern. The teacher remains
+`Qwen/Qwen3-8B`; this is a separate five-layer DSpark configuration, not the
+small offline smoke model. It uses 512 routed experts, top-10, width 512,
+shared width 2048, grouped-MM, CPU optimizer offload, and FULL_SHARD across four
+trainer ranks. Qwen3-8B's existing DSpark backbone geometry, target layers
+`[1, 9, 17, 25, 33]`, block size seven, rank-256 Markov head, and confidence head
+are retained. Routing uses the official `none` center; the undefined `sample`
+option is an explicit difference from any recipe requesting that name.
+
+The CLI owns four TP1 capture servers on GPUs 0–3, the Mooncake TCP master,
+producer, and four trainer ranks on GPUs 4–7. Run after making those eight GPUs
+available and providing the configured Qwen3-8B conversation dataset:
+
+```bash
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+  specforge train --config examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-h200-disaggregated.yaml
+```
+
+The launcher inherits this allocator setting in every managed child. Use the
+clean-main SGLang capture patch matching its pinned SGLang release and install
+Mooncake with `mooncake_master` available. Training uses maximum length 8192,
+512 anchors, objective chunks of 128, batch two and accumulation 64: four ranks
+consume 512 samples per optimizer step. The in-flight high watermark is 768,
+with low watermark 512, so capture can supply a complete optimizer window plus
+prefetch before durable acknowledgement. The default 256-ref cap would be too
+small for this accumulation window.
+
+At maximum length, five auxiliary layer rows plus one final row carry
+`6 × 8192 × 4096 × 2` bytes = 384 MiB per sample. The configured 768-ref high
+watermark represents up to 288 GiB of feature payload before staging and
+metadata. Four 128 GiB Mooncake segment contributions provide capacity; this
+also needs substantial host RAM alongside the offloaded FP32 Adam state. These
+are capacity calculations, not measured residency or a memory-fit result.
+
+For a bounded runtime check, override `training.max_steps=2`,
+`training.save_interval=1` and the dataset path while keeping the architecture,
+length, anchors, split, and accumulation settings. Supply at least 1024 samples
+for those two optimizer windows. Short inputs do not validate the 8192-token
+memory path. The managed-local supervisor currently rejects `resume_from`;
+checkpoint/export and continuation through a compatible externally managed or
+offline run must be tested separately. This recipe has no claim of completed
+GPU execution, throughput, convergence, or serving support.
+
 Math/layout references: official Transformers
 [`qwen3_next`, `qwen3_5_moe`, `qwen4_exp`](https://github.com/huggingface/transformers/tree/60f49549e0db78f022ee30aa1571d9ab6e4a15bf/src/transformers/models),
 Qwen checkpoint configs/indexes and safetensors headers at Next `9c7f2fbe`,
