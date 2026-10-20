@@ -201,11 +201,118 @@ length, anchors, split, and accumulation settings. Supply at least 1024 samples
 for those two optimizer windows. Short inputs do not validate the 8192-token
 memory path. The managed-local supervisor currently rejects `resume_from`;
 checkpoint/export and continuation through a compatible externally managed or
-offline run must be tested separately. This recipe has no claim of completed
-GPU execution, throughput, convergence, or serving support.
+offline run must be tested separately. The bounded validation below covers
+runtime correctness; convergence, throughput, and serving support are not claimed.
 
 Math/layout references: official Transformers
 [`qwen3_next`, `qwen3_5_moe`, `qwen4_exp`](https://github.com/huggingface/transformers/tree/60f49549e0db78f022ee30aa1571d9ab6e4a15bf/src/transformers/models),
 Qwen checkpoint configs/indexes and safetensors headers at Next `9c7f2fbe`,
 3.5 `59d61f3c`, and 3.8 `de4b8e4d`; grouped-MM/autograd source at PyTorch
 [`v2.13.0`](https://github.com/pytorch/pytorch/tree/cf30153c4c131c8164ee7798e5022d810682e2cb).
+
+## H200 validation and its boundaries
+
+The post-correction validation used source `d921b6f8ee939121b77cf1637f1ddb3985f03842`,
+PyTorch **2.13.0**, Transformers **5.12.1**, and SGLang **0.5.18** on one
+eight-H200 node. The tested online model was the full
+five-layer DSpark MoE above: **16,613,910,017 parameters**, 512 experts/top-10,
+routed width 512, shared width 2048, and grouped-MM execution. Four TP1 teacher
+capture servers used GPUs 0–3; four FULL_SHARD trainers used GPUs 4–7 with CPU
+optimizer offload. Batch two and accumulation 64 produced 512 samples per
+optimizer window. Actual input length was 8192, with 512 anchors and objective
+chunks of 128.
+
+The dataset contained 1280 newly authored synthetic conversations. All 1280
+were actually captured through the Qwen3-8B teacher, with zero capture failures;
+the unused tail of 256 samples was settled at end of stream.
+These are genuine teacher features, not evidence that the authored answers are
+on-policy, high quality, or suitable for convergence evaluation. The public CLI
+exited successfully at 2026-10-20 21:19:53 UTC after two optimizer steps. Every
+trainer rank performed 128 backward calls and two optimizer updates. The metrics
+below are the reported values, without combining metrics with different weights:
+
+| Optimizer step | Loss | CE metric | MoE auxiliary metric | Gradient norm |
+| --- | --- | --- | --- | --- |
+| 1 | 4.27719736099 | 14.28656196594 | 0.55796426535 | 57.79375076294 |
+| 2 | 7.36499834061 | 8.90692806244 | 0.489936619997 | 6.37076759338 |
+
+Sampled observations showed finite gradients and positive parameter updates in
+the router, routed experts, shared expert, and shared gate at both steps. Sampling
+does not establish a change in every individual parameter. Peak allocated CUDA
+memory was 93.97 GiB; this observation is not a memory or throughput benchmark.
+These short runs establish execution and update paths; they do not establish convergence,
+acceptance length, serving compatibility, or a performance improvement.
+
+A fresh isolated CUDA probe found that the earlier grouped combine's single
+`index_add` over repeated top-k token IDs was nondeterministic: 31 of 31 ordinary
+repeated forwards differed. PyTorch documents this CUDA behavior. Grouped output
+now restores unique `(token, top-k slot)` assignments and performs a fixed top-k
+sum, retaining the activation dtype and autograd paths. Router math and checkpoint
+layout did not change. On the corrected source, 32 ordinary-mode K10 forwards
+were bitwise identical, and output, input-gradient, and every parameter-gradient
+path matched the portable reference within the explicit BF16 test tolerances.
+The two native CUDA tests passed. The selected CPU regression suite passed
+110 tests with 13 skips and 153 subtests. The full-scale rerun above also
+exercises the combine's additional temporary buffer.
+
+Capture traffic used `runtime.producer_lease: 4` and
+`runtime.producer_concurrency: 4`; the requested reference used eight for both.
+This is an explicit traffic-setting difference. The GPU topology remained four
+capture servers plus four trainers on eight GPUs.
+
+To reproduce the bounded public entry point in an isolated environment, install
+the pinned dependencies and Mooncake, make `mooncake_master` available, apply
+the clean-main capture patch, and provide a fresh dataset with at least 1024
+valid samples:
+
+```bash
+bash scripts/apply_sglang_spec_capture_patch.sh --target v0.5.18
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+  specforge train --config examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-h200-disaggregated.yaml \
+  data.train_data_path=/absolute/path/to/fresh-conversations.jsonl \
+  training.max_steps=2 training.total_steps=2 training.save_interval=1
+```
+
+SGLang 0.5.18 requires the versioned capture patch for this run; it lacks the
+observer modules required by the alternative plugin. Routing used
+`moe_router_center: none`. The undefined `sample` option remains rejected.
+
+All following acceptance checks also passed on the corrected source above.
+A separate small four-rank offline model used portable `reference` dispatch and
+resumed step 3 through steps 4/5 against five uninterrupted steps. Across saved
+steps 3, 4, and 5, all 510 compared checkpoint tensors (516,405,768 elements) matched exactly,
+including model tensors, every rank's FP32 masters, Adam moments/counters,
+scheduler, CPU/CUDA RNG, and training counters/cursor. Live observations confirmed
+CPU FP32 masters and CPU Adam moments. This does not establish managed-local
+queue/supervisor resume, which clean main rejects, or full-model native grouped
+bitwise optimizer continuation.
+
+Separate four-rank FSDP tests explicitly enabled HF non-reentrant decoder
+checkpointing before wrapping. Both portable `reference` and native `grouped_mm`
+dispatch passed exact ordinary-versus-checkpointed gradient and actual updated
+parameter-shard comparisons for main-plus-auxiliary and auxiliary-only objectives.
+Decoder calls changed from `[2, 2]` to `[4, 4]`, confirming recomputation. Router
+updates remained nonzero; the final layer's expert gradient was zero for the
+auxiliary-only objective. Native acceptance used exact comparisons with no
+numerical-tolerance fallback. The public online recipe separately exercises
+objective chunk checkpointing.
+
+The full 16.6B HF export/reload check exited successfully. The untouched
+`AutoDraftModel.from_pretrained(dtype="auto")` result had clean loading information
+and all 82 serialized tensor keys, values, and dtypes matched the finite training
+checkpoint exactly. Both nonpersistent RoPE buffers had matching FP32 values
+against the independent HF-policy reference. Three repeated forwards of the same
+loaded model and the independent HF-policy forward were bitwise identical
+(maximum difference zero), with deterministic algorithms disabled and
+`CUBLAS_WORKSPACE_CONFIG` unset. No checkpoint weights were copied into the
+reloaded subject to obtain this result.
+
+The original training-builder forward comparison exposed an existing generic
+RoPE precision difference, reproduced by a fresh dense control. Clean-main
+`AutoDraftModel.from_config` calls `model.to(BF16)`, rounding the nonpersistent
+`inv_freq` and `original_inv_freq` buffers; HF dtype-context loading creates
+those buffers in FP32. Therefore parameter integrity does not imply exact
+parity with the old training-buffer policy. The diagnostic failure is retained.
+No change was made to eliminate this RoPE policy difference; the generic builder
+and loaded subject were left intact. Any independent HF-policy comparison uses
+HF's dtype context only for the separate reference model.
