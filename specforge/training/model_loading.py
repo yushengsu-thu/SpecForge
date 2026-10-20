@@ -441,9 +441,13 @@ def warm_start_draft_model(
 
     runtime_state = _runtime_state_file(source)
     if runtime_state is not None:
+        from specforge.modeling.draft.moe import MoEStateCodec
+
         checkpoint_format: Literal["specforge", "pretrained"] = "specforge"
         state = _load_specforge_draft_state(runtime_state, expected_strategy=strategy)
+        state = dict(MoEStateCodec.for_model(model).decode(state))
     else:
+        # from_pretrained already maps checkpoint names to module names.
         checkpoint_format = "pretrained"
         state = _load_pretrained_draft_state(
             source,

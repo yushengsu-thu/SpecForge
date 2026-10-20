@@ -86,6 +86,19 @@ def _normalize_dspark(config: Dict[str, Any], method_config: Dict[str, Any]) -> 
     config["architectures"] = ["Qwen3DSparkModel"]
 
 
+def _normalize_moe(config: Dict[str, Any]) -> None:
+    """Spell a draft MoE FFN out in its upstream layout's config fields.
+
+    Serving reads the published upstream fields instead of SpecForge presets.
+    Only MoE exports import SpecForge; dense exports stay dependency-free.
+    """
+
+    from specforge.modeling.draft.moe import get_moe_layout, resolve_moe_config
+
+    moe_config = resolve_moe_config(config)
+    config.update(get_moe_layout(moe_config.layout).config_fields(moe_config))
+
+
 def normalize_export(config_path: str, expected_block_size: int) -> Dict[str, Any]:
     path = Path(config_path)
     with path.open(encoding="utf-8") as handle:
@@ -132,6 +145,8 @@ def normalize_export(config_path: str, expected_block_size: int) -> Dict[str, An
         _normalize_dflash2(config, method_config)
     else:
         config["architectures"] = ["DFlashDraftModel"]
+    if config.get("moe_preset") is not None:
+        _normalize_moe(config)
     config.pop("auto_map", None)
     with path.open("w", encoding="utf-8") as handle:
         json.dump(config, handle, indent=2)

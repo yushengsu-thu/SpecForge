@@ -173,11 +173,13 @@ def materialize_draft(
     when ``vocab_mapping_path`` is supplied to restore them.
     """
     from specforge.modeling.auto import AutoDraftModel, AutoDraftModelConfig
+    from specforge.modeling.draft.moe import MoEStateCodec
 
     draft_config = AutoDraftModelConfig.from_file(draft_config_path)
     torch_dtype = checkpoint_dtype(state["draft_state_dict"]) or torch.bfloat16
     model = AutoDraftModel.from_config(draft_config, torch_dtype=torch_dtype)
-    missing, unexpected = model.load_state_dict(state["draft_state_dict"], strict=False)
+    draft_state = MoEStateCodec.for_model(model).decode(state["draft_state_dict"])
+    missing, unexpected = model.load_state_dict(draft_state, strict=False)
     if unexpected:
         raise ValueError(
             f"checkpoint carries weights the {type(model).__name__} architecture "

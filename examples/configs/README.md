@@ -175,6 +175,7 @@ assume the command runs from the repository root.
 | --- | --- |
 | EAGLE3 offline, colocated | [`offline/colocated/qwen3-8b-eagle3.yaml`](offline/colocated/qwen3-8b-eagle3.yaml) |
 | DFlash offline, colocated | [`offline/colocated/qwen3-8b-dflash.yaml`](offline/colocated/qwen3-8b-dflash.yaml) |
+| DFlash with MoE FFNs (`moe_preset`), offline, colocated | [`offline/colocated/qwen3-8b-dflash-moe.yaml`](offline/colocated/qwen3-8b-dflash-moe.yaml) |
 | Domino offline, colocated | [`offline/colocated/qwen3-8b-domino.yaml`](offline/colocated/qwen3-8b-domino.yaml) |
 | DSpark offline, colocated | [`offline/colocated/qwen3-4b-dspark.yaml`](offline/colocated/qwen3-4b-dspark.yaml) |
 | EAGLE3 offline, disaggregated | [`offline/disaggregated/qwen3-8b-eagle3.yaml`](offline/disaggregated/qwen3-8b-eagle3.yaml) |
