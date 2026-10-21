@@ -1,4 +1,4 @@
-# dense-same: Qwen3-8B DSpark dense drafter, 12 epochs
+# dense-same: Qwen3-8B DSpark dense drafter, 12 epochs (continued to 24)
 
 Branch `dense-same` (base: `spark-Qwen3-8B`). The dense DSpark drafter for `Qwen/Qwen3-8B`, trained with the
 hyperparameters of the published Qwen3-8B dense DSpark run
@@ -9,9 +9,9 @@ instead of 6. One continuous run: one W&B curve, one checkpoint per epoch, every
 | | |
 |---|---|
 | recipe | `examples/configs/online/disaggregated/external/qwen3-8b-dspark-dense-same-2node-h200.yaml` |
-| launch | `scripts/launch/dense-same/` (`capture_node.sh`, `trainer_node.sh`, `watch_exports.sh`, `epoch_results.py`) |
+| launch | `scripts/launch/dense-same/` (`capture_node.sh`, `trainer_node.sh`, `watch_exports.sh`, `epoch_results.py`; continuations: `continue_node.sh`, `segment.sh`, `reap_producer.sh`) |
 | W&B | entity `eigent_radixark_training`, project `qwen3-8b-dspark`, run id `dense-same-r6` shown as `dense-same` (fixed id, `WANDB_RESUME=allow`; `dense-same`, `dense-same-causal`, `dense-same-r3`, `dense-same-r4` and `dense-same-r5` were abandoned attempts and W&B does not allow reusing a deleted id) |
-| HF | `yushengsu/dense-same`, folders `1ep/` ... `12ep/` (servable HF export + tokenizer), README mirrors the table below |
+| HF | `yushengsu/dense-same`, folders `1ep/` ... `24ep/` (servable HF export + tokenizer), README mirrors the table below |
 | hardware | devbox `moe-16exp-1024dim` (h200-sci-k8s-1): rank 0 = 8x H200 capture servers, rank 1 = 8x H200 trainer |
 | started | 2026-10-15 18:52 UTC (causal run; the 13:23 UTC bidirectional run was abandoned at step 4,050) |
 
@@ -88,7 +88,7 @@ Domino/DSpark vocabulary projection controls `cache_vocab_projection` / `flatten
 
 - 2026-10-15 ~22:20 UTC: the devbox `moe-16exp-1024dim` (id aafb151e) was released (not by this run's automation); /scratch was wiped with the r5 run at about step 2,300 (no checkpoint yet). A new 16x H200 devbox with the same name (id c31564d0) was acquired at 22:31 UTC and rebuilt with `scripts/launch/dense-same/setup_node.sh`; the run restarted from scratch at 22:49 UTC as W&B run id `dense-same-r6` (2.98 s per step, same as r5). Two false starts on the fresh image: the trainer needs wandb/accelerate/zstandard/liger-kernel installed, and plain `pip install mooncake-transfer-engine` must not be run (it replaces the image's CUDA-13 Mooncake 0.3.12.post1 with a CUDA-12 0.3.13 wheel and feature reads fail with status -900); both are now handled by `setup_node.sh`.
 
-## Continuation: epochs 13-18
+## Continuation: epochs 13-18 (then 14-18 again, and 19-24)
 
 At the user's request the run continues to 18 epochs, with the same scheme as the dense-1/8 run. An online
 producer cannot resume and the 12-epoch cosine schedule decays to 0, so epochs 13-18 are a separate launch on the
@@ -105,6 +105,33 @@ waiting until the 12-epoch run has finished cleanly):
 | exports | `13ep/` ... `18ep/` on HF, recorded below at global step 133,200 + 11,100 x k |
 
 Expect a small dip in train/acc right after epoch 12 while the LR warms up again.
+
+### 2026-10-20/21: hand-off, crash in epoch 14, and the plan to 24 epochs
+
+- **12 -> 13 hand-off (2026-10-20).** The 12-epoch run finished at 12:18 UTC (final checkpoint step 133,209), but its
+  online producer then spun in its end-of-run Mooncake cleanup: `StreamingRefChannel.poll(max_n=1024)` re-reads the whole
+  remaining 27.5 GB `refs.jsonl` on every call, so the cleanup is quadratic (~6 days). Only that producer was killed;
+  the epoch-12 export and the epoch 13-18 launch then ran automatically (first step 12:52 UTC).
+  `scripts/launch/dense-same/reap_producer.sh` now does this automatically once `refs.jsonl.consumer_done` exists.
+- **Crash (2026-10-21 04:36 UTC).** Capture server 1 died in SGLang's decode CUDA-graph runner (`RuntimeError: The runtime
+  hidden-state mode exceeds the fixed CUDA graph capture mode (NULL)`). Every capture server holds a 100 GB Mooncake
+  segment, so the features stored there vanished and all 8 consumer ranks failed (`KeyError ... not available (freed,
+  stale, or never written)`) at segment step 19,190 (global step 152,390, inside epoch 14). Epoch 13 (step 144,300) was
+  already exported.
+- **Hardening.** All 8 capture servers were restarted with `--disable-cuda-graph` (`capture_node.sh`, NCCL ports
+  37100-37107) and the Mooncake master was restarted with an empty store.
+- **Plan chosen by the user:** finish epochs 14-18 from the epoch-13 checkpoint, then train 6 more epochs (19-24). Both are
+  weights-only warm starts launched by `scripts/launch/dense-same/segment.sh` (the second one chained to start after the
+  first finishes); each segment starts its own export watcher and producer reaper.
+
+| segment | run id | start checkpoint | epochs | LR | prompt seed | true global step | W&B step |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| C | `dense-same-ep14-18` | epoch 13 (`dense-same-ep13-18-step11100`) | 14-18 (5) | 1% warm-up to 1.88e-4 (the planned 6-epoch cosine value at the end of epoch 13), cosine to 0 | 55 | 144,300 + s | 152,390 + s |
+| D | `dense-same-ep19-24` | final checkpoint of C (epoch 18) | 19-24 (6) | 1% warm-up to 2e-4, cosine to 0 | 60 | 199,800 + s | 207,890 + s |
+
+W&B history cannot be rewound on this account (the rewind API is in private preview), so the crashed epoch-14 attempt
+stays in run `dense-same-r6` at W&B steps 144,310-152,390 and the curve continues right after it: from epoch 14 on the
+W&B step is the true global step + 8,090. The epoch table below and the HF commit messages use the true global step.
 
 ## Acceptance-length benchmark (protocol of jiapingW/Qwen3-8b-dspark-SpecForge)
 
@@ -201,6 +228,12 @@ is exported. acc / ce = mean over the last 100 logged steps of the epoch; acc pe
 | 16 | - | - | - | - | - | - |
 | 17 | - | - | - | - | - | - |
 | 18 | - | - | - | - | - | - |
+| 19 | - | - | - | - | - | - |
+| 20 | - | - | - | - | - | - |
+| 21 | - | - | - | - | - | - |
+| 22 | - | - | - | - | - | - |
+| 23 | - | - | - | - | - | - |
+| 24 | - | - | - | - | - | - |
 
 Highest train/acc so far: **0.8863** (epoch 11, peak value).
 <!-- EPOCH_TABLE_END -->
