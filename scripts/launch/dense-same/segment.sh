@@ -2,10 +2,14 @@
 # dense-same: launch one weights-only continuation segment (same scheme as the epoch 13-18 continuation and the
 # dense-1/8 run: AdamW reset, short warm-up, cosine to 0), optionally after a previous segment has finished.
 # A new online producer needs a fresh run id / channel / store, so every segment has its own RUN id; W&B resumes the
-# same run (WANDB_RUN_ID, default dense-same-r6) with SPECFORGE_TRACKING_STEP_OFFSET=STEP_OFFSET so the curve continues.
+# same run (WANDB_RUN_ID, default dense-same-r6) with SPECFORGE_TRACKING_STEP_OFFSET=WANDB_STEP_OFFSET (default STEP_OFFSET,
+# the true global step at the segment start) so the curve continues. W&B history cannot be rewound on this account (private
+# preview), so after the crashed epoch-14 attempt (W&B steps 144,310-152,390) later segments log with WANDB_STEP_OFFSET =
+# STEP_OFFSET + 8,090; exported/recorded epochs keep the true global step (STEP_OFFSET + segment step).
 # Starts the segment's export watcher (epochs EPOCH_OFFSET+1 .. TOTAL_EPOCHS) and its producer reaper.
 # usage (trainer node, rank 1):  RUN=... NUM_EPOCHS=... LR=... SEED=... STEP_OFFSET=... EPOCH_OFFSET=... TOTAL_EPOCHS=... \
-#          { CKPT=<checkpoint dir> | PREV_RUN=<run id> PREV_MIN_STEP=<final step> } [WARMUP=0.01] bash segment.sh <CAP_IP> <TRN_IP>
+#          { CKPT=<checkpoint dir> | PREV_RUN=<run id> PREV_MIN_STEP=<final step> } [WARMUP=0.01] [WANDB_STEP_OFFSET=...] \
+#          bash segment.sh <CAP_IP> <TRN_IP>
 set -u
 CAP=${1:?capture ip}; TRN=${2:?trainer ip}
 RUN=${RUN:?}; NUM_EPOCHS=${NUM_EPOCHS:?}; LR=${LR:?}; SEED=${SEED:?}; STEP_OFFSET=${STEP_OFFSET:?}
@@ -36,12 +40,12 @@ pgrep -f "mooncake_master --enable_http_metadata_server" >/dev/null || { CUDA_VI
 for i in $(seq 0 7); do until curl -sf -m 3 "http://$CAP:$((30000+i))/health" >/dev/null; do log "waiting for capture server $i on $CAP"; sleep 20; done; done; log "all 8 capture servers healthy"
 export HF_HOME=/scratch/hf-cache HF_HUB_CACHE=/scratch/hf-cache/hub HF_DATASETS_CACHE=/scratch/hf-cache/datasets HF_TOKEN="$(cat $BASE/hf_token)"
 export WANDB_API_KEY="$(cat $BASE/wandb_key)" WANDB_ENTITY=eigent_radixark_training WANDB_RUN_ID=$W_RUN_ID WANDB_RESUME=allow
-export SPECFORGE_TRACKING_STEP_OFFSET=$STEP_OFFSET
+WANDB_STEP_OFFSET=${WANDB_STEP_OFFSET:-$STEP_OFFSET}; export SPECFORGE_TRACKING_STEP_OFFSET=$WANDB_STEP_OFFSET
 unset RANK LOCAL_RANK WORLD_SIZE MASTER_ADDR MASTER_PORT NODE_RANK
 OV="model.draft_checkpoint_path=$CKPT training.num_epochs=$NUM_EPOCHS training.learning_rate=$LR training.warmup_ratio=$WARMUP training.prompt_seed=$SEED"
 OV="$OV run_id=$RUN output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state tracking.wandb_dir=$OUT/wandb"
 launch() {
-  mkdir -p $OUT; log "launching $RUN: $OV (W&B $W_RUN_ID, step offset $STEP_OFFSET)"
+  mkdir -p $OUT; log "launching $RUN: $OV (W&B $W_RUN_ID, W&B step offset $WANDB_STEP_OFFSET, global step offset $STEP_OFFSET)"
   setsid nohup python -m specforge.cli train -c "$R" $OV >> $OUT/launch.log 2>&1 < /dev/null &
   log "trainer launcher pid $!"
 }
