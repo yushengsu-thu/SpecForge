@@ -4,13 +4,14 @@ Branch `dense-1/8` of https://github.com/yushengsu-thu/SpecForge (based on `spar
 One experiment: the Qwen3-8B dense DSpark drafter of the dense-vs-MoE comparison
 (`docs/recipes/qwen3-8b-dspark-moe-disaggregated.md`) shrunk in structure only: 2 layers instead
 of 5, attention width 1/4 (GQA 8/2 heads x 128), MLP hidden dim 1/8 (1536); residual hidden stays
-4096. Trained for 12 epochs on the Open Perfect Blend regen corpus.
+4096. Trained for 24 epochs on the Open Perfect Blend regen corpus (12 epochs, then two 6-epoch warm-started
+continuations).
 
 | Link | |
 | --- | --- |
 | Code / config | this branch: `configs/qwen3-8b-dspark-dense-1-8-2layer-causal-noconf-b16.json` + the launch yaml below |
-| W&B (one line for all 12 epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8-r8 (display name `dense-1-8`) |
-| Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/dense-1-8 (`epoch-01/` ... `epoch-12/`, each a `specforge export`ed servable directory) |
+| W&B (one line for all epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8-r8 (display name `dense-1-8`) |
+| Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/dense-1-8 (`epoch-01/` ... `epoch-24/`, each a `specforge export`ed servable directory) |
 | Machine | one 8x H200 node (`specforge-dsv4-h200`, cluster h200-sci-k8s-1), SGLang 0.5.18 + spec-capture patch, torch 2.13.0+cu130 |
 | Launch yaml | `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml` |
 
@@ -104,12 +105,28 @@ At the user's request the run continues to 18 epochs. `deployment.managed_local`
 Epoch 12+k is the continuation's step 10764*k checkpoint, listed below at global step 129168 + 10764*k. Expect a small
 dip in train/acc right after epoch 12 while the LR warms up again.
 
+## Continuation: epochs 19-24
+
+At the user's request (2026-10-21) the run continues for 6 more epochs after epoch 18, with the same recipe as
+epochs 13-18:
+
+| | |
+| --- | --- |
+| start | weights-only warm start from the epoch-18 checkpoint (`qwen3-8b-dspark-dense-1-8-ep13-18-step64584`); AdamW state is reset |
+| LR schedule | 1% warmup to **2e-4**, cosine to 0 over the 6 epochs (64,586 steps) |
+| prompt order | `training.prompt_seed: 66` (epochs 1-12 used 42, epochs 13-18 used 54) |
+| run id / output | `qwen3-8b-dspark-dense-1-8-ep19-24`, checkpoint every 1,196 steps |
+| W&B | the same run (`dense-1-8-r8`) with `SPECFORGE_TRACKING_STEP_OFFSET=193752` (= 18 x 10,764) |
+| launch | `launch_dense18.sh continue2`; started automatically on the node once the epochs 13-18 run has finished. The hand-off script also handles the shutdown hang seen after epoch 12 (py-spy dump, then kill the leftover process tree) |
+
+Epoch 18+k is this run's step 10764*k checkpoint, listed below at global step 193752 + 10764*k.
+
 ## Results per epoch
 
 Training metrics are the values logged at (or just before) the epoch's checkpoint step (W&B `train/acc`,
 `train/loss`). Acceptance benchmarks (`specforge benchmark`, same protocol as the
 published run: gsm8k and the pooled 2,400-question set, temperature 0 and 1, D16/V16 and
-D16/V8) are run on every epoch checkpoint after the 12 epochs finish.
+D16/V8) are run on every epoch checkpoint after training finishes (now after epoch 24).
 
 | epoch | step | train/acc | train/loss | checkpoint | gsm8k t0 D16/V16 | gsm8k t0 D16/V8 | pooled t0 D16/V16 | pooled t0 D16/V8 | gsm8k t1 D16/V16 | gsm8k t1 D16/V8 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -131,6 +148,12 @@ D16/V8) are run on every epoch checkpoint after the 12 epochs finish.
 | 16 | 172224 | 0.6734 | 0.3467 | `epoch-16/` | | | | | | |
 | 17 | 182988 | 0.6934 | 0.6680 | `epoch-17/` | | | | | | |
 | 18 | 193752 | | | `epoch-18/` | | | | | | |
+| 19 | 204516 | | | `epoch-19/` |
+| 20 | 215280 | | | `epoch-20/` |
+| 21 | 226044 | | | `epoch-21/` |
+| 22 | 236808 | | | `epoch-22/` |
+| 23 | 247572 | | | `epoch-23/` |
+| 24 | 258336 | | | `epoch-24/` |
 
 Reference (published dense drafter, FFN 12288, jiapingW/Qwen3-8b-dspark-SpecForge step 39,000
 ~3.5 epochs, global batch 128): train/acc 0.71 / 0.75 / 0.78 at the end of epochs 1 / 2 / 3;
@@ -194,6 +217,7 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
   run as finished. The producer stack (py-spy) and the final launch log were saved on the node
   (`/scratch/logs/dense18_producer_hang_pyspy.txt`), the process tree was killed by hand, and the chain launched the
   epochs 13-18 continuation at 12:14 UTC (warm start from step 129168, W&B `dense-1-8-r8` with step offset 129168).
+- 2026-10-21 04:44 UTC: decided to continue for 6 more epochs (see "Continuation: epochs 19-24"); `launch_dense18.sh continue2` added and a hand-off script on the node launches it after epoch 18. The per-epoch benchmarks move to after epoch 24.
 
 - 2026-10-15 13:24 UTC: branch created, draft config + launch yaml added, corpus and Qwen3-8B
   downloaded to the node. 3-step smoke on a 2,000-row slice (`training.max_steps=3`, no warmup):
