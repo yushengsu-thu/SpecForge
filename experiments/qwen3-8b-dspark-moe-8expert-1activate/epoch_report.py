@@ -6,6 +6,8 @@ Sources, all optional (without them the file reports "not launched"):
   <out>/<run>-step<k*E>/          epoch checkpoints (mtime -> wall-clock per epoch)
   <out>/control/**/*.json         the online schedule payload (num_prompts, total_steps)
   <exports>/<k>ep/.uploaded       which epochs are on the HF repo
+  <cont out>/continuation.json    a warm-started continuation's recipe (lr, warmup_ratio, prompt_seed, step_offset,
+                                  warm_start); one --cont-out/--cont-run/--cont-epoch-offset triple per continuation
 """
 import argparse
 import ast
@@ -106,9 +108,11 @@ def main():
     ap.add_argument("--num-epochs", type=int, default=12)
     ap.add_argument("--hf-repo", default="yushengsu/qwen3-8b-dspark-moe-8expert-1activate")
     ap.add_argument("--write", default=None, help="file to write (default: stdout)")
-    ap.add_argument("--cont-out", default=None, help="output dir of the warm-started continuation run")
-    ap.add_argument("--cont-run", default=None)
-    ap.add_argument("--cont-epoch-offset", type=int, default=12, help="epochs completed before the continuation")
+    ap.add_argument("--cont-out", action="append", default=[],
+                    help="output dir of a warm-started continuation run (repeat once per continuation, in order)")
+    ap.add_argument("--cont-run", action="append", default=[])
+    ap.add_argument("--cont-epoch-offset", action="append", type=int, default=[],
+                    help="epochs completed before that continuation")
     args = ap.parse_args()
 
     out, run, E, N = args.out, args.run, args.epoch_steps, args.num_epochs
@@ -116,20 +120,42 @@ def main():
     keep = args.keep or f"/scratch/ckpt-keep/{run}"
     steps, launches = parse_log(os.path.join(out, "launch.log"))
     sched = schedule_payload(out)
-    M = args.cont_epoch_offset if args.cont_out else N   # epochs of the first run
+    if not (len(args.cont_out) == len(args.cont_run) == len(args.cont_epoch_offset)):
+        ap.error("give one --cont-out, --cont-run and --cont-epoch-offset per continuation")
+    starts = [0] + list(args.cont_epoch_offset)                 # epochs completed before each segment
+    M = starts[1] if len(starts) > 1 else N                    # epochs of the first run
     main_total = int(sched.get("total_steps") or M * E)
     total_src = "schedule payload" if sched.get("total_steps") else "estimate (num_epochs x epoch_steps)"
-    cont_total = 0
-    if args.cont_out:
-        # the continuation's tracker dicts are logged at main_total + its own step; move its console dicts there too
-        c_steps, c_launches = parse_log(os.path.join(args.cont_out, "launch.log"), plain_step_offset=main_total)
+    # segments: the first run, then each continuation; a continuation logs its tracker dicts at base + its own step
+    # (SPECFORGE_LOG_STEP_OFFSET = steps of all earlier segments), and its console dicts are moved there too
+    segs = [{"out": out, "run": run, "keep": keep, "first": 0, "n": M, "base": 0, "total": main_total, "meta": {}}]
+    for j, (c_out, c_run, c_off) in enumerate(zip(args.cont_out, args.cont_run, args.cont_epoch_offset)):
+        n = (starts[j + 2] if j + 2 < len(starts) else N) - c_off
+        base = segs[-1]["base"] + segs[-1]["total"]
+        c_steps, c_launches = parse_log(os.path.join(c_out, "launch.log"), plain_step_offset=base)
         steps.update({s: v for s, v in c_steps.items() if s not in steps})
         launches += c_launches
-        c_sched = schedule_payload(args.cont_out)
-        cont_total = int(c_sched.get("total_steps") or (N - M) * E)
-    total = main_total + cont_total
-    ends = [k * E for k in range(1, M)] + [main_total] + [main_total + j * E for j in range(1, N - M)] + ([main_total + cont_total] if N > M else [])
-    cont_keep = f"/scratch/ckpt-keep/{args.cont_run}" if args.cont_run else None
+        try:
+            with open(os.path.join(c_out, "continuation.json")) as fh:
+                meta = json.load(fh)
+        except (OSError, ValueError):
+            meta = {}
+        segs.append({"out": c_out, "run": c_run, "keep": f"/scratch/ckpt-keep/{c_run}", "first": c_off, "n": n,
+                     "base": base, "total": int(schedule_payload(c_out).get("total_steps") or n * E), "meta": meta})
+    cont_segs = segs[1:]
+    total = sum(s["total"] for s in segs)
+    ends = []
+    for s in segs:
+        ends += [s["base"] + i * E for i in range(1, s["n"])] + [s["base"] + s["total"]]
+    ends = ends[:N]
+
+    def seg_of(k):
+        return next(s for s in reversed(segs) if k > s["first"])
+
+    def recipe(s):
+        m = s["meta"]
+        lr, wu, seed = m.get("lr", 6e-4), m.get("warmup_ratio", 0.04), m.get("prompt_seed", 42 + s["first"])
+        return f"re-warmup {wu:.0%} to {f'{lr:.0e}'.replace('e-0', 'e-')}, cosine to 0, prompt_seed {seed}"
     num_prompts = sched.get("num_prompts")
     ordered = sorted(steps)
     last = ordered[-1] if ordered else 0
@@ -145,7 +171,8 @@ def main():
         eta = utc(now + (total - last) / rate * 3600) if rate and last < total else "-"
         cur_epoch = min(N, next((i + 1 for i, e in enumerate(ends) if last < e), N))
         state = ("finished" if last >= total else
-                 ("running" if (alive(args.cont_out) if args.cont_out and os.path.exists(os.path.join(args.cont_out, "launcher.pid")) else alive(out)) else "NOT RUNNING (launcher gone)"))
+                 ("running" if alive(next((s["out"] for s in reversed(segs) if os.path.exists(os.path.join(s["out"], "launcher.pid"))), out))
+                  else "NOT RUNNING (launcher gone)"))
         status = (f"**{state}** - optimizer step {last:,} / {total:,} "
                   f"({100 * last / total:.1f}%), epoch {cur_epoch}/{N}; launched {utc(first_launch)}"
                   + (f" (relaunched {utc(last_launch)}, {len(launches)} launches)" if len(launches) > 1 else "")
@@ -172,10 +199,8 @@ def main():
                         statistics.fmean([m[key] for m in window[-20:] if key in m]) if any(key in m for m in window[-20:]) else None)
                   for key in loss_keys}
         lr_end = next((m["lr"] for m in reversed(window) if "lr" in m), None)
-        if k <= M:
-            t = ckpt_time(out, run, k * E) or ckpt_time(keep, run, k * E)
-        else:
-            t = ckpt_time(args.cont_out, args.cont_run, (k - M) * E) or ckpt_time(cont_keep, args.cont_run, (k - M) * E)
+        s = seg_of(k)
+        t = ckpt_time(s["out"], s["run"], (k - s["first"]) * E) or ckpt_time(s["keep"], s["run"], (k - s["first"]) * E)
         hours = (t - prev_t) / 3600 if (t and prev_t) else None
         if t:
             prev_t = t
@@ -229,7 +254,10 @@ def main():
     w("| item | setting |")
     w("|---|---|")
     w("| strategy | dspark, online disaggregated capture (Mooncake TCP) |")
-    w(f"| epochs / optimizer steps | {N} in one run / {total:,} ({total_src}) |" if N == M else f"| epochs / optimizer steps | {N} = {M} in the first run ({main_total:,} steps, one cosine) + {N - M} in a warm-started continuation ({cont_total:,} steps, re-warmup 4% to 6e-4, cosine to 0) = {total:,} |")
+    w(f"| epochs / optimizer steps | {N} in one run / {total:,} ({total_src}) |" if not cont_segs else
+      f"| epochs / optimizer steps | {N} = {M} in the first run ({main_total:,} steps, one cosine)"
+      + "".join(f" + {s['n']} in a warm-started continuation ({s['total']:,} steps, {recipe(s)})" for s in cont_segs)
+      + f" = {total:,} |")
     w("| global batch | 132 = batch_size 2 x accumulation_steps 11 x 6 DDP ranks (the dense-1/8 arm uses 133 = 1 x 19 x 7) |")
     w("| optimizer | AdamW, lr 6e-4, cosine over the whole run, warmup 4%, FP32 master params |")
     w("| max_grad_norm | 1.0 |")
@@ -243,7 +271,16 @@ def main():
     w("### Deviations from the dense run")
     w("")
     w("- Global batch 132 instead of 128: 128 does not divide over 6 trainer ranks; 2 x 11 x 6 = 132 is the branch's standard for the 2-server + 6-rank layout (the dense-1/8 arm runs 1 x 19 x 7 = 133). A 1-server + 7-rank layout was profiled and rejected: the single capture server ran stop-and-go against the producer window and did not beat two servers.")
-    w(f"- {N} epochs in one run with one cosine schedule (the dense run planned 6 epochs and stopped at step 40,960)." if N == M else f"- {N} epochs: {M} in one run with one cosine schedule, then {N - M} more as a continuation warm-started from the epoch-{M} checkpoint (draft weights only; fresh AdamW state), re-warmed up over 4% of its steps to 6e-4 and cosine-decayed to 0, with prompt_seed {42 + M} so the data order differs from the first {N - M} epochs. W&B: same run, steps offset by {main_total:,} (`SPECFORGE_LOG_STEP_OFFSET`). (The dense run planned 6 epochs and stopped at step 40,960.)")
+    if not cont_segs:
+        w(f"- {N} epochs in one run with one cosine schedule (the dense run planned 6 epochs and stopped at step 40,960).")
+    else:
+        w(f"- {N} epochs: {M} in one run with one cosine schedule, then {len(cont_segs)} warm-started continuation run(s); "
+          "`deployment.managed_local` cannot resume a run, so each continuation starts from the previous run's final "
+          "checkpoint (draft weights only; fresh AdamW state) and logs into the same W&B run with its steps offset by "
+          "all earlier steps (`SPECFORGE_LOG_STEP_OFFSET`). (The dense run planned 6 epochs and stopped at step 40,960.)")
+        for s in cont_segs:
+            w(f"  - epochs {s['first'] + 1}-{s['first'] + s['n']} (`{s['run']}`): warm start from the epoch-{s['first']} "
+              f"checkpoint, {recipe(s)}, W&B steps offset by {s['base']:,}.")
     w("- The upstream PR stack #957-#963 is merged (same stack as the dense-1/8 branch) plus #966 (cost-balanced consumer dispatch, a scheduling-only change that keeps each optimizer window's sample membership), so `is_causal: true`, `flatten_vocab_projection`, `cache_vocab_projection`, `ddp_bucket_cap_mb: 128`, one DDP gradient sync per window and the system-prompt removal apply exactly as in the reference run.")
     w("- Structure shrunk like the dense-1/8 arm: 2 layers instead of 5 and GQA 8/2 heads instead of 32/8; the dense FFN is replaced by 8 x 1536 top-1 experts (no shared expert); every other draft-config field is the dense skeleton.")
     w("")
