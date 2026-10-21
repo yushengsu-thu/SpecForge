@@ -147,7 +147,7 @@ D16/V8) are run on every epoch checkpoint after training finishes (now after epo
 | 15 | 161460 | 0.7147 | 0.4838 | `epoch-15/` | | | | | | |
 | 16 | 172224 | 0.6734 | 0.3467 | `epoch-16/` | | | | | | |
 | 17 | 182988 | 0.6934 | 0.6680 | `epoch-17/` | | | | | | |
-| 18 | 193752 | | | `epoch-18/` | | | | | | |
+| 18 | 193752 | 0.6765 | 0.4375 | `epoch-18/` | | | | | | |
 | 19 | 204516 | | | `epoch-19/` |
 | 20 | 215280 | | | `epoch-20/` |
 | 21 | 226044 | | | `epoch-21/` |
@@ -210,6 +210,7 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
 - epoch 15 done at 2026-10-20T10:04:59Z: step 161460, train/acc 0.7147, train/loss 0.4838, uploaded to HF epoch-15/
 - epoch 16 done at 2026-10-20T17:15:17Z: step 172224, train/acc 0.6734, train/loss 0.3467, uploaded to HF epoch-16/
 - epoch 17 done at 2026-10-21T00:35:35Z: step 182988, train/acc 0.6934, train/loss 0.6680, uploaded to HF epoch-17/
+- epoch 18 done at 2026-10-21T07:45:54Z: step 193752, train/acc 0.6765, train/loss 0.4375, uploaded to HF epoch-18/ (end of the epochs 13-18 schedule; last logged step 64580)
 - 2026-10-18 20:21 UTC: decided to continue to 18 epochs (see "Continuation: epochs 13-18"); `SPECFORGE_TRACKING_STEP_OFFSET` added to the tracker (3375bc93); a chain script on the node launches the continuation after epoch 12.
 - 2026-10-19 11:46-12:14 UTC: the 12-epoch run finished training and W&B synced, but the job did not exit: the managed
   producer stayed blocked in `streaming_ref_channel.poll` (`disaggregated.py:761`, after "drive_producer returning ...
@@ -218,6 +219,12 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
   (`/scratch/logs/dense18_producer_hang_pyspy.txt`), the process tree was killed by hand, and the chain launched the
   epochs 13-18 continuation at 12:14 UTC (warm start from step 129168, W&B `dense-1-8-r8` with step offset 129168).
 - 2026-10-21 04:44 UTC: decided to continue for 6 more epochs (see "Continuation: epochs 19-24"); `launch_dense18.sh continue2` added and a hand-off script on the node launches it after epoch 18. The per-epoch benchmarks move to after epoch 24.
+- 2026-10-21 07:42-08:13 UTC: the epochs 13-18 run hung at shutdown exactly like the 12-epoch run (trainer ranks exited,
+  the managed producer, launcher, capture servers and Mooncake stayed up). The hand-off script detected it at 07:52 and
+  killed the 12-process tree, but its process filter matched its own `awk` command line, so it kept seeing one
+  "leftover" process and did not launch; a later retry also truncated the py-spy file, so no stack of this hang was
+  kept. Fixed (pattern rewritten so it cannot match itself, dump taken once) and restarted; the epochs 19-24 run
+  launched at 08:13 UTC (warm start from run-local step 64584, W&B `dense-1-8-r8` with step offset 193752).
 
 - 2026-10-15 13:24 UTC: branch created, draft config + launch yaml added, corpus and Qwen3-8B
   downloaded to the node. 3-step smoke on a 2,000-row slice (`training.max_steps=3`, no warmup):
