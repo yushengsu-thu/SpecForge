@@ -7,7 +7,7 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 
 ## Status
 
-**running** - optimizer step 161,563 / 193,759 (83.4%), epoch 16/18; launched 2026-10-15 20:55Z (relaunched 2026-10-19 20:36Z, 2 launches); 119.4 h elapsed, 1,354 steps/h, ETA 2026-10-21 20:04Z. total_steps from schedule payload, num_prompts 1,420,903.
+**running** - optimizer step 172,343 / 193,759 (88.9%), epoch 17/18; launched 2026-10-15 20:55Z (relaunched 2026-10-19 20:36Z, 2 launches); 127.2 h elapsed, 1,355 steps/h, ETA 2026-10-21 19:56Z. total_steps from schedule payload, num_prompts 1,420,903.
 
 ## Setup
 
@@ -77,7 +77,8 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 | 13 | 139,937 | 1076 | 0.6967 | 0.6981 | 1.3185 / 1.3069 | 0.0000 / 0.0000 | 0.5257 / 0.5233 | 0.4040 / 0.4318 | 0.0010 / 0.0011 | 0.000575 | 9.5 | [13ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/13ep) |
 | 14 | 150,701 | 1076 | 0.6981 | 0.7076 | 1.3102 / 1.2565 | 0.0000 / 0.0000 | 0.5232 / 0.5050 | 0.4076 / 0.4200 | 0.0010 / 0.0010 | 0.000472 | 7.8 | [14ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/14ep) |
 | 15 | 161,465 | 1077 | 0.7042 | 0.7121 | 1.2874 / 1.2471 | 0.0000 / 0.0000 | 0.5131 / 0.4989 | 0.3744 / 0.3718 | 0.0010 / 0.0011 | 0.000320 | 7.8 | [15ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/15ep) |
-| 16 | 172,229 | 10 | 0.7232 | 0.7232 | 1.1906 / 1.1906 | 0.0000 / 0.0000 | 0.4796 / 0.4796 | 0.2712 / 0.2712 | 0.0010 / 0.0010 | 0.000318 | - | in progress |
+| 16 | 172,229 | 1076 | 0.7126 | 0.7167 | 1.2508 / 1.2325 | 0.0000 / 0.0000 | 0.4984 / 0.4909 | 0.3322 / 0.3003 | 0.0010 / 0.0010 | 0.000162 | 7.8 | [16ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/16ep) |
+| 17 | 182,993 | 12 | 0.7179 | 0.7179 | 1.2365 / 1.2365 | 0.0000 / 0.0000 | 0.4897 / 0.4897 | 0.2857 / 0.2857 | 0.0010 / 0.0010 | 0.000160 | - | in progress |
 
 ## How the numbers are computed
 
@@ -87,4 +88,4 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 - *wall-clock* is the time between consecutive epoch checkpoints (epoch 1: since launch); it includes the dataset cache build for epoch 1.
 - Exports are `specforge export --to hf` of the epoch checkpoint with the frozen Qwen3-8B embedding, plus the Qwen3-8B tokenizer; the raw training checkpoints (optimizer state included) stay on the box under `/scratch/ckpt-keep/`.
 
-_Generated 2026-10-20 20:17Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
+_Generated 2026-10-21 04:08Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
