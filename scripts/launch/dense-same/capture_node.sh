@@ -1,9 +1,11 @@
 #!/bin/bash
 # dense-same capture node: 8 spec-capture SGLang servers serving Qwen/Qwen3-8B (bf16, TP1, one per GPU),
 # each registering a 100 GiB Mooncake RDMA segment with the master on the trainer node.
-# usage: bash capture_node.sh <CAPTURE_IP> <TRAINER_IP> [N=8]      (model: hf download Qwen/Qwen3-8B --local-dir /scratch/models/Qwen3-8B)
+# CUDA graphs are off: on 2026-10-21 a capture server died in the decode CUDA-graph runner ("runtime hidden-state mode
+# exceeds the fixed CUDA graph capture mode"), and its Mooncake segment took the in-flight features with it.
+# usage: [NCCL_BASE=37000] bash capture_node.sh <CAPTURE_IP> <TRAINER_IP> [N=8]      (model: hf download Qwen/Qwen3-8B --local-dir /scratch/models/Qwen3-8B)
 set -u
-CAP=${1:?capture ip}; TRN=${2:?trainer ip}; N=${3:-8}
+CAP=${1:?capture ip}; TRN=${2:?trainer ip}; N=${3:-8}; NCCL_BASE=${NCCL_BASE:-37000}
 MODEL=/scratch/models/Qwen3-8B; LOGS=/scratch/dense/logs
 export HF_HOME=/scratch/hf-cache FLASHINFER_DISABLE_VERSION_CHECK=1
 export MOONCAKE_GLOBAL_SEGMENT_SIZE=107374182400 MOONCAKE_LOCAL_BUFFER_SIZE=1073741824
@@ -17,7 +19,7 @@ until curl -s -m 3 "http://$TRN:35880/metadata?key=x" >/dev/null 2>&1; do log "w
 for i in $(seq 0 $((N-1))); do
   CUDA_VISIBLE_DEVICES=$i setsid nohup python -m sglang.launch_server --model-path $MODEL --dtype bfloat16 \
     --skip-tokenizer-init --tp-size 1 --chunked-prefill-size -1 --enable-spec-capture --spec-capture-method dspark --spec-capture-aux-layer-ids 1 9 17 25 33 \
-    --host 0.0.0.0 --port $((30000+i)) --nccl-port $((37000+i)) --attention-backend triton --mem-fraction-static 0.85 --disable-radix-cache \
+    --host 0.0.0.0 --port $((30000+i)) --nccl-port $((NCCL_BASE+i)) --attention-backend triton --mem-fraction-static 0.85 --disable-radix-cache --disable-cuda-graph \
     --context-length 8208 --max-running-requests 4 --max-total-tokens 65536 > $LOGS/capture-server-$i.log 2>&1 < /dev/null &
   log "capture-server-$i pid $! GPU $i port $((30000+i))"; sleep 20
 done
