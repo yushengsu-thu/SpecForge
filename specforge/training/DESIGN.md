@@ -92,6 +92,14 @@ All policies preserve sample coverage, per-rank accumulation counts, deduplicati
 durable acknowledgements, and incomplete-tail handling. Cost estimates are heuristics,
 not guarantees of throughput improvement.
 
+## Domino and DSpark Liger kernels
+
+Domino and DSpark support `model.use_liger_kernel: true` through their draft
+providers and constructors; `null` (auto) and `false` keep native kernels.
+This reuses the existing RMSNorm/SwiGLU kernel bundle without global patching
+or changes to parameter layouts. Explicit opt-in uses the same platform,
+activation, and dependency validation as DFlash.
+
 ## Endpoints
 
 ### What this plane calls into
