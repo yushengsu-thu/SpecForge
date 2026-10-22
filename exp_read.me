@@ -133,6 +133,21 @@ W&B history cannot be rewound on this account (the rewind API is in private prev
 stays in run `dense-same-r6` at W&B steps 144,310-152,390 and the curve continues right after it: from epoch 14 on the
 W&B step is the true global step + 8,090. The epoch table below and the HF commit messages use the true global step.
 
+### 2026-10-22: stopped at the user's request, devbox released
+
+At the user's request training was stopped at 06:02 UTC on 2026-10-22 at segment step 30,500 of `dense-same-ep14-18`
+(global step 174,800, about 36% into epoch 16; W&B step 182,890). The chained epoch 19-24 segment never started.
+The last complete checkpoint is the end of epoch 15 (global step 166,500, `dense-same-ep14-18-step22200`); the
+partial epoch 16 is not saved. The devbox `moe-16exp-1024dim` was then released (its `/scratch` is gone) and replaced
+by two 1-node devboxes, `specforge-exp-branch` and `specforge-dev-branch`.
+
+Kept on cluster storage, `/personal/dense-same-backup-20261022/` (survives across devboxes):
+`outputs/dense-same-ep14-18-step22200/` (full training state at the end of epoch 15, usable as
+`model.draft_checkpoint_path` for a weights-only warm start), `data/` (the regenerated Perfect Blend corpus), every
+segment's `launch.log` and schedule, `logs/`, `epoch_results.json`, the rendered recipes, and the acceptance-benchmark
+results (`bench/`). The tokenization cache (57 GB) was not kept; it is rebuilt on the first launch. All epoch exports
+1-15 are on HF (`yushengsu/dense-same`).
+
 ## Acceptance-length benchmark (protocol of jiapingW/Qwen3-8b-dspark-SpecForge)
 
 Run on the capture node (rank 0) next to the capture servers, which are idle most of the time (training speed was
