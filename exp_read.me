@@ -176,7 +176,7 @@ D16/V8) are run on every epoch checkpoint after training finishes (now after epo
 | 28 | 301392 | 0.6762 | 0.2147 | `epoch-28/` | | | | | | |
 | 29 | 312156 | 0.6885 | 0.4518 | `epoch-29/` | | | | | | |
 | 30 | 322920 | 0.6648 | 0.4659 | `epoch-30/` | | | | | | |
-| 31 | 333684 | | | `epoch-31/` |
+| 31 | 333684 | 0.6932 | 0.5931 | `epoch-31/` | | | | | | |
 | 32 | 344448 | | | `epoch-32/` |
 
 Reference (published dense drafter, FFN 12288, jiapingW/Qwen3-8b-dspark-SpecForge step 39,000
@@ -253,6 +253,7 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
 - epoch 28 done at 2026-10-24T08:55:34Z: step 301392, train/acc 0.6762, train/loss 0.2147, uploaded to HF epoch-28/
 - epoch 29 done at 2026-10-24T16:15:54Z: step 312156, train/acc 0.6885, train/loss 0.4518, uploaded to HF epoch-29/
 - epoch 30 done at 2026-10-24T23:26:12Z: step 322920, train/acc 0.6648, train/loss 0.4659, uploaded to HF epoch-30/
+- epoch 31 done at 2026-10-25T06:46:30Z: step 333684, train/acc 0.6932, train/loss 0.5931, uploaded to HF epoch-31/
 - 2026-10-18 20:21 UTC: decided to continue to 18 epochs (see "Continuation: epochs 13-18"); `SPECFORGE_TRACKING_STEP_OFFSET` added to the tracker (3375bc93); a chain script on the node launches the continuation after epoch 12.
 - 2026-10-19 11:46-12:14 UTC: the 12-epoch run finished training and W&B synced, but the job did not exit: the managed
   producer stayed blocked in `streaming_ref_channel.poll` (`disaggregated.py:761`, after "drive_producer returning ...
