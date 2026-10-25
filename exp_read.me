@@ -177,7 +177,7 @@ D16/V8) are run on every epoch checkpoint after training finishes (now after epo
 | 29 | 312156 | 0.6885 | 0.4518 | `epoch-29/` | | | | | | |
 | 30 | 322920 | 0.6648 | 0.4659 | `epoch-30/` | | | | | | |
 | 31 | 333684 | 0.6932 | 0.5931 | `epoch-31/` | | | | | | |
-| 32 | 344448 | | | `epoch-32/` |
+| 32 | 344448 | 0.6763 | 0.4925 | `epoch-32/` | | | | | | |
 
 Reference (published dense drafter, FFN 12288, jiapingW/Qwen3-8b-dspark-SpecForge step 39,000
 ~3.5 epochs, global batch 128): train/acc 0.71 / 0.75 / 0.78 at the end of epochs 1 / 2 / 3;
@@ -254,6 +254,18 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
 - epoch 29 done at 2026-10-24T16:15:54Z: step 312156, train/acc 0.6885, train/loss 0.4518, uploaded to HF epoch-29/
 - epoch 30 done at 2026-10-24T23:26:12Z: step 322920, train/acc 0.6648, train/loss 0.4659, uploaded to HF epoch-30/
 - epoch 31 done at 2026-10-25T06:46:30Z: step 333684, train/acc 0.6932, train/loss 0.5931, uploaded to HF epoch-31/
+- epoch 32 done at 2026-10-25T13:56:48Z: step 344448, train/acc 0.6763, train/loss 0.4925, uploaded to HF epoch-32/ (end of training; last logged step 86110 of the epochs 25-32 run)
+- 2026-10-25 13:53-14:03 UTC: training finished; the run hung at shutdown for the fourth time (same producer busy-poll).
+  A finish script on the node detected it after 10 min without log output, saved a py-spy dump and killed the
+  12-process tree at 14:03 UTC.
+- 2026-10-25 14:03-14:18 UTC: the first benchmark smoke test failed: SGLang 0.5.18 refused the exported drafts with
+  `DSPARK requires markov_rank > 0 in the draft config, got markov_rank=0`. Its DSpark config parser reads
+  `markov_rank` / `markov_head_type` from top-level keys (or `dspark_config` / `dspark_*`), while `specforge export`
+  writes them only under `dflash_config`; the published jiapingW config carries both. The benchmark therefore serves
+  copies of the exports (`/scratch/bench_drafts/dense-1-8/epoch-XX`: symlinked weights, config.json with these keys
+  copied to the top level). The HF checkpoints are unchanged and need the same two top-level keys to load in this
+  SGLang build. With that, the smoke test (epoch 32, 3 samples per dataset) passed and the full benchmark
+  (128 jobs: 32 epochs x V16/V8 x T0/T1, 2,400 requests each) started at 14:18 UTC.
 - 2026-10-18 20:21 UTC: decided to continue to 18 epochs (see "Continuation: epochs 13-18"); `SPECFORGE_TRACKING_STEP_OFFSET` added to the tracker (3375bc93); a chain script on the node launches the continuation after epoch 12.
 - 2026-10-19 11:46-12:14 UTC: the 12-epoch run finished training and W&B synced, but the job did not exit: the managed
   producer stayed blocked in `streaming_ref_channel.poll` (`disaggregated.py:761`, after "drive_producer returning ...
