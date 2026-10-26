@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Export each epoch-end checkpoint (steps 2479 * k) of the 16 x 1088 MoE run: keep a copy of the raw checkpoint under
-# /scratch/moe16x1088/epoch_ckpts/ (the trainer only keeps the last 4), convert it with `specforge export`, normalise the
+# /scratch/moe16x1088/epoch_ckpts/ (the trainer only keeps the last 6), convert it with `specforge export`, normalise the
 # config for SGLang (block 7, architectures Qwen3MoeDSparkModel so SGLang picks the MoE draft class), add the target
 # tokenizer and upload it to folder <k>ep/ of the PRIVATE repo $HF_REPO together with a refreshed README.
 # A checkpoint counts as complete once the trainer has repointed <run_id>-latest at it (CheckpointManager.save does
@@ -13,7 +13,7 @@ VENV=${VENV:-/scratch/moe2ep/venv}; [ -f "$VENV/bin/activate" ] && . "$VENV/bin/
 export PYTHONPATH=/scratch/SpecForge
 DRAFT_CONFIG=configs/qwen3.8-27b-moe-dspark.json
 TARGET=${TARGET:-/scratch/models/Qwen3.8-27B}
-STEPS_PER_EPOCH=2479; EPOCHS=${EPOCHS:-4}; EPOCH_OFFSET=${EPOCH_OFFSET:-0}   # EPOCH_OFFSET: epochs finished by earlier phases (warm-start continuation)
+STEPS_PER_EPOCH=2479; EPOCHS=${EPOCHS:-6}; EPOCH_OFFSET=${EPOCH_OFFSET:-0}   # EPOCH_OFFSET: epochs finished by earlier phases (warm-start continuation)
 HF_REPO=${HF_REPO:-RadixArk/qwen38-dspark-moe-16x1088}
 export HF_HOME=/scratch/hf-cache HF_HUB_CACHE=/scratch/hf-cache/hub HF_DATASETS_CACHE=/scratch/hf-cache/datasets
 export HF_TOKEN="$(cat /scratch/secrets/hf_token)"

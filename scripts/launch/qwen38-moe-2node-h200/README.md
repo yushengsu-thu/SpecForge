@@ -1,4 +1,4 @@
-# Qwen3.8-27B DSpark MoE drafter (16 x 1088, top-1), 4 epochs on two 8x H200 devboxes
+# Qwen3.8-27B DSpark MoE drafter (16 x 1088, top-1), 6 epochs on two 8x H200 devboxes
 
 Box-side scripts for the run described in
 `examples/configs/online/disaggregated/external/qwen3.8-27b-moe-dspark-8server-dp8-2node-h200.yaml`
@@ -13,10 +13,10 @@ Box-side scripts for the run described in
 | setup (code, deps, spec-capture patch, BF16 teacher, corpus jsonl) | both nodes: `setsid nohup bash setup_box.sh > /scratch/moe16x1088/logs/setup_box.log 2>&1 < /dev/null &` (capture node with `SKIP_DATA=1`) |
 | capture node | `bash capture_node.sh <CAPTURE_IP> <TRAINER_IP> 8 rdma` (8 TP1 BF16 capture servers, ports 30000-30007, 100 GiB Mooncake segment each) |
 | trainer node, smoke (3 optimizer steps, no W&B, no checkpoints) | `bash trainer_node.sh <CAPTURE_IP> <TRAINER_IP> smoke rdma` |
-| trainer node, full run (4 epochs, 9,916 steps) | `bash trainer_node.sh <CAPTURE_IP> <TRAINER_IP> full rdma` (W&B entity `eigent_radixark_training` by default, `WANDB_ENTITY=` overrides; project `specforge-qwen38-moe-16x1088`) |
+| trainer node, full run (6 epochs, 14,874 steps) | `bash trainer_node.sh <CAPTURE_IP> <TRAINER_IP> full rdma` (W&B entity `eigent_radixark_training` by default, `WANDB_ENTITY=` overrides; project `specforge-qwen38-moe-16x1088`) |
 | per-epoch export + upload | trainer node: `setsid nohup bash watch_epoch_exports.sh > /scratch/moe16x1088/logs/watch_epoch_exports.log 2>&1 < /dev/null &` |
 | outputs | `/scratch/moe16x1088/outputs/<run_id>/launch.log` (`step N: {...}` lines every 10 steps), checkpoints `<run_id>-step<N>` |
-| HF | `RadixArk/qwen38-dspark-moe-16x1088` (private; folders `1ep/` … `4ep/`; `HF_REPO=` overrides) |
+| HF | `RadixArk/qwen38-dspark-moe-16x1088` (private; folders `1ep/` … `6ep/`; `HF_REPO=` overrides) |
 
 All scripts activate `$VENV` (default `/scratch/moe2ep/venv`: the boxes' sglang 0.5.18 with the spec-capture patch and
 mooncake) and import specforge from `/scratch/SpecForge` through `PYTHONPATH`; `REPO=` may point `setup_box.sh` at a

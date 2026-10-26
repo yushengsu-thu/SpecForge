@@ -34,7 +34,7 @@ if [ "$MODE" = smoke ]; then
   OV="training.max_steps=${SMOKE_STEPS:-3} training.save_interval=1000000 tracking.report_to=none run_id=$RUN-smoke output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state"
 else
   OUT=$D/outputs/$RUN; mkdir -p "$OUT"
-  export WANDB_API_KEY="$(cat /scratch/secrets/wandb_key)" WANDB_ENTITY=${WANDB_ENTITY:-eigent_radixark_training} WANDB_RUN_ID=${WANDB_RUN_ID:-qwen38-moe-16x1088-4ep-2node-h200} WANDB_RESUME=allow
+  export WANDB_API_KEY="$(cat /scratch/secrets/wandb_key)" WANDB_ENTITY=${WANDB_ENTITY:-eigent_radixark_training} WANDB_RUN_ID=${WANDB_RUN_ID:-qwen38-moe-16x1088-6ep-2node-h200} WANDB_RESUME=allow
   OV="tracking.report_to=wandb tracking.wandb_project=$WANDB_PROJECT tracking.wandb_name=$RUN tracking.wandb_dir=$OUT/wandb output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state"
 fi
 if [ -n "${WARMSTART:-}" ]; then

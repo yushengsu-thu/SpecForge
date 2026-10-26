@@ -31,7 +31,7 @@ def main():
     ap.add_argument("--run-dir", required=True)
     ap.add_argument("--steps-per-epoch", type=int, default=2479)
     ap.add_argument("--epochs-done", type=int, required=True)
-    ap.add_argument("--epochs", type=int, default=4)
+    ap.add_argument("--epochs", type=int, default=6)
     ap.add_argument("--hf-repo", default="RadixArk/qwen38-dspark-moe-16x1088")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
