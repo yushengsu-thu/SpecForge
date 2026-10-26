@@ -1,0 +1,5946 @@
+{
+ "epoch-01": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 62788,
+     "macro_tau": 6.902411286807702,
+     "micro_tau": 6.458399694209085,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 68817,
+     "macro_tau": 6.222551444454644,
+     "micro_tau": 5.589665344318991,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 17234,
+     "macro_tau": 4.424039380274118,
+     "micro_tau": 4.389230590692817,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 20275,
+     "macro_tau": 4.3650834210311995,
+     "micro_tau": 4.146436498150432,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 29086,
+     "macro_tau": 3.4175492527756717,
+     "micro_tau": 2.8122808223887783,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 198200,
+    "request_macro_tau": 6.087388744808651,
+    "micro_tau": 5.205272452068618,
+    "benchmark_equal_weight_macro_tau": 5.066326957068666,
+    "benchmark_equal_weight_micro_tau": 4.679202589952021
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 63.63001556396485
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 75361,
+     "macro_tau": 5.475429378667108,
+     "micro_tau": 5.306882870450233,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 78453,
+     "macro_tau": 5.182364103501103,
+     "micro_tau": 4.9104941812295255,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 18615,
+     "macro_tau": 4.096660757488635,
+     "micro_tau": 4.071071716357776,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 21993,
+     "macro_tau": 4.016802520184437,
+     "micro_tau": 3.8697767471468194,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 30194,
+     "macro_tau": 3.152328073774794,
+     "micro_tau": 2.7140160296747697,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 224616,
+    "request_macro_tau": 5.009090210804988,
+    "micro_tau": 4.576757666417352,
+    "benchmark_equal_weight_macro_tau": 4.384716966723216,
+    "benchmark_equal_weight_micro_tau": 4.174448308971824
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 71.49879559675853
+  }
+ },
+ "epoch-02": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 60091,
+     "macro_tau": 7.213937009283785,
+     "micro_tau": 6.748265131217654,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 65319,
+     "macro_tau": 6.584694723508199,
+     "micro_tau": 5.889006261577795,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 15978,
+     "macro_tau": 4.790052165177816,
+     "micro_tau": 4.7342596069595695,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 19255,
+     "macro_tau": 4.613833769221965,
+     "micro_tau": 4.366086730719294,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 27765,
+     "macro_tau": 3.5504918456615426,
+     "micro_tau": 2.9460831982712046,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 188408,
+    "request_macro_tau": 6.394555335868527,
+    "micro_tau": 5.475802513693686,
+    "benchmark_equal_weight_macro_tau": 5.350601902570661,
+    "benchmark_equal_weight_micro_tau": 4.936740185749104
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 60.47165052890777
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 73532,
+     "macro_tau": 5.601431507387495,
+     "micro_tau": 5.438883751291955,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 75890,
+     "macro_tau": 5.358115513098815,
+     "micro_tau": 5.076334167874555,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 17526,
+     "macro_tau": 4.358704949338988,
+     "micro_tau": 4.324032865457036,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 21090,
+     "macro_tau": 4.182048946794852,
+     "micro_tau": 4.035467045993362,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 28911,
+     "macro_tau": 3.28794261804795,
+     "micro_tau": 2.834457472934177,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 216949,
+    "request_macro_tau": 5.159596218624607,
+    "micro_tau": 4.7385007536333426,
+    "benchmark_equal_weight_macro_tau": 4.5576487069336205,
+    "benchmark_equal_weight_micro_tau": 4.341835060710217
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 66.55303842226664
+  }
+ },
+ "epoch-03": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 58896,
+     "macro_tau": 7.375334935573953,
+     "micro_tau": 6.885187449062754,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 63981,
+     "macro_tau": 6.716865773950653,
+     "micro_tau": 6.012159859958425,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 15571,
+     "macro_tau": 4.911458680230978,
+     "micro_tau": 4.858005266199987,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 18794,
+     "macro_tau": 4.7404750653718155,
+     "micro_tau": 4.4731829307225714,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 27108,
+     "macro_tau": 3.6659842483833756,
+     "micro_tau": 3.017485613103143,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 184350,
+    "request_macro_tau": 6.540349359207144,
+    "micro_tau": 5.596338486574451,
+    "benchmark_equal_weight_macro_tau": 5.4820237407021555,
+    "benchmark_equal_weight_micro_tau": 5.049204223809376
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 58.10694918235143
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 72741,
+     "macro_tau": 5.663311231146659,
+     "micro_tau": 5.4980272473570615,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 74808,
+     "macro_tau": 5.434338013330917,
+     "micro_tau": 5.149756710512245,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 17271,
+     "macro_tau": 4.419944891618051,
+     "micro_tau": 4.38787562966823,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 20760,
+     "macro_tau": 4.259766997456991,
+     "micro_tau": 4.099614643545279,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 28329,
+     "macro_tau": 3.3573991923372226,
+     "micro_tau": 2.892689470154259,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 213909,
+    "request_macro_tau": 5.22662144662236,
+    "micro_tau": 4.80584267141635,
+    "benchmark_equal_weight_macro_tau": 4.626952065177968,
+    "benchmark_equal_weight_micro_tau": 4.405592740247415
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 66.59751907984416
+  }
+ },
+ "epoch-04": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 58260,
+     "macro_tau": 7.434146035849564,
+     "micro_tau": 6.960350154479918,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 63013,
+     "macro_tau": 6.809828702625967,
+     "micro_tau": 6.104518115309539,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 15398,
+     "macro_tau": 4.9689898254724785,
+     "micro_tau": 4.912586050136381,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 18461,
+     "macro_tau": 4.834831989800313,
+     "micro_tau": 4.553870321217702,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 26802,
+     "macro_tau": 3.7088752530255733,
+     "micro_tau": 3.0519364226550256,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 181934,
+    "request_macro_tau": 6.608932985766174,
+    "micro_tau": 5.670655292578627,
+    "benchmark_equal_weight_macro_tau": 5.551334361354779,
+    "benchmark_equal_weight_micro_tau": 5.116652212759713
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 58.32115294933319
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 72227,
+     "macro_tau": 5.70277482564886,
+     "micro_tau": 5.537153695986266,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 74378,
+     "macro_tau": 5.462928412644729,
+     "micro_tau": 5.179528892952217,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 17073,
+     "macro_tau": 4.470589901049861,
+     "micro_tau": 4.438762959058162,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 20472,
+     "macro_tau": 4.328318512239335,
+     "micro_tau": 4.157288003126221,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27998,
+     "macro_tau": 3.381363676078908,
+     "micro_tau": 2.9268876348310595,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 212148,
+    "request_macro_tau": 5.2666654128931345,
+    "micro_tau": 4.845735052887607,
+    "benchmark_equal_weight_macro_tau": 4.669195065532338,
+    "benchmark_equal_weight_micro_tau": 4.447924237190785
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 67.29980208476384
+  }
+ },
+ "epoch-05": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57830,
+     "macro_tau": 7.495715037389042,
+     "micro_tau": 7.012104444060176,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 62352,
+     "macro_tau": 6.8906709122814656,
+     "micro_tau": 6.169232743135746,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 15170,
+     "macro_tau": 5.044607515131003,
+     "micro_tau": 4.986420566908372,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 18274,
+     "macro_tau": 4.89662538379737,
+     "micro_tau": 4.600470613987086,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 26566,
+     "macro_tau": 3.749863038067759,
+     "micro_tau": 3.0790484077392155,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 180192,
+    "request_macro_tau": 6.674129180277137,
+    "micro_tau": 5.7254761587639855,
+    "benchmark_equal_weight_macro_tau": 5.6154963773333275,
+    "benchmark_equal_weight_micro_tau": 5.169455355166119
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.894851712385815
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 72024,
+     "macro_tau": 5.7190407875327685,
+     "micro_tau": 5.552760191047429,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73849,
+     "macro_tau": 5.495292229633604,
+     "micro_tau": 5.216631234004523,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16895,
+     "macro_tau": 4.520328080268941,
+     "micro_tau": 4.485528262799645,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 20335,
+     "macro_tau": 4.362208612489135,
+     "micro_tau": 4.1852962871895745,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27638,
+     "macro_tau": 3.4279139903434817,
+     "micro_tau": 2.965011940082495,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 210741,
+    "request_macro_tau": 5.292478571083873,
+    "micro_tau": 4.878087320454966,
+    "benchmark_equal_weight_macro_tau": 4.704956740053586,
+    "benchmark_equal_weight_micro_tau": 4.481045583024733
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.18457264105479
+  }
+ },
+ "epoch-06": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57605,
+     "macro_tau": 7.524151343718377,
+     "micro_tau": 7.03949309955733,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 62006,
+     "macro_tau": 6.938035874946915,
+     "micro_tau": 6.203657710544141,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 15056,
+     "macro_tau": 5.096284172349137,
+     "micro_tau": 5.0241764080765146,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 18141,
+     "macro_tau": 4.931029000082026,
+     "micro_tau": 4.6341987762526875,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 26362,
+     "macro_tau": 3.7832625919530956,
+     "micro_tau": 3.102875350883848,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 179170,
+    "request_macro_tau": 6.709066929932013,
+    "micro_tau": 5.758134732377072,
+    "benchmark_equal_weight_macro_tau": 5.65455259660991,
+    "benchmark_equal_weight_micro_tau": 5.200880269062904
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 58.13757368326187
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71888,
+     "macro_tau": 5.7283606792689215,
+     "micro_tau": 5.563265079011797,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73548,
+     "macro_tau": 5.522542808316739,
+     "micro_tau": 5.237980638494588,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16741,
+     "macro_tau": 4.567501505376298,
+     "micro_tau": 4.526790514306194,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 20211,
+     "macro_tau": 4.382165042840664,
+     "micro_tau": 4.21097422195834,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27544,
+     "macro_tau": 3.429895879274421,
+     "micro_tau": 2.9751306999709555,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 209932,
+    "request_macro_tau": 5.308770476537395,
+    "micro_tau": 4.896885658213136,
+    "benchmark_equal_weight_macro_tau": 4.726093183015409,
+    "benchmark_equal_weight_micro_tau": 4.502828230748375
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.91825309991836
+  }
+ },
+ "epoch-07": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57243,
+     "macro_tau": 7.560111211258522,
+     "micro_tau": 7.084010271998323,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61828,
+     "macro_tau": 6.941531648184976,
+     "micro_tau": 6.2215177589441675,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14952,
+     "macro_tau": 5.116426309515907,
+     "micro_tau": 5.059122525414661,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 18015,
+     "macro_tau": 4.985991757704678,
+     "micro_tau": 4.666611157368859,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 26181,
+     "macro_tau": 3.8099976503692536,
+     "micro_tau": 3.124326801879225,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 178219,
+    "request_macro_tau": 6.738602471788446,
+    "micro_tau": 5.788860895864078,
+    "benchmark_equal_weight_macro_tau": 5.682811715406667,
+    "benchmark_equal_weight_micro_tau": 5.231117703121047
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.63548188606898
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71547,
+     "macro_tau": 5.7499492032487405,
+     "micro_tau": 5.589780144520385,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73365,
+     "macro_tau": 5.534437633677397,
+     "micro_tau": 5.251046139167178,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16725,
+     "macro_tau": 4.568020640575754,
+     "micro_tau": 4.531121076233184,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 20096,
+     "macro_tau": 4.4185164637367516,
+     "micro_tau": 4.235071656050955,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27419,
+     "macro_tau": 3.4560168760098335,
+     "micro_tau": 2.988693971333747,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 209152,
+    "request_macro_tau": 5.32878276346672,
+    "micro_tau": 4.9151478350673194,
+    "benchmark_equal_weight_macro_tau": 4.745388163449695,
+    "benchmark_equal_weight_micro_tau": 4.51914259746109
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.70593190193176
+  }
+ },
+ "epoch-08": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57283,
+     "macro_tau": 7.550204475633354,
+     "micro_tau": 7.079063596529512,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61600,
+     "macro_tau": 6.960288024182024,
+     "micro_tau": 6.244545454545454,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14740,
+     "macro_tau": 5.201435087029265,
+     "micro_tau": 5.131886024423338,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17878,
+     "macro_tau": 5.019981564826311,
+     "micro_tau": 4.702371629936234,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 26011,
+     "macro_tau": 3.828100627929801,
+     "micro_tau": 3.1447464534235516,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 177512,
+    "request_macro_tau": 6.7477210134805565,
+    "micro_tau": 5.811916940826536,
+    "benchmark_equal_weight_macro_tau": 5.712001955920151,
+    "benchmark_equal_weight_micro_tau": 5.260522631771618
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.94970856904983
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71658,
+     "macro_tau": 5.744068291314291,
+     "micro_tau": 5.5811214379413325,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73169,
+     "macro_tau": 5.541483037639781,
+     "micro_tau": 5.265112274323825,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16611,
+     "macro_tau": 4.604981544760467,
+     "micro_tau": 4.562217807476973,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19959,
+     "macro_tau": 4.458794820692204,
+     "micro_tau": 4.2641414900546115,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27318,
+     "macro_tau": 3.467844455369614,
+     "micro_tau": 2.9997437586939015,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208715,
+    "request_macro_tau": 5.334645812575497,
+    "micro_tau": 4.925438995759768,
+    "benchmark_equal_weight_macro_tau": 4.7634344299552716,
+    "benchmark_equal_weight_micro_tau": 4.534467353698129
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.80744732220968
+  }
+ },
+ "epoch-09": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 56962,
+     "macro_tau": 7.597445883983267,
+     "micro_tau": 7.118956497313999,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61376,
+     "macro_tau": 6.995797791995479,
+     "micro_tau": 6.267335766423358,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14807,
+     "macro_tau": 5.175543260899916,
+     "micro_tau": 5.1086648206929155,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17801,
+     "macro_tau": 5.0347322834892125,
+     "micro_tau": 4.722712207179372,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25927,
+     "macro_tau": 3.83205539658087,
+     "micro_tau": 3.154935009835307,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176873,
+    "request_macro_tau": 6.781155905028717,
+    "micro_tau": 5.832914011748543,
+    "benchmark_equal_weight_macro_tau": 5.727114923389749,
+    "benchmark_equal_weight_micro_tau": 5.27452086028899
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.9100899219513
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71434,
+     "macro_tau": 5.7581469589605865,
+     "micro_tau": 5.598622504689644,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73011,
+     "macro_tau": 5.56092317905593,
+     "micro_tau": 5.276506279875635,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16632,
+     "macro_tau": 4.589837353248792,
+     "micro_tau": 4.5564574314574315,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19964,
+     "macro_tau": 4.449255634414335,
+     "micro_tau": 4.263073532358245,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27207,
+     "macro_tau": 3.487490929184196,
+     "micro_tau": 3.0119822104605434,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208248,
+    "request_macro_tau": 5.345686667101557,
+    "micro_tau": 4.936484384003688,
+    "benchmark_equal_weight_macro_tau": 4.769130810972768,
+    "benchmark_equal_weight_micro_tau": 4.5413283917683
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.52516773939132
+  }
+ },
+ "epoch-10": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 56996,
+     "macro_tau": 7.589025955485378,
+     "micro_tau": 7.114709804196786,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61241,
+     "macro_tau": 7.006356627466863,
+     "micro_tau": 6.281151516141147,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14718,
+     "macro_tau": 5.209899163509185,
+     "micro_tau": 5.139557005027857,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17718,
+     "macro_tau": 5.077183336661016,
+     "micro_tau": 4.74483576024382,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25874,
+     "macro_tau": 3.8395695876021874,
+     "micro_tau": 3.161397541933988,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176547,
+    "request_macro_tau": 6.786122609738493,
+    "micro_tau": 5.843684684531598,
+    "benchmark_equal_weight_macro_tau": 5.7444069341449255,
+    "benchmark_equal_weight_micro_tau": 5.28833032550872
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.88873300552368
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71423,
+     "macro_tau": 5.758909527561713,
+     "micro_tau": 5.599484759811265,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72960,
+     "macro_tau": 5.562148118118904,
+     "micro_tau": 5.280194627192983,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16533,
+     "macro_tau": 4.6199984945328,
+     "micro_tau": 4.583741607693703,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19869,
+     "macro_tau": 4.470133238359373,
+     "micro_tau": 4.283456640998541,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27141,
+     "macro_tau": 3.48487818568294,
+     "micro_tau": 3.019306584134704,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207926,
+    "request_macro_tau": 5.3504834295768156,
+    "micro_tau": 4.944129161336245,
+    "benchmark_equal_weight_macro_tau": 4.779213512851146,
+    "benchmark_equal_weight_micro_tau": 4.553236843966239
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.50938092470169
+  }
+ },
+ "epoch-11": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 56964,
+     "macro_tau": 7.591716883750257,
+     "micro_tau": 7.1187065515062145,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61216,
+     "macro_tau": 7.00787639524961,
+     "micro_tau": 6.283716675378986,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14733,
+     "macro_tau": 5.206443353147944,
+     "micro_tau": 5.134324305979773,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17716,
+     "macro_tau": 5.077725986304579,
+     "micro_tau": 4.745371415669451,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25842,
+     "macro_tau": 3.863270535548115,
+     "micro_tau": 3.165312282331089,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176471,
+    "request_macro_tau": 6.789320142239847,
+    "micro_tau": 5.846201358863496,
+    "benchmark_equal_weight_macro_tau": 5.749406630800101,
+    "benchmark_equal_weight_micro_tau": 5.289486246173103
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 55.97893513441086
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71358,
+     "macro_tau": 5.7614564606433545,
+     "micro_tau": 5.604585330306342,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72916,
+     "macro_tau": 5.568651609741882,
+     "micro_tau": 5.2833808766251575,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16556,
+     "macro_tau": 4.612078976977524,
+     "micro_tau": 4.577373761778207,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19861,
+     "macro_tau": 4.476605647227929,
+     "micro_tau": 4.285182015004279,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27122,
+     "macro_tau": 3.4979501883728696,
+     "micro_tau": 3.021421724061647,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207813,
+    "request_macro_tau": 5.3542614625671145,
+    "micro_tau": 4.946817571566745,
+    "benchmark_equal_weight_macro_tau": 4.783348576592712,
+    "benchmark_equal_weight_micro_tau": 4.554388741555127
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.93952818314234
+  }
+ },
+ "epoch-12": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 56956,
+     "macro_tau": 7.589831765462957,
+     "micro_tau": 7.119706440058993,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61149,
+     "macro_tau": 7.015359984418876,
+     "micro_tau": 6.290601645161818,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14708,
+     "macro_tau": 5.211470053572154,
+     "micro_tau": 5.1430514005983134,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17682,
+     "macro_tau": 5.0929437907893655,
+     "micro_tau": 4.754496097726501,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25833,
+     "macro_tau": 3.8534478009399584,
+     "micro_tau": 3.1664150505167807,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176328,
+    "request_macro_tau": 6.7911614091767385,
+    "micro_tau": 5.850942561589765,
+    "benchmark_equal_weight_macro_tau": 5.752610679036662,
+    "benchmark_equal_weight_micro_tau": 5.294854126812481
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.16725479364395
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 410162,
+     "verify_count": 64077,
+     "macro_tau": 7.001193683391112,
+     "micro_tau": 6.401079950684333,
+     "length_limited": 2
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 392508,
+     "verify_count": 73518,
+     "macro_tau": 6.161456007374621,
+     "micro_tau": 5.338937403084959,
+     "length_limited": 43
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78613,
+     "verify_count": 16725,
+     "macro_tau": 4.784200275426269,
+     "micro_tau": 4.7003288490284,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 88374,
+     "verify_count": 19960,
+     "macro_tau": 4.791684882014396,
+     "micro_tau": 4.427555110220441,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83634,
+     "verify_count": 28526,
+     "macro_tau": 3.5413697384420075,
+     "micro_tau": 2.9318516441141416,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1053291,
+    "verify_count": 202806,
+    "request_macro_tau": 6.207497287532716,
+    "micro_tau": 5.193588947072572,
+    "benchmark_equal_weight_macro_tau": 5.255980917329682,
+    "benchmark_equal_weight_micro_tau": 4.759950591426454
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 71.03714119195938
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71384,
+     "macro_tau": 5.759441897409739,
+     "micro_tau": 5.6025439874481675,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72951,
+     "macro_tau": 5.5625923229399605,
+     "micro_tau": 5.2808460473468495,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16568,
+     "macro_tau": 4.611236042068924,
+     "micro_tau": 4.5740584258812165,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19860,
+     "macro_tau": 4.473254062509298,
+     "micro_tau": 4.28539778449144,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27131,
+     "macro_tau": 3.4913728372881736,
+     "micro_tau": 3.0204194463897385,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207894,
+    "request_macro_tau": 5.351036951284886,
+    "micro_tau": 4.944890184420907,
+    "benchmark_equal_weight_macro_tau": 4.779579432443219,
+    "benchmark_equal_weight_micro_tau": 4.5526531383114826
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.09454088211059
+  }
+ },
+ "epoch-13": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57390,
+     "macro_tau": 7.542127207361443,
+     "micro_tau": 7.065865133298484,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61538,
+     "macro_tau": 6.967073636818219,
+     "micro_tau": 6.2508368812766095,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14898,
+     "macro_tau": 5.141328780129537,
+     "micro_tau": 5.077460061753255,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17761,
+     "macro_tau": 5.067162226881446,
+     "micro_tau": 4.733348347502956,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25931,
+     "macro_tau": 3.844899414264127,
+     "micro_tau": 3.154448343681308,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 177518,
+    "request_macro_tau": 6.7467604681045374,
+    "micro_tau": 5.811720501582938,
+    "benchmark_equal_weight_macro_tau": 5.712518253090954,
+    "benchmark_equal_weight_micro_tau": 5.256391753502522
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.16622307697932
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 410874,
+     "verify_count": 64606,
+     "macro_tau": 6.942692205147606,
+     "micro_tau": 6.359687954679132,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 389739,
+     "verify_count": 74182,
+     "macro_tau": 6.084261011015303,
+     "micro_tau": 5.253821681809604,
+     "length_limited": 40
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78043,
+     "verify_count": 17070,
+     "macro_tau": 4.652095323497082,
+     "micro_tau": 4.571939074399531,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87172,
+     "verify_count": 20113,
+     "macro_tau": 4.685200010377468,
+     "micro_tau": 4.334112265698802,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84393,
+     "verify_count": 29313,
+     "macro_tau": 3.5173821131510317,
+     "micro_tau": 2.879029782007983,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1050221,
+    "verify_count": 205284,
+    "request_macro_tau": 6.137234457467517,
+    "micro_tau": 5.115941817189844,
+    "benchmark_equal_weight_macro_tau": 5.176326132637698,
+    "benchmark_equal_weight_micro_tau": 4.67971815171901
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.62930490970612
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71743,
+     "macro_tau": 5.733017614804044,
+     "micro_tau": 5.574509011332116,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73188,
+     "macro_tau": 5.53822368516269,
+     "micro_tau": 5.263745422746898,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16685,
+     "macro_tau": 4.577015790187426,
+     "micro_tau": 4.5419838178004195,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19966,
+     "macro_tau": 4.451086474083418,
+     "micro_tau": 4.262646499048382,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27234,
+     "macro_tau": 3.4998819622309534,
+     "micro_tau": 3.0089961078064182,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208816,
+    "request_macro_tau": 5.3272929182895865,
+    "micro_tau": 4.9230566623247265,
+    "benchmark_equal_weight_macro_tau": 4.7598451052937065,
+    "benchmark_equal_weight_micro_tau": 4.5303761717468465
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.24133720000584
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 403502,
+     "verify_count": 76424,
+     "macro_tau": 5.480502594625454,
+     "micro_tau": 5.279781220558987,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 393347,
+     "verify_count": 85046,
+     "macro_tau": 5.04104370306243,
+     "micro_tau": 4.625108764668532,
+     "length_limited": 40
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76097,
+     "verify_count": 17974,
+     "macro_tau": 4.295446760901464,
+     "micro_tau": 4.233726493824413,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 91025,
+     "verify_count": 22481,
+     "macro_tau": 4.261655078581367,
+     "micro_tau": 4.048974689738001,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81681,
+     "verify_count": 29004,
+     "macro_tau": 3.2882882406264295,
+     "micro_tau": 2.8161977658254034,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1045652,
+    "verify_count": 230929,
+    "request_macro_tau": 5.031303965135695,
+    "micro_tau": 4.528023764880115,
+    "benchmark_equal_weight_macro_tau": 4.473387275559429,
+    "benchmark_equal_weight_micro_tau": 4.2007577869230674
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 74.34284039735795
+  }
+ },
+ "epoch-14": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57442,
+     "macro_tau": 7.529744626787218,
+     "micro_tau": 7.0594686814525955,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61571,
+     "macro_tau": 6.961508697623597,
+     "micro_tau": 6.247486641438339,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14765,
+     "macro_tau": 5.191696474354504,
+     "micro_tau": 5.123196749068744,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17833,
+     "macro_tau": 5.036619143541638,
+     "micro_tau": 4.7142376493018565,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25829,
+     "macro_tau": 3.8618953353499847,
+     "micro_tau": 3.166905416392427,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 177440,
+    "request_macro_tau": 6.740100044535198,
+    "micro_tau": 5.814275247971145,
+    "benchmark_equal_weight_macro_tau": 5.716292855531388,
+    "benchmark_equal_weight_micro_tau": 5.262259027530793
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.12007552782695
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 406999,
+     "verify_count": 63558,
+     "macro_tau": 6.971821442183807,
+     "micro_tau": 6.403584127883193,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 397715,
+     "verify_count": 74470,
+     "macro_tau": 6.094667870685211,
+     "micro_tau": 5.340606955821136,
+     "length_limited": 45
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76983,
+     "verify_count": 16561,
+     "macro_tau": 4.7565879466748,
+     "micro_tau": 4.64845118048427,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89177,
+     "verify_count": 20194,
+     "macro_tau": 4.7694429462161905,
+     "micro_tau": 4.416014657819154,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83633,
+     "verify_count": 28762,
+     "macro_tau": 3.5460131869285547,
+     "micro_tau": 2.907760239204506,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1054507,
+    "verify_count": 203545,
+    "request_macro_tau": 6.173481578301601,
+    "micro_tau": 5.18070696897492,
+    "benchmark_equal_weight_macro_tau": 5.227706678537713,
+    "benchmark_equal_weight_micro_tau": 4.7432834322424515
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 72.76098749240239
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71716,
+     "macro_tau": 5.736379016214522,
+     "micro_tau": 5.576607730492499,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73183,
+     "macro_tau": 5.541096264455173,
+     "micro_tau": 5.264105051719661,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16638,
+     "macro_tau": 4.5913219329426935,
+     "micro_tau": 4.554814280562567,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19983,
+     "macro_tau": 4.445231301822562,
+     "micro_tau": 4.25902016714207,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27208,
+     "macro_tau": 3.4901619870539013,
+     "micro_tau": 3.011871508379888,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208728,
+    "request_macro_tau": 5.3294413392142355,
+    "micro_tau": 4.925132229504427,
+    "benchmark_equal_weight_macro_tau": 4.76083810049777,
+    "benchmark_equal_weight_micro_tau": 4.533283747659337
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 66.0041484395663
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 406034,
+     "verify_count": 77555,
+     "macro_tau": 5.475073728345658,
+     "micro_tau": 5.235432918573915,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 407704,
+     "verify_count": 87897,
+     "macro_tau": 5.080706880785384,
+     "micro_tau": 4.638429070389206,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77190,
+     "verify_count": 18161,
+     "macro_tau": 4.299432624334219,
+     "micro_tau": 4.2503166125213365,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87015,
+     "verify_count": 21575,
+     "macro_tau": 4.240233143478327,
+     "micro_tau": 4.033140208574739,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 85084,
+     "verify_count": 30242,
+     "macro_tau": 3.2772176371461406,
+     "micro_tau": 2.8134382646650353,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1063027,
+    "verify_count": 235430,
+    "request_macro_tau": 5.033823907620308,
+    "micro_tau": 4.515257188973368,
+    "benchmark_equal_weight_macro_tau": 4.474532802817945,
+    "benchmark_equal_weight_micro_tau": 4.194151414944846
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 76.04824510812759
+  }
+ },
+ "epoch-15": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57114,
+     "macro_tau": 7.576432203146229,
+     "micro_tau": 7.100010505305179,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61382,
+     "macro_tau": 6.990626719734187,
+     "micro_tau": 6.266723143592584,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14693,
+     "macro_tau": 5.226283029570079,
+     "micro_tau": 5.148301912475328,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17750,
+     "macro_tau": 5.0761474671312286,
+     "micro_tau": 4.736281690140845,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25878,
+     "macro_tau": 3.8418055904575192,
+     "micro_tau": 3.16090888012984,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176817,
+    "request_macro_tau": 6.777081935913496,
+    "micro_tau": 5.83476136344356,
+    "benchmark_equal_weight_macro_tau": 5.742259002007849,
+    "benchmark_equal_weight_micro_tau": 5.282445226328756
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.75072672367096
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 407230,
+     "verify_count": 63578,
+     "macro_tau": 6.986803871493799,
+     "micro_tau": 6.405203057661455,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 394431,
+     "verify_count": 75269,
+     "macro_tau": 6.063660269635263,
+     "micro_tau": 5.2402848450225195,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76851,
+     "verify_count": 16413,
+     "macro_tau": 4.808811418946351,
+     "micro_tau": 4.682324986291355,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 91275,
+     "verify_count": 20727,
+     "macro_tau": 4.730950769224234,
+     "micro_tau": 4.403676364162687,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 79360,
+     "verify_count": 27637,
+     "macro_tau": 3.568820256963486,
+     "micro_tau": 2.871512827007273,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1049147,
+    "verify_count": 203624,
+    "request_macro_tau": 6.176222959512475,
+    "micro_tau": 5.152373983420422,
+    "benchmark_equal_weight_macro_tau": 5.231809317252627,
+    "benchmark_equal_weight_micro_tau": 4.7206004160290576
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.13319309949875
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71590,
+     "macro_tau": 5.742620140755229,
+     "micro_tau": 5.586422684732504,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73075,
+     "macro_tau": 5.548181229992842,
+     "micro_tau": 5.271885049606569,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16527,
+     "macro_tau": 4.622511833008988,
+     "micro_tau": 4.5854056997640225,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19873,
+     "macro_tau": 4.475832619738007,
+     "micro_tau": 4.282594474915715,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27116,
+     "macro_tau": 3.490347417052333,
+     "micro_tau": 3.022090278802183,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208181,
+    "request_macro_tau": 5.339767954694618,
+    "micro_tau": 4.9380731190646605,
+    "benchmark_equal_weight_macro_tau": 4.7758986481094805,
+    "benchmark_equal_weight_micro_tau": 4.549679637564198
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.09343465566636
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 407357,
+     "verify_count": 77650,
+     "macro_tau": 5.486284292003449,
+     "micro_tau": 5.246065679330329,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 400989,
+     "verify_count": 86147,
+     "macro_tau": 5.070571417500688,
+     "micro_tau": 4.6547064900693,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76685,
+     "verify_count": 18039,
+     "macro_tau": 4.321304953324957,
+     "micro_tau": 4.251067132324408,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89175,
+     "verify_count": 22016,
+     "macro_tau": 4.271498411673144,
+     "micro_tau": 4.050463299418604,
+     "length_limited": 1
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84893,
+     "verify_count": 30101,
+     "macro_tau": 3.263831239275759,
+     "micro_tau": 2.8202717517690443,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1059099,
+    "verify_count": 233953,
+    "request_macro_tau": 5.041823663471795,
+    "micro_tau": 4.5269733664453975,
+    "benchmark_equal_weight_macro_tau": 4.4826980627556,
+    "benchmark_equal_weight_micro_tau": 4.204514870582337
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 76.30760511159897
+  }
+ },
+ "epoch-16": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57189,
+     "macro_tau": 7.560760507181326,
+     "micro_tau": 7.09069926034727,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61130,
+     "macro_tau": 7.014581278712181,
+     "micro_tau": 6.292556846065762,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14645,
+     "macro_tau": 5.237926308560116,
+     "micro_tau": 5.16517582792762,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17740,
+     "macro_tau": 5.07012138767561,
+     "micro_tau": 4.738951521984217,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25791,
+     "macro_tau": 3.8632237870492103,
+     "micro_tau": 3.1715714784227056,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176495,
+    "request_macro_tau": 6.775037777288594,
+    "micro_tau": 5.845406385450013,
+    "benchmark_equal_weight_macro_tau": 5.749322653835689,
+    "benchmark_equal_weight_micro_tau": 5.291790986949515
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.139857474962874
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 408925,
+     "verify_count": 64458,
+     "macro_tau": 6.921522651775121,
+     "micro_tau": 6.344053492196469,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 396763,
+     "verify_count": 74463,
+     "macro_tau": 6.107100536452452,
+     "micro_tau": 5.328324134133731,
+     "length_limited": 44
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75782,
+     "verify_count": 16286,
+     "macro_tau": 4.737375643554208,
+     "micro_tau": 4.65319906668304,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 86356,
+     "verify_count": 19478,
+     "macro_tau": 4.763462057844625,
+     "micro_tau": 4.433514734572338,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83676,
+     "verify_count": 28751,
+     "macro_tau": 3.5314524766979765,
+     "micro_tau": 2.9103683350144345,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1051502,
+    "verify_count": 203436,
+    "request_macro_tau": 6.1455043319159355,
+    "micro_tau": 5.168711535814704,
+    "benchmark_equal_weight_macro_tau": 5.212182673264876,
+    "benchmark_equal_weight_micro_tau": 4.733891952520002
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.81840150356292
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71519,
+     "macro_tau": 5.7489254018140725,
+     "micro_tau": 5.591968567793174,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72892,
+     "macro_tau": 5.561259308173311,
+     "micro_tau": 5.285120452175822,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16503,
+     "macro_tau": 4.631153767857469,
+     "micro_tau": 4.59207416833303,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19879,
+     "macro_tau": 4.463988837460396,
+     "micro_tau": 4.281301876351929,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27079,
+     "macro_tau": 3.501117838134087,
+     "micro_tau": 3.0262195797481444,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207872,
+    "request_macro_tau": 5.345998109307007,
+    "micro_tau": 4.945413523706897,
+    "benchmark_equal_weight_macro_tau": 4.7812890306878675,
+    "benchmark_equal_weight_micro_tau": 4.55533692888042
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.3931356827418
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 402871,
+     "verify_count": 76186,
+     "macro_tau": 5.515540478614776,
+     "micro_tau": 5.287992544561993,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 403075,
+     "verify_count": 86194,
+     "macro_tau": 5.0888223380214574,
+     "micro_tau": 4.676369584889899,
+     "length_limited": 54
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75189,
+     "verify_count": 17407,
+     "macro_tau": 4.397665206646661,
+     "micro_tau": 4.3194691790658934,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85830,
+     "verify_count": 21254,
+     "macro_tau": 4.218386403808908,
+     "micro_tau": 4.038298673190929,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83106,
+     "verify_count": 29123,
+     "macro_tau": 3.293842707939531,
+     "micro_tau": 2.8536208495003947,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1050071,
+    "verify_count": 230164,
+    "request_macro_tau": 5.063235955517869,
+    "micro_tau": 4.562272987956414,
+    "benchmark_equal_weight_macro_tau": 4.5028514270062665,
+    "benchmark_equal_weight_micro_tau": 4.235150166241821
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 74.11116572618485
+  }
+ },
+ "epoch-17": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57158,
+     "macro_tau": 7.569198151382093,
+     "micro_tau": 7.094544945589419,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61216,
+     "macro_tau": 6.989003676348896,
+     "micro_tau": 6.283716675378986,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14684,
+     "macro_tau": 5.228398708808366,
+     "micro_tau": 5.151457368564424,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17736,
+     "macro_tau": 5.081733936837517,
+     "micro_tau": 4.740020297699594,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25703,
+     "macro_tau": 3.8608775720363533,
+     "micro_tau": 3.182430066529199,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176497,
+    "request_macro_tau": 6.774782342243774,
+    "micro_tau": 5.8453401474246025,
+    "benchmark_equal_weight_macro_tau": 5.745842409082645,
+    "benchmark_equal_weight_micro_tau": 5.290433870752325
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.10757689078649
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 406025,
+     "verify_count": 63531,
+     "macro_tau": 6.924998453749312,
+     "micro_tau": 6.390974484897137,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 401699,
+     "verify_count": 75882,
+     "macro_tau": 6.07509899265043,
+     "micro_tau": 5.293732373949026,
+     "length_limited": 51
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77436,
+     "verify_count": 16394,
+     "macro_tau": 4.809247314437857,
+     "micro_tau": 4.723435403196292,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 86683,
+     "verify_count": 19699,
+     "macro_tau": 4.750980062560969,
+     "micro_tau": 4.400375653586477,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 82510,
+     "verify_count": 28753,
+     "macro_tau": 3.482158754476721,
+     "micro_tau": 2.8696136055368138,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1054353,
+    "verify_count": 204259,
+    "request_macro_tau": 6.141035955492837,
+    "micro_tau": 5.1618435417778405,
+    "benchmark_equal_weight_macro_tau": 5.208496715575057,
+    "benchmark_equal_weight_micro_tau": 4.735626304233149
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 71.23388672272364
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71586,
+     "macro_tau": 5.745633097879499,
+     "micro_tau": 5.586734836420529,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72987,
+     "macro_tau": 5.5525871330981165,
+     "micro_tau": 5.278241330647924,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16529,
+     "macro_tau": 4.619753229896248,
+     "micro_tau": 4.5848508681710936,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19820,
+     "macro_tau": 4.481184957725428,
+     "micro_tau": 4.294046417759839,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27039,
+     "macro_tau": 3.4967493931276734,
+     "micro_tau": 3.030696401494138,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207961,
+    "request_macro_tau": 5.343153162246235,
+    "micro_tau": 4.943297060506537,
+    "benchmark_equal_weight_macro_tau": 4.779181562345393,
+    "benchmark_equal_weight_micro_tau": 4.5549139708987045
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.58076237440109
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 406136,
+     "verify_count": 77296,
+     "macro_tau": 5.489266910714964,
+     "micro_tau": 5.254295176981992,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 396697,
+     "verify_count": 85114,
+     "macro_tau": 5.0687570865880955,
+     "micro_tau": 4.660772610851329,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77460,
+     "verify_count": 17872,
+     "macro_tau": 4.373978390224064,
+     "micro_tau": 4.3341539838854075,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87573,
+     "verify_count": 21761,
+     "macro_tau": 4.251652044601283,
+     "micro_tau": 4.024309544598134,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 86807,
+     "verify_count": 30440,
+     "macro_tau": 3.3121364603420353,
+     "micro_tau": 2.8517411300919844,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1054673,
+    "verify_count": 232483,
+    "request_macro_tau": 5.047779359850452,
+    "micro_tau": 4.53655966242693,
+    "benchmark_equal_weight_macro_tau": 4.499158178494088,
+    "benchmark_equal_weight_micro_tau": 4.225054489281769
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 74.91295855840048
+  }
+ },
+ "epoch-18": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57209,
+     "macro_tau": 7.564178190577386,
+     "micro_tau": 7.088220384904473,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61146,
+     "macro_tau": 7.005013600331664,
+     "micro_tau": 6.290910280312694,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14644,
+     "macro_tau": 5.241078222825809,
+     "micro_tau": 5.16552854411363,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17728,
+     "macro_tau": 5.0889058154698965,
+     "micro_tau": 4.7421592960288805,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25685,
+     "macro_tau": 3.87088221909721,
+     "micro_tau": 3.1846603075725133,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176412,
+    "request_macro_tau": 6.777660254880064,
+    "micro_tau": 5.848156587987212,
+    "benchmark_equal_weight_macro_tau": 5.7540116096603935,
+    "benchmark_equal_weight_micro_tau": 5.294295762586438
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.29582451581955
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 411159,
+     "verify_count": 64559,
+     "macro_tau": 6.990247274075062,
+     "micro_tau": 6.368732477268855,
+     "length_limited": 2
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 397125,
+     "verify_count": 74343,
+     "macro_tau": 6.123451313351935,
+     "micro_tau": 5.341794116460191,
+     "length_limited": 52
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78322,
+     "verify_count": 16697,
+     "macro_tau": 4.8045404154907105,
+     "micro_tau": 4.690782775348865,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 88770,
+     "verify_count": 20399,
+     "macro_tau": 4.681527505467824,
+     "micro_tau": 4.351683906073827,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84562,
+     "verify_count": 28927,
+     "macro_tau": 3.5549801641531302,
+     "micro_tau": 2.9232896601790714,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1059938,
+    "verify_count": 204925,
+    "request_macro_tau": 6.184064931037993,
+    "micro_tau": 5.172321581066244,
+    "benchmark_equal_weight_macro_tau": 5.2309493345077325,
+    "benchmark_equal_weight_micro_tau": 4.7352565870661625
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.69114924271902
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71561,
+     "macro_tau": 5.746357817661212,
+     "micro_tau": 5.588686575089784,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72976,
+     "macro_tau": 5.554189273933754,
+     "micro_tau": 5.279036943652708,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16528,
+     "macro_tau": 4.623163752224699,
+     "micro_tau": 4.585128267182962,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19868,
+     "macro_tau": 4.4717099263649285,
+     "micro_tau": 4.283672236762634,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27003,
+     "macro_tau": 3.505258891176317,
+     "micro_tau": 3.034736881087287,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207936,
+    "request_macro_tau": 5.34367096978786,
+    "micro_tau": 4.943891389658356,
+    "benchmark_equal_weight_macro_tau": 4.780135932272183,
+    "benchmark_equal_weight_micro_tau": 4.554252180755075
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.15707916021347
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 408073,
+     "verify_count": 77915,
+     "macro_tau": 5.476091707230531,
+     "micro_tau": 5.237412564974652,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 398031,
+     "verify_count": 85328,
+     "macro_tau": 5.10400460807611,
+     "micro_tau": 4.66471732608288,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78191,
+     "verify_count": 18226,
+     "macro_tau": 4.346156693096549,
+     "micro_tau": 4.290080105344014,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 90053,
+     "verify_count": 22341,
+     "macro_tau": 4.243472699908253,
+     "micro_tau": 4.030840159348283,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81538,
+     "verify_count": 28599,
+     "macro_tau": 3.3255770918398455,
+     "micro_tau": 2.8510787090457708,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1055886,
+    "verify_count": 232409,
+    "request_macro_tau": 5.046000742547399,
+    "micro_tau": 4.5432233691466335,
+    "benchmark_equal_weight_macro_tau": 4.499060560030258,
+    "benchmark_equal_weight_micro_tau": 4.21482577295912
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 75.63321732680002
+  }
+ },
+ "epoch-19": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57515,
+     "macro_tau": 7.524015794800547,
+     "micro_tau": 7.05050856298357,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61562,
+     "macro_tau": 6.95757962432531,
+     "micro_tau": 6.24839998700497,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14747,
+     "macro_tau": 5.207095075159643,
+     "micro_tau": 5.1294500576388415,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17835,
+     "macro_tau": 5.0597027836795565,
+     "micro_tau": 4.713708999158957,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25884,
+     "macro_tau": 3.8487677955223583,
+     "micro_tau": 3.160176170607325,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 177543,
+    "request_macro_tau": 6.738781958549992,
+    "micro_tau": 5.810902147648739,
+    "benchmark_equal_weight_macro_tau": 5.719432214697482,
+    "benchmark_equal_weight_micro_tau": 5.260448755478732
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.20017874240875
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 410027,
+     "verify_count": 64676,
+     "macro_tau": 6.904924958025287,
+     "micro_tau": 6.339708701836848,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 399217,
+     "verify_count": 75396,
+     "macro_tau": 6.068881111825574,
+     "micro_tau": 5.294936070879092,
+     "length_limited": 46
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75480,
+     "verify_count": 16237,
+     "macro_tau": 4.795733385523225,
+     "micro_tau": 4.64864199051549,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 88912,
+     "verify_count": 20402,
+     "macro_tau": 4.699546913740648,
+     "micro_tau": 4.358004117243407,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 82819,
+     "verify_count": 28682,
+     "macro_tau": 3.5023094287878402,
+     "micro_tau": 2.8874904121051532,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1056455,
+    "verify_count": 205393,
+    "request_macro_tau": 6.123620798421396,
+    "micro_tau": 5.143578408222286,
+    "benchmark_equal_weight_macro_tau": 5.194279159580515,
+    "benchmark_equal_weight_micro_tau": 4.705756258515998
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 71.21404060125352
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71796,
+     "macro_tau": 5.726736650418913,
+     "micro_tau": 5.57039389381024,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73218,
+     "macro_tau": 5.530982206210525,
+     "micro_tau": 5.261588680379142,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16607,
+     "macro_tau": 4.601840791968093,
+     "micro_tau": 4.5633166736918165,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19961,
+     "macro_tau": 4.451989604734705,
+     "micro_tau": 4.263714242773408,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27177,
+     "macro_tau": 3.488184807688776,
+     "micro_tau": 3.015307061117857,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208759,
+    "request_macro_tau": 5.323345638557333,
+    "micro_tau": 4.92440086415436,
+    "benchmark_equal_weight_macro_tau": 4.759946812204203,
+    "benchmark_equal_weight_micro_tau": 4.534864110354492
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.2851899544398
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 409976,
+     "verify_count": 78914,
+     "macro_tau": 5.454990190774399,
+     "micro_tau": 5.195225181843526,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 398859,
+     "verify_count": 85907,
+     "macro_tau": 5.055406447654907,
+     "micro_tau": 4.642916176795837,
+     "length_limited": 47
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78771,
+     "verify_count": 18459,
+     "macro_tau": 4.3178862374952915,
+     "micro_tau": 4.267349260523322,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87373,
+     "verify_count": 21665,
+     "macro_tau": 4.2772179035210085,
+     "micro_tau": 4.032910223863374,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 82689,
+     "verify_count": 29111,
+     "macro_tau": 3.304477309072935,
+     "micro_tau": 2.8404726735598227,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1057668,
+    "verify_count": 234056,
+    "request_macro_tau": 5.0245541662769515,
+    "micro_tau": 4.518867279625389,
+    "benchmark_equal_weight_macro_tau": 4.481995617703708,
+    "benchmark_equal_weight_micro_tau": 4.195774703317176
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 77.1746239264806
+  }
+ },
+ "epoch-20": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57394,
+     "macro_tau": 7.5312610642464595,
+     "micro_tau": 7.065372687040457,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61400,
+     "macro_tau": 6.962179492198294,
+     "micro_tau": 6.264885993485342,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14680,
+     "macro_tau": 5.228558967649563,
+     "micro_tau": 5.152861035422343,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17818,
+     "macro_tau": 5.040407391814082,
+     "micro_tau": 4.718206308227635,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25829,
+     "macro_tau": 3.840532874657719,
+     "micro_tau": 3.166905416392427,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 177121,
+    "request_macro_tau": 6.742573633406755,
+    "micro_tau": 5.8247469244189,
+    "benchmark_equal_weight_macro_tau": 5.7205879581132235,
+    "benchmark_equal_weight_micro_tau": 5.273646288113641
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.71320894956589
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 402606,
+     "verify_count": 63038,
+     "macro_tau": 6.923454275527195,
+     "micro_tau": 6.386719121799549,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 390519,
+     "verify_count": 73336,
+     "macro_tau": 6.0982431194900455,
+     "micro_tau": 5.325065452165376,
+     "length_limited": 45
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75317,
+     "verify_count": 15974,
+     "macro_tau": 4.846253363224463,
+     "micro_tau": 4.7149743332915985,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 88682,
+     "verify_count": 19949,
+     "macro_tau": 4.769252628591364,
+     "micro_tau": 4.445435861446689,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 86408,
+     "verify_count": 29723,
+     "macro_tau": 3.488927470694379,
+     "micro_tau": 2.9071089728493087,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1043532,
+    "verify_count": 202020,
+    "request_macro_tau": 6.1499456756638695,
+    "micro_tau": 5.165488565488565,
+    "benchmark_equal_weight_macro_tau": 5.225226171505489,
+    "benchmark_equal_weight_micro_tau": 4.755860748310504
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 69.0291980266571
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71713,
+     "macro_tau": 5.73251148403315,
+     "micro_tau": 5.576841019062095,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73132,
+     "macro_tau": 5.535739808631082,
+     "micro_tau": 5.267776076136301,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16547,
+     "macro_tau": 4.617200725723343,
+     "micro_tau": 4.579863419350939,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19899,
+     "macro_tau": 4.463627149376511,
+     "micro_tau": 4.276998844163023,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27135,
+     "macro_tau": 3.4860274121081205,
+     "micro_tau": 3.0199742030587804,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208426,
+    "request_macro_tau": 5.3296625142087315,
+    "micro_tau": 4.932268526959208,
+    "benchmark_equal_weight_macro_tau": 4.767021315974441,
+    "benchmark_equal_weight_micro_tau": 4.544290712354227
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.84377754529318
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 406110,
+     "verify_count": 77439,
+     "macro_tau": 5.475950973375103,
+     "micro_tau": 5.244256769844652,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 396761,
+     "verify_count": 85739,
+     "macro_tau": 5.042072741041131,
+     "micro_tau": 4.627544058129906,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76454,
+     "verify_count": 18060,
+     "macro_tau": 4.265332124136839,
+     "micro_tau": 4.233333333333333,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 86604,
+     "verify_count": 21451,
+     "macro_tau": 4.267981538220335,
+     "micro_tau": 4.037294298634096,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81543,
+     "verify_count": 28965,
+     "macro_tau": 3.2655611663706416,
+     "micro_tau": 2.815225271879855,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1047472,
+    "verify_count": 231654,
+    "request_macro_tau": 5.026121339459457,
+    "micro_tau": 4.521709100641474,
+    "benchmark_equal_weight_macro_tau": 4.46337970862881,
+    "benchmark_equal_weight_micro_tau": 4.191530746364369
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 75.1411639849345
+  }
+ },
+ "epoch-21": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57280,
+     "macro_tau": 7.556113804976052,
+     "micro_tau": 7.079434357541899,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61350,
+     "macro_tau": 6.981701675052736,
+     "micro_tau": 6.26999185004075,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14698,
+     "macro_tau": 5.220155314539462,
+     "micro_tau": 5.1465505510953875,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17780,
+     "macro_tau": 5.0560943510989,
+     "micro_tau": 4.728290213723285,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25726,
+     "macro_tau": 3.870644793845289,
+     "micro_tau": 3.179584855787919,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176834,
+    "request_macro_tau": 6.763412430467465,
+    "micro_tau": 5.834200436567628,
+    "benchmark_equal_weight_macro_tau": 5.736941987902488,
+    "benchmark_equal_weight_micro_tau": 5.2807703656378475
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.76813271045685
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 404035,
+     "verify_count": 63050,
+     "macro_tau": 6.958119053214244,
+     "micro_tau": 6.408168120539255,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 398003,
+     "verify_count": 75749,
+     "macro_tau": 6.041730115269108,
+     "micro_tau": 5.2542343793317405,
+     "length_limited": 45
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78566,
+     "verify_count": 16628,
+     "macro_tau": 4.807950268619497,
+     "micro_tau": 4.724921818619197,
+     "length_limited": 1
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89640,
+     "verify_count": 20407,
+     "macro_tau": 4.742023890550258,
+     "micro_tau": 4.392610378791591,
+     "length_limited": 1
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 82265,
+     "verify_count": 28748,
+     "macro_tau": 3.516789307889259,
+     "micro_tau": 2.8615903715041044,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1052509,
+    "verify_count": 204582,
+    "request_macro_tau": 6.153547650838099,
+    "micro_tau": 5.1446803726623065,
+    "benchmark_equal_weight_macro_tau": 5.213322527108473,
+    "benchmark_equal_weight_micro_tau": 4.728305013757177
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.31928721666335
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71586,
+     "macro_tau": 5.74547014466614,
+     "micro_tau": 5.586734836420529,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73001,
+     "macro_tau": 5.549981914605796,
+     "micro_tau": 5.277229079053711,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16580,
+     "macro_tau": 4.607652215381412,
+     "micro_tau": 4.570747889022919,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19913,
+     "macro_tau": 4.456057913448946,
+     "micro_tau": 4.273991864611058,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27063,
+     "macro_tau": 3.50247298732259,
+     "micro_tau": 3.0280087203931565,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208143,
+    "request_macro_tau": 5.339384834653368,
+    "micro_tau": 4.938974647237717,
+    "benchmark_equal_weight_macro_tau": 4.7723270350849765,
+    "benchmark_equal_weight_micro_tau": 4.5473424779002745
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 66.73850899934769
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405056,
+     "verify_count": 76949,
+     "macro_tau": 5.474098256184517,
+     "micro_tau": 5.263954047485997,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 399957,
+     "verify_count": 86160,
+     "macro_tau": 5.046464146517721,
+     "micro_tau": 4.642026462395544,
+     "length_limited": 45
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78618,
+     "verify_count": 18463,
+     "macro_tau": 4.318048474889027,
+     "micro_tau": 4.2581378974164545,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87325,
+     "verify_count": 21377,
+     "macro_tau": 4.325776826703896,
+     "micro_tau": 4.0849978949338075,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84844,
+     "verify_count": 29588,
+     "macro_tau": 3.310310824066979,
+     "micro_tau": 2.8675138569690417,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1055800,
+    "verify_count": 232537,
+    "request_macro_tau": 5.038792499734023,
+    "micro_tau": 4.5403527180620715,
+    "benchmark_equal_weight_macro_tau": 4.494939705672428,
+    "benchmark_equal_weight_micro_tau": 4.223326031840169
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 76.33675689697266
+  }
+ },
+ "epoch-22": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57430,
+     "macro_tau": 7.523266653958591,
+     "micro_tau": 7.06094375761797,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61282,
+     "macro_tau": 6.986548524849345,
+     "micro_tau": 6.276949185731536,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14658,
+     "macro_tau": 5.242016688214294,
+     "micro_tau": 5.160594896984581,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17732,
+     "macro_tau": 5.084142193413188,
+     "micro_tau": 4.741089555605685,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25704,
+     "macro_tau": 3.8620606450011588,
+     "micro_tau": 3.1823062558356674,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176806,
+    "request_macro_tau": 6.750294984487739,
+    "micro_tau": 5.835124373607231,
+    "benchmark_equal_weight_macro_tau": 5.739606941087315,
+    "benchmark_equal_weight_micro_tau": 5.2843767303550875
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.20842964649201
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405876,
+     "verify_count": 63361,
+     "macro_tau": 6.943114419549954,
+     "micro_tau": 6.405770110951532,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 406648,
+     "verify_count": 77392,
+     "macro_tau": 6.095988082462594,
+     "micro_tau": 5.2543932189373574,
+     "length_limited": 54
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77588,
+     "verify_count": 16511,
+     "macro_tau": 4.826068327359122,
+     "micro_tau": 4.699170250136273,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89451,
+     "verify_count": 20461,
+     "macro_tau": 4.785992449563787,
+     "micro_tau": 4.371780460388055,
+     "length_limited": 1
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84841,
+     "verify_count": 29658,
+     "macro_tau": 3.5682088595047263,
+     "micro_tau": 2.8606446827162992,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1064404,
+    "verify_count": 207383,
+    "request_macro_tau": 6.16597943473468,
+    "micro_tau": 5.132551848512173,
+    "benchmark_equal_weight_macro_tau": 5.243874427688037,
+    "benchmark_equal_weight_micro_tau": 4.718351744625903
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 72.5140350262324
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71654,
+     "macro_tau": 5.738869725975281,
+     "micro_tau": 5.581432997460016,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73021,
+     "macro_tau": 5.547364966935257,
+     "micro_tau": 5.27578367866778,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16494,
+     "macro_tau": 4.633203338732384,
+     "micro_tau": 4.59457984721717,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19795,
+     "macro_tau": 4.485761869463701,
+     "micro_tau": 4.299469563020965,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27034,
+     "macro_tau": 3.494568900272821,
+     "micro_tau": 3.0312569357105867,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207998,
+    "request_macro_tau": 5.339612010032066,
+    "micro_tau": 4.942417715554957,
+    "benchmark_equal_weight_macro_tau": 4.779953760275889,
+    "benchmark_equal_weight_micro_tau": 4.556504604415304
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.13315989176432
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 410302,
+     "verify_count": 78931,
+     "macro_tau": 5.464359785008786,
+     "micro_tau": 5.198236434354056,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 397572,
+     "verify_count": 85151,
+     "macro_tau": 5.062421376399098,
+     "micro_tau": 4.669023264553558,
+     "length_limited": 53
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77316,
+     "verify_count": 17999,
+     "macro_tau": 4.356727987426704,
+     "micro_tau": 4.295571976220901,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 88468,
+     "verify_count": 21765,
+     "macro_tau": 4.2796211847555465,
+     "micro_tau": 4.064691017688951,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83859,
+     "verify_count": 29744,
+     "macro_tau": 3.273866251960379,
+     "micro_tau": 2.8193585260892955,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1057517,
+    "verify_count": 233590,
+    "request_macro_tau": 5.032035783066648,
+    "micro_tau": 4.527235754955264,
+    "benchmark_equal_weight_macro_tau": 4.4873993171101025,
+    "benchmark_equal_weight_micro_tau": 4.209376243781352
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 76.65692505041758
+  }
+ },
+ "epoch-23": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57311,
+     "macro_tau": 7.545062934968227,
+     "micro_tau": 7.075605032192772,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61126,
+     "macro_tau": 6.999843379212174,
+     "micro_tau": 6.29296862219023,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14635,
+     "macro_tau": 5.241514488031625,
+     "micro_tau": 5.168705158865733,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17691,
+     "macro_tau": 5.0995364703770605,
+     "micro_tau": 4.7520773274546375,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25654,
+     "macro_tau": 3.8629084819973194,
+     "micro_tau": 3.1885086146409916,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176417,
+    "request_macro_tau": 6.766714294530351,
+    "micro_tau": 5.847990839885045,
+    "benchmark_equal_weight_macro_tau": 5.749773150917281,
+    "benchmark_equal_weight_micro_tau": 5.2955729510688725
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.90371950070063
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 407367,
+     "verify_count": 63735,
+     "macro_tau": 6.961690085229375,
+     "micro_tau": 6.39157448811485,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 396927,
+     "verify_count": 74049,
+     "macro_tau": 6.148022816672905,
+     "micro_tau": 5.360328971356804,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75724,
+     "verify_count": 15994,
+     "macro_tau": 4.846322110497697,
+     "micro_tau": 4.734525447042641,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 88719,
+     "verify_count": 19863,
+     "macro_tau": 4.791101775883759,
+     "micro_tau": 4.46654583899713,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 86264,
+     "verify_count": 29499,
+     "macro_tau": 3.588800759024161,
+     "micro_tau": 2.9243025187294482,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1055001,
+    "verify_count": 203140,
+    "request_macro_tau": 6.190332806134005,
+    "micro_tau": 5.193467559318696,
+    "benchmark_equal_weight_macro_tau": 5.267187509461579,
+    "benchmark_equal_weight_micro_tau": 4.775455452848175
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 69.78845147689184
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71654,
+     "macro_tau": 5.738768503512007,
+     "micro_tau": 5.581432997460016,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72912,
+     "macro_tau": 5.5508168985625765,
+     "micro_tau": 5.283670726355058,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16509,
+     "macro_tau": 4.625616598753507,
+     "micro_tau": 4.590405233508995,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19805,
+     "macro_tau": 4.486214449097358,
+     "micro_tau": 4.297298661954052,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 26991,
+     "macro_tau": 3.5054722002993493,
+     "micro_tau": 3.0360861027749992,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207871,
+    "request_macro_tau": 5.340532455447965,
+    "micro_tau": 4.945437314488313,
+    "benchmark_equal_weight_macro_tau": 4.78137773004496,
+    "benchmark_equal_weight_micro_tau": 4.557778744410625
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.63363857666651
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 411764,
+     "verify_count": 78793,
+     "macro_tau": 5.485624801975654,
+     "micro_tau": 5.225895701394794,
+     "length_limited": 2
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 400797,
+     "verify_count": 86152,
+     "macro_tau": 5.085831186744697,
+     "micro_tau": 4.65220772587984,
+     "length_limited": 47
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77696,
+     "verify_count": 18224,
+     "macro_tau": 4.31557135487713,
+     "micro_tau": 4.263388937664618,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 88729,
+     "verify_count": 21859,
+     "macro_tau": 4.289721797314127,
+     "micro_tau": 4.059151836772039,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 80981,
+     "verify_count": 29265,
+     "macro_tau": 3.211087310213081,
+     "micro_tau": 2.7671621390739793,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1059967,
+    "verify_count": 234293,
+    "request_macro_tau": 5.042683700384128,
+    "micro_tau": 4.524108701497697,
+    "benchmark_equal_weight_macro_tau": 4.477567290224938,
+    "benchmark_equal_weight_micro_tau": 4.193561268157054
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 78.71654037237167
+  }
+ },
+ "epoch-24": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57335,
+     "macro_tau": 7.543331765860669,
+     "micro_tau": 7.0726432371152,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61167,
+     "macro_tau": 6.995093100409894,
+     "micro_tau": 6.288750470024686,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14625,
+     "macro_tau": 5.245212939120179,
+     "micro_tau": 5.172239316239316,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17697,
+     "macro_tau": 5.101586255244259,
+     "micro_tau": 4.750466180708595,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25623,
+     "macro_tau": 3.8683075184087925,
+     "micro_tau": 3.1923662334621237,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176447,
+    "request_macro_tau": 6.765605392472525,
+    "micro_tau": 5.846996548538654,
+    "benchmark_equal_weight_macro_tau": 5.750706315808759,
+    "benchmark_equal_weight_micro_tau": 5.295293087509984
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.15030182600022
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 404246,
+     "verify_count": 63155,
+     "macro_tau": 6.950949840150154,
+     "micro_tau": 6.400855039189296,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 397456,
+     "verify_count": 75232,
+     "macro_tau": 6.141476077195453,
+     "micro_tau": 5.283071033602722,
+     "length_limited": 51
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76879,
+     "verify_count": 16561,
+     "macro_tau": 4.7262055079896514,
+     "micro_tau": 4.642171366463378,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 91413,
+     "verify_count": 20730,
+     "macro_tau": 4.790759632923208,
+     "micro_tau": 4.409696092619392,
+     "length_limited": 1
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81659,
+     "verify_count": 27790,
+     "macro_tau": 3.6077052371699865,
+     "micro_tau": 2.9384310903202593,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1051653,
+    "verify_count": 203468,
+    "request_macro_tau": 6.1760819352810605,
+    "micro_tau": 5.168640769064423,
+    "benchmark_equal_weight_macro_tau": 5.24341925908569,
+    "benchmark_equal_weight_micro_tau": 4.73484492443901
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.47096593379975
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71652,
+     "macro_tau": 5.738950554295547,
+     "micro_tau": 5.581588790264054,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72941,
+     "macro_tau": 5.550888603880278,
+     "micro_tau": 5.2815700360565385,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16499,
+     "macro_tau": 4.626056267851455,
+     "micro_tau": 4.593187465907024,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19840,
+     "macro_tau": 4.47583979575879,
+     "micro_tau": 4.289717741935484,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 26987,
+     "macro_tau": 3.4976172015961353,
+     "micro_tau": 3.036536109978879,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207919,
+    "request_macro_tau": 5.3390428711454145,
+    "micro_tau": 4.94429561511935,
+    "benchmark_equal_weight_macro_tau": 4.777870484676441,
+    "benchmark_equal_weight_micro_tau": 4.5565200288283965
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.51250528097152
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405712,
+     "verify_count": 77515,
+     "macro_tau": 5.4841842402281715,
+     "micro_tau": 5.233980519899374,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 402553,
+     "verify_count": 86059,
+     "macro_tau": 5.097105359621652,
+     "micro_tau": 4.677639758770146,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 79918,
+     "verify_count": 18879,
+     "macro_tau": 4.295801503549589,
+     "micro_tau": 4.233169129720854,
+     "length_limited": 1
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87045,
+     "verify_count": 21195,
+     "macro_tau": 4.346107462235477,
+     "micro_tau": 4.10686482661005,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83660,
+     "verify_count": 29390,
+     "macro_tau": 3.245112726266825,
+     "micro_tau": 2.846546444368833,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1058888,
+    "verify_count": 233038,
+    "request_macro_tau": 5.051196163854636,
+    "micro_tau": 4.543842635106721,
+    "benchmark_equal_weight_macro_tau": 4.4936622583803425,
+    "benchmark_equal_weight_micro_tau": 4.219640135873851
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 75.81099803447724
+  }
+ },
+ "epoch-25": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57582,
+     "macro_tau": 7.505187966509185,
+     "micro_tau": 7.042304886943836,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61441,
+     "macro_tau": 6.974226164683613,
+     "micro_tau": 6.260705392164841,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14755,
+     "macro_tau": 5.1963446553498756,
+     "micro_tau": 5.126668925787868,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17795,
+     "macro_tau": 5.070517374429553,
+     "micro_tau": 4.724304579938185,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25813,
+     "macro_tau": 3.859435598325122,
+     "micro_tau": 3.1688683996435905,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 177386,
+    "request_macro_tau": 6.733037164418841,
+    "micro_tau": 5.816045234685939,
+    "benchmark_equal_weight_macro_tau": 5.72114235185947,
+    "benchmark_equal_weight_micro_tau": 5.2645704368956645
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.638640785217284
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405299,
+     "verify_count": 63869,
+     "macro_tau": 6.912272749449809,
+     "micro_tau": 6.345785905525372,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 402700,
+     "verify_count": 76439,
+     "macro_tau": 6.1001900329541705,
+     "micro_tau": 5.268253116864428,
+     "length_limited": 46
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77956,
+     "verify_count": 16800,
+     "macro_tau": 4.733860018046924,
+     "micro_tau": 4.640238095238095,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85522,
+     "verify_count": 19461,
+     "macro_tau": 4.740631160212158,
+     "micro_tau": 4.394532655053697,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81038,
+     "verify_count": 28355,
+     "macro_tau": 3.4668359376187645,
+     "micro_tau": 2.8579791923822957,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1052515,
+    "verify_count": 204924,
+    "request_macro_tau": 6.131988239231085,
+    "micro_tau": 5.136123636079717,
+    "benchmark_equal_weight_macro_tau": 5.190757979656365,
+    "benchmark_equal_weight_micro_tau": 4.701357793012777
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 71.40212411085764
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71983,
+     "macro_tau": 5.714309047466256,
+     "micro_tau": 5.555922926246475,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73165,
+     "macro_tau": 5.54021915116959,
+     "micro_tau": 5.265400123009636,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16592,
+     "macro_tau": 4.605564745073528,
+     "micro_tau": 4.567442140790742,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19883,
+     "macro_tau": 4.462431887951369,
+     "micro_tau": 4.280440577377659,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27137,
+     "macro_tau": 3.4903933853598446,
+     "micro_tau": 3.0197516306150276,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208760,
+    "request_macro_tau": 5.319959901769135,
+    "micro_tau": 4.924377275340103,
+    "benchmark_equal_weight_macro_tau": 4.762583643404118,
+    "benchmark_equal_weight_micro_tau": 4.537791479607908
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.34844310283661
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 401749,
+     "verify_count": 76476,
+     "macro_tau": 5.459056024191072,
+     "micro_tau": 5.253268999424656,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 398164,
+     "verify_count": 85406,
+     "macro_tau": 5.077487628907554,
+     "micro_tau": 4.66201437838091,
+     "length_limited": 48
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77292,
+     "verify_count": 18061,
+     "macro_tau": 4.326808113268298,
+     "micro_tau": 4.279497259287969,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89597,
+     "verify_count": 22109,
+     "macro_tau": 4.271485623842212,
+     "micro_tau": 4.052512551449636,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83082,
+     "verify_count": 29587,
+     "macro_tau": 3.25632283748944,
+     "micro_tau": 2.8080575928617297,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1049884,
+    "verify_count": 231639,
+    "request_macro_tau": 5.02817445844315,
+    "micro_tau": 4.532414662470482,
+    "benchmark_equal_weight_macro_tau": 4.478232045539714,
+    "benchmark_equal_weight_micro_tau": 4.2110701562809805
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 75.03643851677576
+  }
+ },
+ "epoch-26": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57573,
+     "macro_tau": 7.522473804314386,
+     "micro_tau": 7.043405763118129,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61513,
+     "macro_tau": 6.960536144181675,
+     "micro_tau": 6.253377334872304,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14758,
+     "macro_tau": 5.199946581304307,
+     "micro_tau": 5.1256267786963,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17763,
+     "macro_tau": 5.06310109110239,
+     "micro_tau": 4.73281540280358,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25858,
+     "macro_tau": 3.8114717429533735,
+     "micro_tau": 3.163353700982288,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 177465,
+    "request_macro_tau": 6.735939466083864,
+    "micro_tau": 5.8134561744569355,
+    "benchmark_equal_weight_macro_tau": 5.711505872771227,
+    "benchmark_equal_weight_micro_tau": 5.2637157960945204
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.14753637313843
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 402018,
+     "verify_count": 62746,
+     "macro_tau": 6.926730913561885,
+     "micro_tau": 6.407069773372008,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 407047,
+     "verify_count": 77171,
+     "macro_tau": 6.069284885197055,
+     "micro_tau": 5.27461092897591,
+     "length_limited": 59
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76629,
+     "verify_count": 16566,
+     "macro_tau": 4.736807016723906,
+     "micro_tau": 4.625679101774719,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 86788,
+     "verify_count": 19942,
+     "macro_tau": 4.713855149379387,
+     "micro_tau": 4.352020860495437,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 82301,
+     "verify_count": 28863,
+     "macro_tau": 3.452054452546725,
+     "micro_tau": 2.8514360946540553,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1054783,
+    "verify_count": 205288,
+    "request_macro_tau": 6.1298443142197305,
+    "micro_tau": 5.138064572697869,
+    "benchmark_equal_weight_macro_tau": 5.179746483481791,
+    "benchmark_equal_weight_micro_tau": 4.702163351854426
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 71.7300174554189
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71873,
+     "macro_tau": 5.72654771829031,
+     "micro_tau": 5.5644261405534765,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73116,
+     "macro_tau": 5.539584093118503,
+     "micro_tau": 5.268928825428087,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16569,
+     "macro_tau": 4.612003611460651,
+     "micro_tau": 4.573782364656889,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19917,
+     "macro_tau": 4.4508140736570265,
+     "micro_tau": 4.273133504041773,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27125,
+     "macro_tau": 3.49272853217051,
+     "micro_tau": 3.021087557603687,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208600,
+    "request_macro_tau": 5.325905358892022,
+    "micro_tau": 4.928154362416107,
+    "benchmark_equal_weight_macro_tau": 4.7643356057394,
+    "benchmark_equal_weight_micro_tau": 4.540271678456782
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.72465806802114
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 407718,
+     "verify_count": 78322,
+     "macro_tau": 5.451912004372076,
+     "micro_tau": 5.205663798166543,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 400580,
+     "verify_count": 86699,
+     "macro_tau": 5.044948858215691,
+     "micro_tau": 4.620353175930518,
+     "length_limited": 47
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76346,
+     "verify_count": 17951,
+     "macro_tau": 4.304512302747831,
+     "micro_tau": 4.253022115759568,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89669,
+     "verify_count": 22367,
+     "macro_tau": 4.220922577746075,
+     "micro_tau": 4.00898645325703,
+     "length_limited": 1
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84861,
+     "verify_count": 29925,
+     "macro_tau": 3.2502082498047726,
+     "micro_tau": 2.8357894736842106,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1059174,
+    "verify_count": 235264,
+    "request_macro_tau": 5.010123667906151,
+    "micro_tau": 4.5020657644178455,
+    "benchmark_equal_weight_macro_tau": 4.454500798577289,
+    "benchmark_equal_weight_micro_tau": 4.184763003359574
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 76.70764307578405
+  }
+ },
+ "epoch-27": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57524,
+     "macro_tau": 7.524604652671118,
+     "micro_tau": 7.049405465544816,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61563,
+     "macro_tau": 6.954801203070499,
+     "micro_tau": 6.248298490976723,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14674,
+     "macro_tau": 5.238102749720263,
+     "micro_tau": 5.1549679705601745,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17746,
+     "macro_tau": 5.073599502637086,
+     "micro_tau": 4.737349261805477,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25789,
+     "macro_tau": 3.8507658332861086,
+     "micro_tau": 3.1718174415448446,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 177296,
+    "request_macro_tau": 6.742266914527536,
+    "micro_tau": 5.818997608519087,
+    "benchmark_equal_weight_macro_tau": 5.728374788277015,
+    "benchmark_equal_weight_micro_tau": 5.272367726086407
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.25175788799922
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 402948,
+     "verify_count": 63046,
+     "macro_tau": 6.918817662683829,
+     "micro_tau": 6.391333312184754,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 406881,
+     "verify_count": 77754,
+     "macro_tau": 6.052596563748951,
+     "micro_tau": 5.232926923373717,
+     "length_limited": 55
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76543,
+     "verify_count": 16325,
+     "macro_tau": 4.801840180827079,
+     "micro_tau": 4.688698315467075,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 88520,
+     "verify_count": 20187,
+     "macro_tau": 4.715755354583375,
+     "micro_tau": 4.385000247684153,
+     "length_limited": 1
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83711,
+     "verify_count": 28815,
+     "macro_tau": 3.491423950218562,
+     "micro_tau": 2.905118861703974,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1058603,
+    "verify_count": 206127,
+    "request_macro_tau": 6.129290636155409,
+    "micro_tau": 5.135683340852969,
+    "benchmark_equal_weight_macro_tau": 5.196086742412359,
+    "benchmark_equal_weight_micro_tau": 4.720615532082735
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.58427304824194
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71861,
+     "macro_tau": 5.723887275102043,
+     "micro_tau": 5.565355338779032,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73212,
+     "macro_tau": 5.532388792094395,
+     "micro_tau": 5.262019887450145,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16563,
+     "macro_tau": 4.622118293598486,
+     "micro_tau": 4.575439232023184,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19878,
+     "macro_tau": 4.471895520551136,
+     "micro_tau": 4.281517255257068,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27078,
+     "macro_tau": 3.487833432075386,
+     "micro_tau": 3.026331339094468,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208592,
+    "request_macro_tau": 5.325566504154437,
+    "micro_tau": 4.9283433688732075,
+    "benchmark_equal_weight_macro_tau": 4.767624662684289,
+    "benchmark_equal_weight_micro_tau": 4.542132610520779
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.62117028633753
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 403412,
+     "verify_count": 76865,
+     "macro_tau": 5.458360305264003,
+     "micro_tau": 5.248318480452742,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 395620,
+     "verify_count": 84726,
+     "macro_tau": 5.050809985297402,
+     "micro_tau": 4.669404905223899,
+     "length_limited": 41
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76961,
+     "verify_count": 18075,
+     "macro_tau": 4.311271121889196,
+     "micro_tau": 4.257869986168742,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87047,
+     "verify_count": 21458,
+     "macro_tau": 4.2624085385709,
+     "micro_tau": 4.056622238792059,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83706,
+     "verify_count": 29600,
+     "macro_tau": 3.370834121199163,
+     "micro_tau": 2.8279054054054056,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1046746,
+    "verify_count": 230724,
+    "request_macro_tau": 5.027834647119307,
+    "micro_tau": 4.536788543887935,
+    "benchmark_equal_weight_macro_tau": 4.490736814444133,
+    "benchmark_equal_weight_micro_tau": 4.2120242032085695
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 75.65454062223435
+  }
+ },
+ "epoch-28": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57477,
+     "macro_tau": 7.527342349748292,
+     "micro_tau": 7.055169894044575,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61254,
+     "macro_tau": 6.984151872657101,
+     "micro_tau": 6.279818460835211,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14724,
+     "macro_tau": 5.213949576906072,
+     "micro_tau": 5.137462646020103,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17728,
+     "macro_tau": 5.063263812101601,
+     "micro_tau": 4.7421592960288805,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25687,
+     "macro_tau": 3.853637359283012,
+     "micro_tau": 3.1844123486588547,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176870,
+    "request_macro_tau": 6.747320418106057,
+    "micro_tau": 5.8330129473624694,
+    "benchmark_equal_weight_macro_tau": 5.728468994139216,
+    "benchmark_equal_weight_micro_tau": 5.279804529117525
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.8082768479983
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405601,
+     "verify_count": 63556,
+     "macro_tau": 6.926771815343853,
+     "micro_tau": 6.381789288186796,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 405718,
+     "verify_count": 77176,
+     "macro_tau": 6.087821525637361,
+     "micro_tau": 5.257048823468436,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78574,
+     "verify_count": 16795,
+     "macro_tau": 4.818627644368944,
+     "micro_tau": 4.6784161952962195,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89370,
+     "verify_count": 20406,
+     "macro_tau": 4.759921633329201,
+     "micro_tau": 4.379594236989121,
+     "length_limited": 1
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 83544,
+     "verify_count": 29480,
+     "macro_tau": 3.514188847489611,
+     "micro_tau": 2.8339213025780188,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1062807,
+    "verify_count": 207413,
+    "request_macro_tau": 6.14839491512403,
+    "micro_tau": 5.1241098677517805,
+    "benchmark_equal_weight_macro_tau": 5.221466293233794,
+    "benchmark_equal_weight_micro_tau": 4.706153969303719
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 71.20108595291774
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71875,
+     "macro_tau": 5.724076469445807,
+     "micro_tau": 5.564271304347826,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72988,
+     "macro_tau": 5.548035022242938,
+     "micro_tau": 5.278169014084507,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16545,
+     "macro_tau": 4.618682219757184,
+     "micro_tau": 4.580417044424298,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19873,
+     "macro_tau": 4.471746119632271,
+     "micro_tau": 4.282594474915715,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27053,
+     "macro_tau": 3.5031113708360664,
+     "micro_tau": 3.029128007984327,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208334,
+    "request_macro_tau": 5.3296978460166375,
+    "micro_tau": 4.934446609770848,
+    "benchmark_equal_weight_macro_tau": 4.773130240382853,
+    "benchmark_equal_weight_micro_tau": 4.546915969151335
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 65.17657349507014
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 408024,
+     "verify_count": 78327,
+     "macro_tau": 5.4510620732611565,
+     "micro_tau": 5.209238193726302,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 399347,
+     "verify_count": 85647,
+     "macro_tau": 5.091438319620366,
+     "micro_tau": 4.662708559552582,
+     "length_limited": 47
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77659,
+     "verify_count": 18097,
+     "macro_tau": 4.342582441581481,
+     "micro_tau": 4.291263745372161,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87708,
+     "verify_count": 21639,
+     "macro_tau": 4.255299737283247,
+     "micro_tau": 4.053237210591987,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84094,
+     "verify_count": 29693,
+     "macro_tau": 3.303429562965147,
+     "micro_tau": 2.832115313373522,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1056832,
+    "verify_count": 233403,
+    "request_macro_tau": 5.029172632257179,
+    "micro_tau": 4.527928090041687,
+    "benchmark_equal_weight_macro_tau": 4.488762426942279,
+    "benchmark_equal_weight_micro_tau": 4.209712604523311
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 75.78910848697026
+  }
+ },
+ "epoch-29": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57462,
+     "macro_tau": 7.530566508816711,
+     "micro_tau": 7.057011590268352,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61187,
+     "macro_tau": 6.9823183406940865,
+     "micro_tau": 6.286694886168631,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14667,
+     "macro_tau": 5.239015080999946,
+     "micro_tau": 5.157428240267267,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17700,
+     "macro_tau": 5.09731575108643,
+     "micro_tau": 4.749661016949153,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25691,
+     "macro_tau": 3.867124733258091,
+     "micro_tau": 3.183916546650578,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176707,
+    "request_macro_tau": 6.754968739212827,
+    "micro_tau": 5.838393498842717,
+    "benchmark_equal_weight_macro_tau": 5.743268082971053,
+    "benchmark_equal_weight_micro_tau": 5.286942456060796
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.5081435362498
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 408117,
+     "verify_count": 64084,
+     "macro_tau": 6.9431567990454415,
+     "micro_tau": 6.368469508769739,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 398404,
+     "verify_count": 75408,
+     "macro_tau": 6.100082025148513,
+     "micro_tau": 5.283312115425419,
+     "length_limited": 47
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78270,
+     "verify_count": 16647,
+     "macro_tau": 4.7856714234333655,
+     "micro_tau": 4.701748062714002,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 86278,
+     "verify_count": 19764,
+     "macro_tau": 4.706299626111877,
+     "micro_tau": 4.365411859947379,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84769,
+     "verify_count": 29305,
+     "macro_tau": 3.5552484557042563,
+     "micro_tau": 2.8926463060911107,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1055838,
+    "verify_count": 205208,
+    "request_macro_tau": 6.154697375325708,
+    "micro_tau": 5.145208763790885,
+    "benchmark_equal_weight_macro_tau": 5.218091665888691,
+    "benchmark_equal_weight_micro_tau": 4.72231757058953
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 71.22360191345214
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71783,
+     "macro_tau": 5.732112435975117,
+     "micro_tau": 5.571402699803575,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 73029,
+     "macro_tau": 5.545138887738529,
+     "micro_tau": 5.275205740185406,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16523,
+     "macro_tau": 4.626692933033175,
+     "micro_tau": 4.586515765902076,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19825,
+     "macro_tau": 4.48910105066988,
+     "micro_tau": 4.292963430012611,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 26965,
+     "macro_tau": 3.510511914509814,
+     "micro_tau": 3.0390135360652697,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208125,
+    "request_macro_tau": 5.336410110117339,
+    "micro_tau": 4.939401801801802,
+    "benchmark_equal_weight_macro_tau": 4.780711444385303,
+    "benchmark_equal_weight_micro_tau": 4.553020234393787
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 66.18735372622808
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 410303,
+     "verify_count": 78777,
+     "macro_tau": 5.464117828647306,
+     "micro_tau": 5.2084110844535845,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 396459,
+     "verify_count": 85592,
+     "macro_tau": 5.040770654262255,
+     "micro_tau": 4.631963267595102,
+     "length_limited": 47
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78652,
+     "verify_count": 18386,
+     "macro_tau": 4.33161524008779,
+     "micro_tau": 4.27782008049603,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87522,
+     "verify_count": 21180,
+     "macro_tau": 4.323767005644989,
+     "micro_tau": 4.13229461756374,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 85386,
+     "verify_count": 29957,
+     "macro_tau": 3.286953512210681,
+     "micro_tau": 2.850285409086357,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1058322,
+    "verify_count": 233892,
+    "request_macro_tau": 5.031275968706581,
+    "micro_tau": 4.524831973731466,
+    "benchmark_equal_weight_macro_tau": 4.489444848170605,
+    "benchmark_equal_weight_micro_tau": 4.220154891838963
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 76.23610401948294
+  }
+ },
+ "epoch-30": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57577,
+     "macro_tau": 7.509466720569806,
+     "micro_tau": 7.042916442329402,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61096,
+     "macro_tau": 7.002828664401843,
+     "micro_tau": 6.2960586617781855,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14640,
+     "macro_tau": 5.243242241396592,
+     "micro_tau": 5.166939890710383,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17667,
+     "macro_tau": 5.100525763540949,
+     "micro_tau": 4.758532857870606,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25662,
+     "macro_tau": 3.8501171392214553,
+     "micro_tau": 3.187514613046528,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176642,
+    "request_macro_tau": 6.747144386552915,
+    "micro_tau": 5.840541886980446,
+    "benchmark_equal_weight_macro_tau": 5.741236105826129,
+    "benchmark_equal_weight_micro_tau": 5.290392493147021
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.74215341806412
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 403448,
+     "verify_count": 63361,
+     "macro_tau": 6.900459206439236,
+     "micro_tau": 6.367450008680419,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 391037,
+     "verify_count": 73697,
+     "macro_tau": 6.111623156428659,
+     "micro_tau": 5.306009742594679,
+     "length_limited": 45
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77130,
+     "verify_count": 16161,
+     "macro_tau": 4.888294756540964,
+     "micro_tau": 4.772600705401893,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87293,
+     "verify_count": 19794,
+     "macro_tau": 4.759927974961795,
+     "micro_tau": 4.41007375972517,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81866,
+     "verify_count": 28110,
+     "macro_tau": 3.5282981112054337,
+     "micro_tau": 2.912344361437211,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1040774,
+    "verify_count": 201123,
+    "request_macro_tau": 6.144594499557687,
+    "micro_tau": 5.174813422631922,
+    "benchmark_equal_weight_macro_tau": 5.237720641115217,
+    "benchmark_equal_weight_micro_tau": 4.753695715567874
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.06638070344925
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71873,
+     "macro_tau": 5.722332577182947,
+     "micro_tau": 5.5644261405534765,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72912,
+     "macro_tau": 5.553088973577814,
+     "micro_tau": 5.283670726355058,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16490,
+     "macro_tau": 4.635333786402323,
+     "micro_tau": 4.595694360218314,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19837,
+     "macro_tau": 4.479221615702171,
+     "micro_tau": 4.290366486867974,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 27003,
+     "macro_tau": 3.4888840900031526,
+     "micro_tau": 3.034736881087287,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 208115,
+    "request_macro_tau": 5.3307822111246495,
+    "micro_tau": 4.939639141820628,
+    "benchmark_equal_weight_macro_tau": 4.775772208573682,
+    "benchmark_equal_weight_micro_tau": 4.5537789190164215
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.82131158510843
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 407217,
+     "verify_count": 78384,
+     "macro_tau": 5.4379836271872035,
+     "micro_tau": 5.195154623392529,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 401972,
+     "verify_count": 86184,
+     "macro_tau": 5.035504800062928,
+     "micro_tau": 4.664113988675393,
+     "length_limited": 44
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 76136,
+     "verify_count": 17603,
+     "macro_tau": 4.389412210773881,
+     "micro_tau": 4.325171845708118,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89825,
+     "verify_count": 21789,
+     "macro_tau": 4.307812527130942,
+     "micro_tau": 4.122493001055578,
+     "length_limited": 1
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 82861,
+     "verify_count": 29198,
+     "macro_tau": 3.31169789282405,
+     "micro_tau": 2.837899856154531,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1058011,
+    "verify_count": 233158,
+    "request_macro_tau": 5.019706620492834,
+    "micro_tau": 4.537742646617315,
+    "benchmark_equal_weight_macro_tau": 4.496482211595801,
+    "benchmark_equal_weight_micro_tau": 4.228966662997229
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 77.81887034575145
+  }
+ },
+ "epoch-31": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57536,
+     "macro_tau": 7.515371511807698,
+     "micro_tau": 7.047935205784205,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61103,
+     "macro_tau": 7.000376204839149,
+     "micro_tau": 6.295337381143315,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14568,
+     "macro_tau": 5.272310065844834,
+     "micro_tau": 5.192476661175179,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17688,
+     "macro_tau": 5.090507375778928,
+     "micro_tau": 4.752883310719132,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25614,
+     "macro_tau": 3.881378256689198,
+     "micro_tau": 3.193487936284844,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176509,
+    "request_macro_tau": 6.752876205807474,
+    "micro_tau": 5.844942750794577,
+    "benchmark_equal_weight_macro_tau": 5.7519886829919615,
+    "benchmark_equal_weight_micro_tau": 5.296424099021335
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 57.36748692194621
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 407632,
+     "verify_count": 63991,
+     "macro_tau": 6.954660367937154,
+     "micro_tau": 6.370145801753371,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 407620,
+     "verify_count": 76007,
+     "macro_tau": 6.109506206685643,
+     "micro_tau": 5.362927098819846,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77909,
+     "verify_count": 16474,
+     "macro_tau": 4.82244480004091,
+     "micro_tau": 4.729209663712517,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 89124,
+     "verify_count": 20096,
+     "macro_tau": 4.802844270332846,
+     "micro_tau": 4.434912420382165,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81808,
+     "verify_count": 27986,
+     "macro_tau": 3.499121501760075,
+     "micro_tau": 2.923175873651111,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1064093,
+    "verify_count": 204554,
+    "request_macro_tau": 6.17209228900658,
+    "micro_tau": 5.202015115812939,
+    "benchmark_equal_weight_macro_tau": 5.237715429351326,
+    "benchmark_equal_weight_micro_tau": 4.764074171663802
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 71.1010771671931
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71848,
+     "macro_tau": 5.724787169209124,
+     "micro_tau": 5.566362320454292,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72957,
+     "macro_tau": 5.5480372060180585,
+     "micro_tau": 5.280411749386625,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16445,
+     "macro_tau": 4.651456408315007,
+     "micro_tau": 4.608269990878687,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19816,
+     "macro_tau": 4.481313734409645,
+     "micro_tau": 4.294913201453371,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 26924,
+     "macro_tau": 3.5138482794646047,
+     "micro_tau": 3.0436413608676274,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207990,
+    "request_macro_tau": 5.334068785257141,
+    "micro_tau": 4.942607817683543,
+    "benchmark_equal_weight_macro_tau": 4.783888559483288,
+    "benchmark_equal_weight_micro_tau": 4.55871972460812
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.70727391640345
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 408991,
+     "verify_count": 78281,
+     "macro_tau": 5.460709307825554,
+     "micro_tau": 5.22465221445817,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 399679,
+     "verify_count": 85869,
+     "macro_tau": 5.061764552591713,
+     "micro_tau": 4.654520257601695,
+     "length_limited": 51
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 78529,
+     "verify_count": 18480,
+     "macro_tau": 4.331658304148287,
+     "micro_tau": 4.249404761904762,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 86827,
+     "verify_count": 21225,
+     "macro_tau": 4.308338320911372,
+     "micro_tau": 4.090789163722026,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 85932,
+     "verify_count": 30206,
+     "macro_tau": 3.2833514483237023,
+     "micro_tau": 2.8448652585579026,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1059958,
+    "verify_count": 234061,
+    "request_macro_tau": 5.0318870814183745,
+    "micro_tau": 4.528554522111757,
+    "benchmark_equal_weight_macro_tau": 4.489164386760126,
+    "benchmark_equal_weight_micro_tau": 4.212846331248911
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 76.47001274029414
+  }
+ },
+ "epoch-32": {
+  "v16_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 405510,
+     "verify_count": 57530,
+     "macro_tau": 7.513195833021257,
+     "micro_tau": 7.0486702589953065,
+     "length_limited": 4
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 384664,
+     "verify_count": 61127,
+     "macro_tau": 6.991060316780962,
+     "micro_tau": 6.29286567310681,
+     "length_limited": 50
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75644,
+     "verify_count": 14610,
+     "macro_tau": 5.255471760315269,
+     "micro_tau": 5.1775496235455165,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 84069,
+     "verify_count": 17715,
+     "macro_tau": 5.090391471704775,
+     "micro_tau": 4.745639288738357,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81798,
+     "verify_count": 25642,
+     "macro_tau": 3.8598854199710244,
+     "micro_tau": 3.190000779970361,
+     "length_limited": 2
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1031685,
+    "verify_count": 176624,
+    "request_macro_tau": 6.747143794275298,
+    "micro_tau": 5.841137104810218,
+    "benchmark_equal_weight_macro_tau": 5.7420009603586575,
+    "benchmark_equal_weight_micro_tau": 5.29094512487127
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 56.19658489624659
+  },
+  "v16_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 409531,
+     "verify_count": 64741,
+     "macro_tau": 6.920319285580584,
+     "micro_tau": 6.325682334224062,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 388092,
+     "verify_count": 73217,
+     "macro_tau": 6.1235592448429,
+     "micro_tau": 5.300572271467009,
+     "length_limited": 43
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75669,
+     "verify_count": 16089,
+     "macro_tau": 4.793428766804204,
+     "micro_tau": 4.7031512213313444,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 92933,
+     "verify_count": 20982,
+     "macro_tau": 4.771536407740267,
+     "micro_tau": 4.429177390143933,
+     "length_limited": 2
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 84270,
+     "verify_count": 28851,
+     "macro_tau": 3.5181892098115255,
+     "micro_tau": 2.920869293958615,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1050495,
+    "verify_count": 203880,
+    "request_macro_tau": 6.152082586757176,
+    "micro_tau": 5.15251618599176,
+    "benchmark_equal_weight_macro_tau": 5.225406582955896,
+    "benchmark_equal_weight_micro_tau": 4.735890502224993
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 70.7872836748759
+  },
+  "v8_t0": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 399932,
+     "verify_count": 71800,
+     "macro_tau": 5.727479576998943,
+     "micro_tau": 5.57008356545961,
+     "length_limited": 1
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 385243,
+     "verify_count": 72939,
+     "macro_tau": 5.549316786510647,
+     "micro_tau": 5.281714857620751,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 75783,
+     "verify_count": 16470,
+     "macro_tau": 4.644734125112556,
+     "micro_tau": 4.60127504553734,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 85108,
+     "verify_count": 19785,
+     "macro_tau": 4.495282649280068,
+     "micro_tau": 4.301642658579732,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81947,
+     "verify_count": 26940,
+     "macro_tau": 3.5089634693403924,
+     "micro_tau": 3.041833704528582,
+     "length_limited": 1
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1028013,
+    "verify_count": 207934,
+    "request_macro_tau": 5.336525894914512,
+    "micro_tau": 4.9439389421643405,
+    "benchmark_equal_weight_macro_tau": 4.785155321448522,
+    "benchmark_equal_weight_micro_tau": 4.559309966345203
+   },
+   "zero_verify_requests": 0,
+   "temperature": 0.0,
+   "elapsed_min": 64.838332148393
+  },
+  "v8_t1": {
+   "datasets": {
+    "gsm8k": {
+     "requests": 1319,
+     "output_tokens": 406101,
+     "verify_count": 77577,
+     "macro_tau": 5.463528377197781,
+     "micro_tau": 5.234811864341236,
+     "length_limited": 0
+    },
+    "math500": {
+     "requests": 500,
+     "output_tokens": 394803,
+     "verify_count": 84481,
+     "macro_tau": 5.090375940641035,
+     "micro_tau": 4.673275647778791,
+     "length_limited": 49
+    },
+    "humaneval": {
+     "requests": 164,
+     "output_tokens": 77928,
+     "verify_count": 18090,
+     "macro_tau": 4.367295083663453,
+     "micro_tau": 4.307794361525705,
+     "length_limited": 0
+    },
+    "mbpp": {
+     "requests": 257,
+     "output_tokens": 87648,
+     "verify_count": 21445,
+     "macro_tau": 4.303512587516888,
+     "micro_tau": 4.08710655164374,
+     "length_limited": 0
+    },
+    "mt-bench": {
+     "requests": 160,
+     "output_tokens": 81222,
+     "verify_count": 28746,
+     "macro_tau": 3.2729423012959886,
+     "micro_tau": 2.8255061573784177,
+     "length_limited": 0
+    }
+   },
+   "pooled": {
+    "requests": 2400,
+    "output_tokens": 1047702,
+    "verify_count": 230339,
+    "request_macro_tau": 5.040621581985165,
+    "micro_tau": 4.548521961109495,
+    "benchmark_equal_weight_macro_tau": 4.4995308580630295,
+    "benchmark_equal_weight_micro_tau": 4.225698916533578
+   },
+   "zero_verify_requests": 0,
+   "temperature": 1.0,
+   "elapsed_min": 75.54466933409373
+  }
+ }
+}
