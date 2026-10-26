@@ -23,6 +23,11 @@ sed -e "s/CAPTURE_IP/$CAP/g" -e "s/TRAINER_IP/$TRN/g" -e "s/mooncake_protocol: r
     -e "s#cache_dir: cache/qwen3.8-27b-regen-mixture-v1#cache_dir: /scratch/cache/qwen3.8-27b-regen-mixture-v1#" \
     -e "s#target_model_path: Qwen/Qwen3.8-27B#target_model_path: /scratch/models/Qwen3.8-27B#" \
     examples/configs/online/disaggregated/external/qwen3.8-27b-moe-dspark-8server-dp8-2node-h200.yaml > "$R"
+# rdma needs the HCAs listed explicitly (the capture sink refuses an empty MOONCAKE_RDMA_DEVICES): default to every ACTIVE port.
+if [ "$PROTO" = rdma ] && [ -z "${MOONCAKE_RDMA_DEVICES:-}" ]; then
+  MOONCAKE_RDMA_DEVICES=$(for d in /sys/class/infiniband/*; do grep -q ACTIVE "$d/ports/1/state" 2>/dev/null && basename "$d"; done | paste -sd, -)
+fi
+export MOONCAKE_RDMA_DEVICES=${MOONCAKE_RDMA_DEVICES:-}
 [ -n "${MOONCAKE_RDMA_DEVICES:-}" ] && echo "    mooncake_rdma_devices: $MOONCAKE_RDMA_DEVICES" >> "$R"
 log "recipe rendered: $R (capture $CAP, trainer $TRN, protocol $PROTO)"
 pgrep -f "mooncake_master --enable_http_metadata_serve[r]" >/dev/null || { CUDA_VISIBLE_DEVICES= setsid nohup mooncake_master --enable_http_metadata_server=true --http_metadata_server_host=0.0.0.0 --rpc_port=35551 --http_metadata_server_port=35880 --metrics_port=35903 --default_kv_lease_ttl=300000 > $D/logs/mooncake_master.log 2>&1 < /dev/null & log "mooncake_master pid $!"; sleep 3; }
