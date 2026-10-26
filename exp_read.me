@@ -2,12 +2,12 @@
 
 Branch `exp/qwen3-8b-dspark-moe-8expert-1activate-dense-same` (base `spark-Qwen3-8B @ 7cd9696d + upstream PR stack #957-#963 (as on dense-1/8) + #966 cost-balanced consumer dispatch`). Recipe `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-8expert-1activate-dense-same-12ep.yaml`.  
 Checkpoints: https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate (private; one folder `<k>ep/` per epoch, HF layout + tokenizer; only epochs 1-12 are kept, later epochs are reported by their training metrics).  
-W&B: project `specforge-qwen3-8b-dspark`, run `qwen3-8b-dspark-moe-8expert-1activate-dense-same` (id 1ia117wn; one W&B run for all 32 epochs, so the curves are continuous).  
+W&B: project `specforge-qwen3-8b-dspark`, run `qwen3-8b-dspark-moe-8expert-1activate-dense-same` (id 1ia117wn; one W&B run for all 40 epochs, so the curves are continuous).  
 Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (training/launch.yaml, step 39,000 checkpoint).
 
 ## Status
 
-**running** - optimizer step 344,455 / 344,460 (100.0%), epoch 32/32; launched 2026-10-15 20:55Z (relaunched 2026-10-23 19:38Z, 4 launches); 253.6 h elapsed, 1,358 steps/h, ETA 2026-10-26 10:30Z. total_steps from schedule payload, num_prompts 1,420,903.
+**running** - optimizer step 344,510 / 430,575 (80.0%), epoch 33/40; launched 2026-10-15 20:55Z (relaunched 2026-10-26 10:48Z, 5 launches); 254.0 h elapsed, 1,356 steps/h, ETA 2026-10-29 02:26Z. total_steps from schedule payload, num_prompts 1,420,903.
 
 ## Setup
 
@@ -40,7 +40,7 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 | item | setting |
 |---|---|
 | strategy | dspark, online disaggregated capture (Mooncake TCP) |
-| epochs / optimizer steps | 32 = 12 in the first run (129,173 steps, one cosine) + 6 in a warm-started continuation (64,586 steps, re-warmup 4% to 6e-4, cosine to 0, prompt_seed 54) + 6 in a warm-started continuation (64,586 steps, re-warmup 1% to 2e-4, cosine to 0, prompt_seed 60) + 8 in a warm-started continuation (86,115 steps, re-warmup 1% to 2e-4, cosine to 0, prompt_seed 78) = 344,460 |
+| epochs / optimizer steps | 40 = 12 in the first run (129,173 steps, one cosine) + 6 in a warm-started continuation (64,586 steps, re-warmup 4% to 6e-4, cosine to 0, prompt_seed 54) + 6 in a warm-started continuation (64,586 steps, re-warmup 1% to 2e-4, cosine to 0, prompt_seed 60) + 8 in a warm-started continuation (86,115 steps, re-warmup 1% to 2e-4, cosine to 0, prompt_seed 78) + 8 in a warm-started continuation (86,115 steps, re-warmup 1% to 2e-4, cosine to 0, prompt_seed 90) = 430,575 |
 | global batch | 132 = batch_size 2 x accumulation_steps 11 x 6 DDP ranks (the dense-1/8 arm uses 133 = 1 x 19 x 7) |
 | optimizer | AdamW, lr 6e-4, cosine over the whole run, warmup 4%, FP32 master params |
 | max_grad_norm | 1.0 |
@@ -54,10 +54,11 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 ### Deviations from the dense run
 
 - Global batch 132 instead of 128: 128 does not divide over 6 trainer ranks; 2 x 11 x 6 = 132 is the branch's standard for the 2-server + 6-rank layout (the dense-1/8 arm runs 1 x 19 x 7 = 133). A 1-server + 7-rank layout was profiled and rejected: the single capture server ran stop-and-go against the producer window and did not beat two servers.
-- 32 epochs: 12 in one run with one cosine schedule, then 3 warm-started continuation run(s); `deployment.managed_local` cannot resume a run, so each continuation starts from the previous run's final checkpoint (draft weights only; fresh AdamW state) and logs into the same W&B run with its steps offset by all earlier steps (`SPECFORGE_LOG_STEP_OFFSET`). (The dense run planned 6 epochs and stopped at step 40,960.)
+- 40 epochs: 12 in one run with one cosine schedule, then 4 warm-started continuation run(s); `deployment.managed_local` cannot resume a run, so each continuation starts from the previous run's final checkpoint (draft weights only; fresh AdamW state) and logs into the same W&B run with its steps offset by all earlier steps (`SPECFORGE_LOG_STEP_OFFSET`). (The dense run planned 6 epochs and stopped at step 40,960.)
   - epochs 13-18 (`qwen3-8b-dspark-moe-8expert-1activate-dense-same-cont13to18`): warm start from the epoch-12 checkpoint, re-warmup 4% to 6e-4, cosine to 0, prompt_seed 54, W&B steps offset by 129,173.
   - epochs 19-24 (`qwen3-8b-dspark-moe-8expert-1activate-dense-same-cont19to24`): warm start from the epoch-18 checkpoint, re-warmup 1% to 2e-4, cosine to 0, prompt_seed 60, W&B steps offset by 193,759.
   - epochs 25-32 (`qwen3-8b-dspark-moe-8expert-1activate-dense-same-cont25to32`): warm start from the epoch-24 checkpoint, re-warmup 1% to 2e-4, cosine to 0, prompt_seed 78, W&B steps offset by 258,345.
+  - epochs 33-40 (`qwen3-8b-dspark-moe-8expert-1activate-dense-same-cont33to40`): warm start from the epoch-32 checkpoint, re-warmup 1% to 2e-4, cosine to 0, prompt_seed 90, W&B steps offset by 344,460.
 - The upstream PR stack #957-#963 is merged (same stack as the dense-1/8 branch) plus #966 (cost-balanced consumer dispatch, a scheduling-only change that keeps each optimizer window's sample membership), so `is_causal: true`, `flatten_vocab_projection`, `cache_vocab_projection`, `ddp_bucket_cap_mb: 128`, one DDP gradient sync per window and the system-prompt removal apply exactly as in the reference run.
 - Structure shrunk like the dense-1/8 arm: 2 layers instead of 5 and GQA 8/2 heads instead of 32/8; the dense FFN is replaced by 8 x 1536 top-1 experts (no shared expert); every other draft-config field is the dense skeleton.
 
@@ -96,7 +97,8 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 | 29 | 312,165 | 1077 | 0.7282 | 0.7376 | 1.1951 / 1.1538 | 0.0000 / 0.0000 | 0.4724 / 0.4570 | 0.2566 / 0.2480 | 0.0010 / 0.0011 | 0.000063 | 7.8 | not kept (epochs 1-12 only) |
 | 30 | 322,929 | 1076 | 0.7290 | 0.7307 | 1.1943 / 1.1888 | 0.0000 / 0.0000 | 0.4713 / 0.4674 | 0.2509 / 0.2203 | 0.0010 / 0.0011 | 0.000030 | 7.8 | not kept (epochs 1-12 only) |
 | 31 | 333,693 | 1076 | 0.7299 | 0.7340 | 1.1923 / 1.1722 | 0.0000 / 0.0000 | 0.4696 / 0.4635 | 0.2366 / 0.2485 | 0.0010 / 0.0010 | 0.000008 | 7.9 | not kept (epochs 1-12 only) |
-| 32 | 344,460 | 1077 | 0.7316 | 0.7302 | 1.1859 / 1.1962 | 0.0000 / 0.0000 | 0.4665 / 0.4685 | 0.2384 / 0.2285 | 0.0010 / 0.0010 | 0.000000 | 7.9 | in progress |
+| 32 | 344,460 | 1077 | 0.7316 | 0.7302 | 1.1859 / 1.1962 | 0.0000 / 0.0000 | 0.4665 / 0.4685 | 0.2384 / 0.2285 | 0.0010 / 0.0010 | 0.000000 | 7.9 | not kept (epochs 1-12 only) |
+| 33 | 355,224 | 5 | 0.7427 | 0.7427 | 1.1291 / 1.1291 | 0.0000 / 0.0000 | 0.4474 / 0.4474 | 0.1854 / 0.1854 | 0.0010 / 0.0010 | 0.000012 | - | in progress |
 
 ## How the numbers are computed
 
@@ -106,4 +108,4 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 - *wall-clock* is the time between consecutive epoch checkpoints (epoch 1: since launch); it includes the dataset cache build for epoch 1.
 - Exports are `specforge export --to hf` of the epoch checkpoint with the frozen Qwen3-8B embedding, plus the Qwen3-8B tokenizer; the raw training checkpoints (optimizer state included) stay on the box under `/scratch/ckpt-keep/`.
 
-_Generated 2026-10-26 10:30Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
+_Generated 2026-10-26 10:58Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
