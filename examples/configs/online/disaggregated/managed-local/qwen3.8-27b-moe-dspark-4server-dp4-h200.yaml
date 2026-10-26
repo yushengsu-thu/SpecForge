@@ -17,15 +17,15 @@
 #
 # Training protocol = the RadixArk/Qwen3.8-27B-DSpark v2 recipe as reproduced in
 # qwen3.8-27b-dspark-regen-mixture-v1-6ep.yaml (kan/qwen38-dspark-ablation): the
-# Regen-Mixture-v1 corpus (1,269,290 conversations, 8,192-token context), six
-# epochs at global batch 512 (14,874 optimizer steps), a 250-step linear warm-up
-# into constant 5e-4, grad clip 1.0, DSpark CE 0.1 / L1 0.9 / confidence 1.0,
-# 512 anchors, decay gamma 4, flex attention.  Besides the MoE FFN, the teacher
-# differs from v2's NVFP4 target (Hopper cannot run it): this file captures from
-# the FP8 target; the two-node sibling uses the BF16 one.  The micro-batch is
-# split for H200 memory: 4 ranks x 2 x 64 = 512 samples per optimizer step.
+# Regen-Mixture-v1 corpus (1,269,290 conversations, 8,192-token context), global
+# batch 512 (2,479 optimizer steps per epoch), a 250-step linear warm-up into
+# constant 5e-4, grad clip 1.0, DSpark CE 0.1 / L1 0.9 / confidence 1.0, 512
+# anchors, decay gamma 4, flex attention; four epochs here (v2 ran six).  Besides
+# the MoE FFN, the teacher differs from v2's NVFP4 target (Hopper cannot run it):
+# the BF16 target captures instead.  The micro-batch is split for H200 memory:
+# 4 ranks x 2 x 64 = 512 samples per optimizer step.
 model:
-  target_model_path: Qwen/Qwen3.8-27B-FP8
+  target_model_path: Qwen/Qwen3.8-27B
   draft_model_config: configs/qwen3.8-27b-moe-dspark.json
   target_backend: sglang
   trust_remote_code: true
@@ -52,7 +52,7 @@ data:
 
 training:
   strategy: dspark
-  num_epochs: 6
+  num_epochs: 4
   tp_size: 1
   batch_size: 2
   accumulation_steps: 64
@@ -60,8 +60,8 @@ training:
   optimizer_cpu_offload: false
   learning_rate: 0.0005
   lr_scheduler: constant
-  # 250 warm-up steps of 14,874, as in the v2 recipe.
-  warmup_ratio: 0.0168
+  # 250 warm-up steps of 9,916, as in the v2 recipe.
+  warmup_ratio: 0.0252
   max_grad_norm: 1.0
   attention_backend: flex_attention
   num_anchors: 512
@@ -72,7 +72,7 @@ training:
   dspark_confidence_head_alpha: 1.0
   # 2,479 steps per epoch: every epoch end is checkpointed.
   save_interval: 2479
-  max_checkpoints: 6
+  max_checkpoints: 4
   log_interval: 10
   dist_timeout: 30
   seed: 42
