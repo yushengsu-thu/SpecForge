@@ -1,13 +1,13 @@
 # Qwen3-8B DSpark MoE drafter: 2 layers, 1/4 attention width, 8 experts x 1536 top-1, dense-same hyperparameters
 
 Branch `exp/qwen3-8b-dspark-moe-8expert-1activate-dense-same` (base `spark-Qwen3-8B @ 7cd9696d + upstream PR stack #957-#963 (as on dense-1/8) + #966 cost-balanced consumer dispatch`). Recipe `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-moe-8expert-1activate-dense-same-12ep.yaml`.  
-Checkpoints: https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate (private; one folder `<k>ep/` per epoch, HF layout + tokenizer).  
+Checkpoints: https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate (private; one folder `<k>ep/` per epoch, HF layout + tokenizer; only epochs 1-12 are kept, later epochs are reported by their training metrics).  
 W&B: project `specforge-qwen3-8b-dspark`, run `qwen3-8b-dspark-moe-8expert-1activate-dense-same` (id 1ia117wn; one W&B run for all 32 epochs, so the curves are continuous).  
 Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (training/launch.yaml, step 39,000 checkpoint).
 
 ## Status
 
-**running** - optimizer step 333,765 / 344,460 (96.9%), epoch 32/32; launched 2026-10-15 20:55Z (relaunched 2026-10-23 19:38Z, 4 launches); 245.7 h elapsed, 1,358 steps/h, ETA 2026-10-26 10:33Z. total_steps from schedule payload, num_prompts 1,420,903.
+**running** - optimizer step 336,935 / 344,460 (97.8%), epoch 32/32; launched 2026-10-15 20:55Z (relaunched 2026-10-23 19:38Z, 4 launches); 248.1 h elapsed, 1,358 steps/h, ETA 2026-10-26 10:31Z. total_steps from schedule payload, num_prompts 1,420,903.
 
 ## Setup
 
@@ -77,26 +77,26 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 | 10 | 107,640 | 1077 | 0.7132 | 0.7097 | 1.2557 / 1.2741 | 0.0000 / 0.0000 | 0.4975 / 0.5040 | 0.3432 / 0.3669 | 0.0010 / 0.0010 | 0.000044 | 7.9 | [10ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/10ep) |
 | 11 | 118,404 | 1076 | 0.7153 | 0.7179 | 1.2499 / 1.2400 | 0.0000 / 0.0000 | 0.4940 / 0.4890 | 0.3295 / 0.3456 | 0.0010 / 0.0010 | 0.000011 | 7.9 | [11ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/11ep) |
 | 12 | 129,173 | 1077 | 0.7167 | 0.7178 | 1.2455 / 1.2374 | 0.0000 / 0.0000 | 0.4916 / 0.4894 | 0.3196 / 0.3603 | 0.0010 / 0.0010 | 0.000000 | 7.9 | [12ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/12ep) |
-| 13 | 139,937 | 1076 | 0.6967 | 0.6981 | 1.3185 / 1.3069 | 0.0000 / 0.0000 | 0.5257 / 0.5233 | 0.4040 / 0.4318 | 0.0010 / 0.0011 | 0.000575 | 9.5 | [13ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/13ep) |
-| 14 | 150,701 | 1076 | 0.6981 | 0.7076 | 1.3102 / 1.2565 | 0.0000 / 0.0000 | 0.5232 / 0.5050 | 0.4076 / 0.4200 | 0.0010 / 0.0010 | 0.000472 | 7.8 | [14ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/14ep) |
-| 15 | 161,465 | 1077 | 0.7042 | 0.7121 | 1.2874 / 1.2471 | 0.0000 / 0.0000 | 0.5131 / 0.4989 | 0.3744 / 0.3718 | 0.0010 / 0.0011 | 0.000320 | 7.8 | [15ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/15ep) |
-| 16 | 172,229 | 1076 | 0.7126 | 0.7167 | 1.2508 / 1.2325 | 0.0000 / 0.0000 | 0.4984 / 0.4909 | 0.3322 / 0.3003 | 0.0010 / 0.0010 | 0.000162 | 7.8 | [16ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/16ep) |
-| 17 | 182,993 | 1077 | 0.7182 | 0.7192 | 1.2311 / 1.2302 | 0.0000 / 0.0000 | 0.4890 / 0.4867 | 0.3054 / 0.3511 | 0.0010 / 0.0010 | 0.000044 | 7.8 | [17ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/17ep) |
-| 18 | 193,759 | 1076 | 0.7222 | 0.7258 | 1.2178 / 1.1982 | 0.0000 / 0.0000 | 0.4822 / 0.4756 | 0.2876 / 0.3161 | 0.0010 / 0.0010 | 0.000000 | 7.8 | [18ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/18ep) |
-| 19 | 204,523 | 1076 | 0.7168 | 0.7144 | 1.2367 / 1.2475 | 0.0000 / 0.0000 | 0.4915 / 0.4949 | 0.3138 / 0.2384 | 0.0010 / 0.0010 | 0.000188 | 8.3 | [19ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/19ep) |
-| 20 | 215,287 | 1076 | 0.7185 | 0.7191 | 1.2300 / 1.2253 | 0.0000 / 0.0000 | 0.4886 / 0.4882 | 0.3073 / 0.3101 | 0.0010 / 0.0010 | 0.000152 | 7.8 | [20ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/20ep) |
-| 21 | 226,051 | 1077 | 0.7215 | 0.7281 | 1.2189 / 1.1899 | 0.0000 / 0.0000 | 0.4834 / 0.4723 | 0.2851 / 0.2730 | 0.0010 / 0.0010 | 0.000102 | 7.9 | [21ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/21ep) |
-| 22 | 236,815 | 1076 | 0.7242 | 0.7233 | 1.2099 / 1.2131 | 0.0000 / 0.0000 | 0.4790 / 0.4808 | 0.2797 / 0.3090 | 0.0010 / 0.0011 | 0.000051 | 7.8 | [22ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/22ep) |
-| 23 | 247,579 | 1077 | 0.7263 | 0.7225 | 1.2040 / 1.2239 | 0.0000 / 0.0000 | 0.4755 / 0.4814 | 0.2647 / 0.2174 | 0.0010 / 0.0010 | 0.000014 | 7.8 | [23ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/23ep) |
-| 24 | 258,345 | 1076 | 0.7272 | 0.7280 | 1.2020 / 1.2024 | 0.0000 / 0.0000 | 0.4740 / 0.4724 | 0.2612 / 0.2486 | 0.0010 / 0.0010 | 0.000000 | 7.9 | [24ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/24ep) |
-| 25 | 269,109 | 1076 | 0.7208 | 0.7204 | 1.2214 / 1.2210 | 0.0000 / 0.0000 | 0.4848 / 0.4848 | 0.2931 / 0.3051 | 0.0010 / 0.0010 | 0.000193 | 8.3 | [25ep](https://huggingface.co/yushengsu/qwen3-8b-dspark-moe-8expert-1activate/tree/main/25ep) |
-| 26 | 279,873 | 1076 | 0.7211 | 0.7162 | 1.2204 / 1.2426 | 0.0000 / 0.0000 | 0.4844 / 0.4927 | 0.2899 / 0.3293 | 0.0010 / 0.0010 | 0.000172 | 7.8 | complete, export/upload pending |
-| 27 | 290,637 | 1077 | 0.7224 | 0.7292 | 1.2172 / 1.1854 | 0.0000 / 0.0000 | 0.4824 / 0.4707 | 0.2766 / 0.2339 | 0.0010 / 0.0010 | 0.000140 | 7.8 | complete, export/upload pending |
-| 28 | 301,401 | 1076 | 0.7248 | 0.7255 | 1.2074 / 1.2010 | 0.0000 / 0.0000 | 0.4781 / 0.4755 | 0.2669 / 0.2662 | 0.0010 / 0.0010 | 0.000102 | 7.8 | complete, export/upload pending |
-| 29 | 312,165 | 1077 | 0.7282 | 0.7376 | 1.1951 / 1.1538 | 0.0000 / 0.0000 | 0.4724 / 0.4570 | 0.2566 / 0.2480 | 0.0010 / 0.0011 | 0.000063 | 7.8 | complete, export/upload pending |
-| 30 | 322,929 | 1076 | 0.7290 | 0.7307 | 1.1943 / 1.1888 | 0.0000 / 0.0000 | 0.4713 / 0.4674 | 0.2509 / 0.2203 | 0.0010 / 0.0011 | 0.000030 | 7.8 | complete, export/upload pending |
-| 31 | 333,693 | 1076 | 0.7299 | 0.7340 | 1.1923 / 1.1722 | 0.0000 / 0.0000 | 0.4696 / 0.4635 | 0.2366 / 0.2485 | 0.0010 / 0.0010 | 0.000008 | 7.9 | complete, export/upload pending |
-| 32 | 344,460 | 8 | 0.7410 | 0.7410 | 1.1377 / 1.1377 | 0.0000 / 0.0000 | 0.4496 / 0.4496 | 0.2688 / 0.2688 | 0.0010 / 0.0010 | 0.000008 | - | in progress |
+| 13 | 139,937 | 1076 | 0.6967 | 0.6981 | 1.3185 / 1.3069 | 0.0000 / 0.0000 | 0.5257 / 0.5233 | 0.4040 / 0.4318 | 0.0010 / 0.0011 | 0.000575 | 9.5 | not kept (epochs 1-12 only) |
+| 14 | 150,701 | 1076 | 0.6981 | 0.7076 | 1.3102 / 1.2565 | 0.0000 / 0.0000 | 0.5232 / 0.5050 | 0.4076 / 0.4200 | 0.0010 / 0.0010 | 0.000472 | 7.8 | not kept (epochs 1-12 only) |
+| 15 | 161,465 | 1077 | 0.7042 | 0.7121 | 1.2874 / 1.2471 | 0.0000 / 0.0000 | 0.5131 / 0.4989 | 0.3744 / 0.3718 | 0.0010 / 0.0011 | 0.000320 | 7.8 | not kept (epochs 1-12 only) |
+| 16 | 172,229 | 1076 | 0.7126 | 0.7167 | 1.2508 / 1.2325 | 0.0000 / 0.0000 | 0.4984 / 0.4909 | 0.3322 / 0.3003 | 0.0010 / 0.0010 | 0.000162 | 7.8 | not kept (epochs 1-12 only) |
+| 17 | 182,993 | 1077 | 0.7182 | 0.7192 | 1.2311 / 1.2302 | 0.0000 / 0.0000 | 0.4890 / 0.4867 | 0.3054 / 0.3511 | 0.0010 / 0.0010 | 0.000044 | 7.8 | not kept (epochs 1-12 only) |
+| 18 | 193,759 | 1076 | 0.7222 | 0.7258 | 1.2178 / 1.1982 | 0.0000 / 0.0000 | 0.4822 / 0.4756 | 0.2876 / 0.3161 | 0.0010 / 0.0010 | 0.000000 | 7.8 | not kept (epochs 1-12 only) |
+| 19 | 204,523 | 1076 | 0.7168 | 0.7144 | 1.2367 / 1.2475 | 0.0000 / 0.0000 | 0.4915 / 0.4949 | 0.3138 / 0.2384 | 0.0010 / 0.0010 | 0.000188 | 8.3 | not kept (epochs 1-12 only) |
+| 20 | 215,287 | 1076 | 0.7185 | 0.7191 | 1.2300 / 1.2253 | 0.0000 / 0.0000 | 0.4886 / 0.4882 | 0.3073 / 0.3101 | 0.0010 / 0.0010 | 0.000152 | 7.8 | not kept (epochs 1-12 only) |
+| 21 | 226,051 | 1077 | 0.7215 | 0.7281 | 1.2189 / 1.1899 | 0.0000 / 0.0000 | 0.4834 / 0.4723 | 0.2851 / 0.2730 | 0.0010 / 0.0010 | 0.000102 | 7.9 | not kept (epochs 1-12 only) |
+| 22 | 236,815 | 1076 | 0.7242 | 0.7233 | 1.2099 / 1.2131 | 0.0000 / 0.0000 | 0.4790 / 0.4808 | 0.2797 / 0.3090 | 0.0010 / 0.0011 | 0.000051 | 7.8 | not kept (epochs 1-12 only) |
+| 23 | 247,579 | 1077 | 0.7263 | 0.7225 | 1.2040 / 1.2239 | 0.0000 / 0.0000 | 0.4755 / 0.4814 | 0.2647 / 0.2174 | 0.0010 / 0.0010 | 0.000014 | 7.8 | not kept (epochs 1-12 only) |
+| 24 | 258,345 | 1076 | 0.7272 | 0.7280 | 1.2020 / 1.2024 | 0.0000 / 0.0000 | 0.4740 / 0.4724 | 0.2612 / 0.2486 | 0.0010 / 0.0010 | 0.000000 | 7.9 | not kept (epochs 1-12 only) |
+| 25 | 269,109 | 1076 | 0.7208 | 0.7204 | 1.2214 / 1.2210 | 0.0000 / 0.0000 | 0.4848 / 0.4848 | 0.2931 / 0.3051 | 0.0010 / 0.0010 | 0.000193 | 8.3 | not kept (epochs 1-12 only) |
+| 26 | 279,873 | 1076 | 0.7211 | 0.7162 | 1.2204 / 1.2426 | 0.0000 / 0.0000 | 0.4844 / 0.4927 | 0.2899 / 0.3293 | 0.0010 / 0.0010 | 0.000172 | 7.8 | not kept (epochs 1-12 only) |
+| 27 | 290,637 | 1077 | 0.7224 | 0.7292 | 1.2172 / 1.1854 | 0.0000 / 0.0000 | 0.4824 / 0.4707 | 0.2766 / 0.2339 | 0.0010 / 0.0010 | 0.000140 | 7.8 | not kept (epochs 1-12 only) |
+| 28 | 301,401 | 1076 | 0.7248 | 0.7255 | 1.2074 / 1.2010 | 0.0000 / 0.0000 | 0.4781 / 0.4755 | 0.2669 / 0.2662 | 0.0010 / 0.0010 | 0.000102 | 7.8 | not kept (epochs 1-12 only) |
+| 29 | 312,165 | 1077 | 0.7282 | 0.7376 | 1.1951 / 1.1538 | 0.0000 / 0.0000 | 0.4724 / 0.4570 | 0.2566 / 0.2480 | 0.0010 / 0.0011 | 0.000063 | 7.8 | not kept (epochs 1-12 only) |
+| 30 | 322,929 | 1076 | 0.7290 | 0.7307 | 1.1943 / 1.1888 | 0.0000 / 0.0000 | 0.4713 / 0.4674 | 0.2509 / 0.2203 | 0.0010 / 0.0011 | 0.000030 | 7.8 | not kept (epochs 1-12 only) |
+| 31 | 333,693 | 1076 | 0.7299 | 0.7340 | 1.1923 / 1.1722 | 0.0000 / 0.0000 | 0.4696 / 0.4635 | 0.2366 / 0.2485 | 0.0010 / 0.0010 | 0.000008 | 7.9 | not kept (epochs 1-12 only) |
+| 32 | 344,460 | 325 | 0.7327 | 0.7364 | 1.1807 / 1.1636 | 0.0000 / 0.0000 | 0.4649 / 0.4597 | 0.2337 / 0.2375 | 0.0010 / 0.0010 | 0.000004 | - | in progress |
 
 ## How the numbers are computed
 
@@ -106,4 +106,4 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 - *wall-clock* is the time between consecutive epoch checkpoints (epoch 1: since launch); it includes the dataset cache build for epoch 1.
 - Exports are `specforge export --to hf` of the epoch checkpoint with the frozen Qwen3-8B embedding, plus the Qwen3-8B tokenizer; the raw training checkpoints (optimizer state included) stay on the box under `/scratch/ckpt-keep/`.
 
-_Generated 2026-10-26 02:40Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
+_Generated 2026-10-26 04:59Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
