@@ -1,0 +1,119 @@
+# Qwen3.8-27B DSpark drafter with the dense FFN replaced by a Qwen3.5-MoE FFN
+# (16 experts x 1088, top-1, no shared expert; configs/qwen3.8-27b-moe-dspark.json)
+# on one 8x H200 node: four TP=1 capture servers on GPUs 0-3 and a DP=4 trainer
+# on GPUs 4-7, all owned by `specforge train`.
+#
+# Everything but the FFN is the RadixArk/Qwen3.8-27B-DSpark (v2) architecture:
+# 5 full-attention layers, hidden 5120, 32 / 8 heads of dim 128, target layers
+# 5/19/33/47/61, Markov rank 256, confidence head, YaRN 32 / 8192, training
+# block 16.  Each expert is 1/16 of the dense 17408-wide FFN, so the drafter
+# keeps the dense v2's 1.86B parameters (plus 410k router weights) while one
+# token runs 1/16 of its FFN (0.60B active).  Served with the accept length
+# pinned to 3 on one H200 this shape ran 2.7% / 4.8% / 7.5% more output tok/s
+# than the dense v2 at concurrency 1 / 8 / 32; its trained accept length is
+# what decides the net speedup.  The router is balanced the torchtitan way (a
+# selection bias moved once per optimizer step plus a 0.005 batch-wise aux
+# loss); watch the moe/* metrics for the router collapsing onto a few experts.
+#
+# Hyperparameters follow the dense v1 recipe: global batch 512, lr 5e-4
+# constant after a 4% warm-up, grad clip 1.0, SHARD_GRAD_OP, DSpark CE 0.1 /
+# L1 0.9 / confidence 1.0, 512 anchors, decay gamma 4, flex attention, three
+# epochs.  The micro-batch is split for H200 memory: 4 ranks x 2 x 64 = 512
+# samples per optimizer step.
+model:
+  target_model_path: Qwen/Qwen3.8-27B-FP8
+  draft_model_config: configs/qwen3.8-27b-moe-dspark.json
+  target_backend: sglang
+  trust_remote_code: true
+  embedding_key: model.language_model.embed_tokens.weight
+  torch_dtype: bfloat16
+  mask_token_id: 248070
+  sglang_attention_backend: triton
+  sglang_disable_radix_cache: true
+  # data.max_length + 7 tokens of request headroom for the capture endpoint.
+  sglang_context_length: 8199
+
+data:
+  # Conversations answered by the target itself (on-policy regeneration); see
+  # docs/recipes/qwen3.8-27b-dflash2-disaggregated.md for how the corpus was
+  # produced.
+  train_data_path: ./cache/dataset/qwen3.8-27b-regen-train.jsonl
+  max_length: 8192
+  chat_template: qwen3.5
+  build_dataset_num_proc: 32
+  dataloader_num_workers: 8
+  cache_dir: cache/qwen3.8-27b-moe-dspark
+
+training:
+  strategy: dspark
+  num_epochs: 3
+  tp_size: 1
+  batch_size: 2
+  accumulation_steps: 64
+  fsdp_sharding: SHARD_GRAD_OP
+  optimizer_cpu_offload: false
+  learning_rate: 0.0005
+  lr_scheduler: constant
+  warmup_ratio: 0.04
+  max_grad_norm: 1.0
+  attention_backend: flex_attention
+  num_anchors: 512
+  loss_decay_gamma: 4.0
+  objective_chunk_blocks: 128
+  dspark_ce_loss_alpha: 0.1
+  dspark_l1_loss_alpha: 0.9
+  dspark_confidence_head_alpha: 1.0
+  save_interval: 500
+  max_checkpoints: 5
+  log_interval: 10
+  dist_timeout: 15
+  seed: 42
+  prompt_seed: 42
+
+tracking:
+  report_to: none
+
+runtime:
+  producer_lease: 8
+  producer_concurrency: 8
+  # Both watermarks must cover the 512-sample optimizer quantum.
+  in_flight_high_watermark: 768
+  in_flight_low_watermark: 512
+
+run_id: qwen3.8-27b-moe-dspark-4server-dp4-h200
+output_dir: outputs/qwen3.8-27b-moe-dspark-4server-dp4-h200
+
+deployment:
+  mode: disaggregated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 4
+  disaggregated:
+    control_dir: outputs/qwen3.8-27b-moe-dspark-4server-dp4-h200/control
+    consumer_state_dir: outputs/qwen3.8-27b-moe-dspark-4server-dp4-h200/consumer-state
+    backend: mooncake
+    client_buffer_size: 1073741824
+    managed_local:
+      trainer_cuda_visible_devices: ["4", "5", "6", "7"]
+      mooncake:
+        protocol: tcp
+        global_segment_size_bytes: 107374182400
+        local_buffer_size_bytes: 1073741824
+        default_kv_lease_ttl_ms: 300000
+      capture_servers:
+        - port: 30000
+          cuda_visible_devices: ["0"]
+          tp_size: 1
+          mem_fraction_static: 0.85
+        - port: 30001
+          cuda_visible_devices: ["1"]
+          tp_size: 1
+          mem_fraction_static: 0.85
+        - port: 30002
+          cuda_visible_devices: ["2"]
+          tp_size: 1
+          mem_fraction_static: 0.85
+        - port: 30003
+          cuda_visible_devices: ["3"]
+          tp_size: 1
+          mem_fraction_static: 0.85
