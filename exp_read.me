@@ -11,7 +11,7 @@ of 5, attention width 1/4 (GQA 8/2 heads x 128), MLP hidden dim 1/8 (1536); resi
 | --- | --- |
 | Code / config | this branch: `configs/qwen3-8b-dspark-dense-1-8-2layer-causal-noconf-b16.json` + the launch yaml below |
 | W&B (one line for all epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8-r8 (display name `dense-1-8`) |
-| Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/dense-1-8 (`epoch-01/` ... `epoch-32/`, each a `specforge export`ed servable directory) |
+| Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/dense-1-8 (`epoch-01/` ... `epoch-12/`, each a `specforge export`ed servable directory; epochs 13-32 were removed from the repo on 2026-10-26 at the user's request and remain in its git history, commit `cc18cac5`) |
 | Machine | one 8x H200 node (`specforge-dsv4-h200`, cluster h200-sci-k8s-1), SGLang 0.5.18 + spec-capture patch, torch 2.13.0+cu130 |
 | Launch yaml | `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml` |
 
@@ -266,6 +266,7 @@ gsm8k t0 9.72 (D16/V16), 6.45 (D16/V8); pooled t0 8.90 / 6.11; gsm8k t1 8.98 / 6
   copied to the top level). The HF checkpoints are unchanged and need the same two top-level keys to load in this
   SGLang build. With that, the smoke test (epoch 32, 3 samples per dataset) passed and the full benchmark
   (128 jobs: 32 epochs x V16/V8 x T0/T1, 2,400 requests each) started at 14:18 UTC.
+- 2026-10-26 05:00 UTC: at the user's request the HF repo keeps only `epoch-01/` ... `epoch-12/`; `epoch-13/` ... `epoch-32/` were deleted in one commit (`cc18cac5`, recoverable from the repo history). The checkpoint column below still names those folders for reference.
 - 2026-10-18 20:21 UTC: decided to continue to 18 epochs (see "Continuation: epochs 13-18"); `SPECFORGE_TRACKING_STEP_OFFSET` added to the tracker (3375bc93); a chain script on the node launches the continuation after epoch 12.
 - 2026-10-19 11:46-12:14 UTC: the 12-epoch run finished training and W&B synced, but the job did not exit: the managed
   producer stayed blocked in `streaming_ref_channel.poll` (`disaggregated.py:761`, after "drive_producer returning ...
