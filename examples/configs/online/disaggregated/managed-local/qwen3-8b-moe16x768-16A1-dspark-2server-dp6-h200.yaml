@@ -51,6 +51,9 @@ training:
   lr_scheduler: cosine
   warmup_ratio: 0.04
   max_grad_norm: 1.0
+  # Skip the update on a gradient-norm outlier: the 8 x 1536 run took one at step 8,580 (145 x the recent
+  # median) that cost ~900 steps of recovery; a 10 x rule would have skipped only that step and one other.
+  spike_guard_ratio: 10
   attention_backend: flex_attention
   num_anchors: 512
   loss_decay_gamma: 7.0
