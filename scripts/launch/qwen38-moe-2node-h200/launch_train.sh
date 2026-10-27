@@ -6,7 +6,7 @@ MODE=${1:?smoke|full}
 # The body runs from main() so that the git reset below cannot change the file bash is still reading (bash reads
 # scripts incrementally; the first launch after a push otherwise runs with the previous version's settings).
 main() {
-  BR=${BR:-dspark-v2-moe}
+  BR=${BR:-dspark-v2-moe-launch}
   D=/scratch/moe16x1088; mkdir -p $D/outputs
   VENV=${VENV:-/scratch/moe2ep/venv}; [ -f "$VENV/bin/activate" ] && . "$VENV/bin/activate"   # the boxes' sglang 0.5.18 + spec-capture + mooncake env
   export PYTHONPATH=/scratch/SpecForge

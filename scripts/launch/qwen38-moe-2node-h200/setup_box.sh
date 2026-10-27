@@ -4,7 +4,7 @@
 #   setsid nohup bash setup_box.sh > /scratch/moe16x1088/logs/setup_box.log 2>&1 < /dev/null &
 #   SKIP_DATA=1 on the capture node (it never reads the corpus).
 set -u
-BR=${BR:-dspark-v2-moe}
+BR=${BR:-dspark-v2-moe-launch}
 REPO=${REPO:-https://github.com/yushengsu-thu/SpecForge.git}
 TARGET=${TARGET:-Qwen/Qwen3.8-27B}
 D=/scratch/moe16x1088
