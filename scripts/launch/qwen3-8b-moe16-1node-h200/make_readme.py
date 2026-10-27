@@ -60,7 +60,7 @@ tags: [speculative-decoding, dspark, draft-model, moe, sglang]
 
 # Qwen3-8B DSpark MoE drafter (16 experts x 768, top-1)
 
-Private. One folder per finished epoch (`1ep/` … `{a.epochs}ep/`), each a complete SGLang-servable draft model
+One folder per finished epoch (`1ep/` … `{a.epochs}ep/`), each a complete SGLang-servable draft model
 (`Qwen3MoeDSparkModel`, block_size 16, tokenizer included).
 
 ## Training setting

@@ -10,5 +10,5 @@ all owned by `specforge train`. The box holds the assets under `/scratch/moe2ep/
   `eigent_radixark_training` by default) and the export watcher.
 - `bash launch_1node.sh smoke|full` and `bash watch_epoch_exports.sh` run the pieces separately.
 - Every epoch end (step 10764 x k) is exported (block 16, `Qwen3MoeDSparkModel`, tokenizer) and uploaded to
-  `yushengsu/qwen3-8b-moe16x768-16A1-dspark/<k>ep/` (private) with a refreshed README; outputs under
+  `yushengsu/qwen3-8b-moe16x768-16A1-dspark/<k>ep/` (public) with a refreshed README; outputs under
   `/scratch/moe8b16/outputs/qwen3-8b-moe16x768-16A1-dspark-2server-dp6-h200/`.

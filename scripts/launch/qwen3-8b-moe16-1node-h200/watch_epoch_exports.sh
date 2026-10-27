@@ -2,7 +2,7 @@
 # Export each epoch-end checkpoint (steps 10764 * k) of the Qwen3-8B 16 x 768 MoE run: keep a copy of the raw checkpoint
 # under /scratch/moe8b16/epoch_ckpts/, convert it with `specforge export`, normalise the config for SGLang (block 16 as
 # jiapingW serves it, architectures Qwen3MoeDSparkModel so SGLang picks the MoE draft class), add the target tokenizer
-# and upload it to folder <k>ep/ of the PRIVATE repo $HF_REPO together with a refreshed README.
+# and upload it to folder <k>ep/ of the public repo $HF_REPO together with a refreshed README.
 # A checkpoint counts as complete once the trainer has repointed <run_id>-latest at it (CheckpointManager.save does
 # that after every rank wrote its state).
 #   setsid nohup bash watch_epoch_exports.sh > /scratch/moe8b16/logs/watch_epoch_exports.log 2>&1 < /dev/null &
@@ -50,7 +50,7 @@ for j in $(seq 1 "$EPOCHS"); do
   python3 -c "import json; c=json.load(open('$dst/config.json')); print('config:', c['architectures'], 'layers', c['num_hidden_layers'], 'experts', c['num_experts'], 'x', c['moe_intermediate_size'], 'top', c['num_experts_per_tok'], 'block', c.get('block_size'))"
   du -sh "$dst" | tail -1
   python3 scripts/launch/qwen3-8b-moe16-1node-h200/make_readme.py --run-dir "$RUN_DIR" --steps-per-epoch "$STEPS_PER_EPOCH" --epochs-done "$k" --epochs "$((EPOCHS + EPOCH_OFFSET))" --hf-repo "$HF_REPO" --out "$D/exports/README.md"
-  log "epoch $k: uploading to $HF_REPO/${k}ep (private)"
+  log "epoch $k: uploading to $HF_REPO/${k}ep"
   for try in 1 2 3 4 5; do
     if hf upload "$HF_REPO" "$dst" "${k}ep" --repo-type model --commit-message "epoch $k export (step $step)" > "$D/exports/upload-${k}ep.log" 2>&1 \
        && hf upload "$HF_REPO" "$D/exports/README.md" README.md --repo-type model --commit-message "README after epoch $k" >> "$D/exports/upload-${k}ep.log" 2>&1; then
