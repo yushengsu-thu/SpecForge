@@ -772,6 +772,8 @@ class TestPackageArchitecture(unittest.TestCase):
             Path("scripts/launch/qwen3-8b-moe16-2node-h200/launch_train.sh"),
             Path("scripts/launch/qwen3-8b-moe16-2node-h200/trainer_node.sh"),
             Path("scripts/launch/qwen3-8b-moe16-2node-h200/run_8b.sh"),
+            Path("scripts/launch/qwen3-8b-moe16-1node-h200/launch_1node.sh"),
+            Path("scripts/launch/qwen3-8b-moe16-1node-h200/run_1node.sh"),
         }
         bypasses = []
         train_command = re.compile(r"\btrain\s+(?:--config|-c)\b")
