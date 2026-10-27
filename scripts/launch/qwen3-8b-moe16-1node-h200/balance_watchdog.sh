@@ -10,8 +10,9 @@ while true; do
   if [ -n "$line" ] && [ "$line" != "$last" ]; then
     last=$line
     step=$(echo "$line" | grep -o -E '^step [0-9]+' | cut -d' ' -f2)
-    bal=$(echo "$line" | grep -o -E "'moe/step_balance': [0-9.]+" | grep -o -E '[0-9.]+$')
-    aux=$(echo "$line" | grep -o -E "'moe/aux_loss': [0-9.]+" | grep -o -E '[0-9.]+$')
+    # The trainer logs each step twice, with bare keys and with a train/ prefix; accept both.
+    bal=$(echo "$line" | grep -o -E "'(train/)?moe/step_balance': [0-9.]+" | grep -o -E '[0-9.]+$')
+    aux=$(echo "$line" | grep -o -E "'(train/)?moe/aux_loss': [0-9.]+" | grep -o -E '[0-9.]+$')
     if [ -n "$bal" ] && awk -v b=$bal -v t=$TH 'BEGIN{exit !(b>t)}'; then bad=$((bad+1)); else bad=0; fi
     [ "$bad" -ge 3 ] && log "ALERT step $step step_balance=$bal aux_loss=$aux (>$TH for $bad readings)"
     [ "$bad" -eq 0 ] && [ $((step % 500)) -lt 10 ] && log "ok step $step step_balance=$bal aux_loss=$aux"
