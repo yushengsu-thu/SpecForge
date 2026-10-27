@@ -1,4 +1,4 @@
-# Qwen3-8B DSpark MoE drafter (16 experts x 768, top-1; configs/qwen3-8b-moe16x768-dspark.json) trained with the
+# Qwen3-8B DSpark MoE drafter (16 experts x 768, top-1; configs/qwen3-8b-moe16x768-16A1-dspark.json) trained with the
 # jiapingW/Qwen3-8b-dspark-SpecForge protocol on TWO 8x H200 nodes: eight TP=1 capture servers on the capture
 # node, mooncake_master plus the producer and an eight-rank DDP trainer on the trainer node.
 #
@@ -27,7 +27,7 @@
 #   TRAINER_IP replaced below, python -m specforge.cli train -c <this file>
 model:
   target_model_path: Qwen/Qwen3-8B
-  draft_model_config: configs/qwen3-8b-moe16x768-dspark.json
+  draft_model_config: configs/qwen3-8b-moe16x768-16A1-dspark.json
   target_backend: sglang
   trust_remote_code: true
   embedding_key: model.embed_tokens.weight
