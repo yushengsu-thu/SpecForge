@@ -11,7 +11,8 @@
 #   - the draft's FFN is the MoE above (the dense 12288-wide FFN split 16 ways, one expert per token);
 #   - the optimizer step is 6 ranks x 2 x 11 = 132 samples (jiapingW: 32 x 2 x 2 = 128), 10,764 steps per epoch;
 #   - a checkpoint every 1,196 steps (= 1/9 epoch, so every epoch end too; three kept) instead of every 3,000;
-#   - router balancing doubled / 10x: aux loss 0.01, selection-bias step 0.01 (0.005 / 0.001 collapsed at peak lr);
+#   - aux loss 0.02 instead of 0.005 (0.005 collapsed at peak lr; a 0.01 selection-bias step made the router
+#     oscillate from step 40 and collapse during the warm-up, so the bias step stays at 0.001);
 #   - Liger kernels and projection flattening / caching are not wired for DSpark on this branch.
 model:
   target_model_path: Qwen/Qwen3-8B
