@@ -719,6 +719,7 @@ class TestPackageArchitecture(unittest.TestCase):
                 "qwen3-4b-dspark.json",
                 "qwen3-8b-dspark.json",
                 "qwen3-8b-moe-dspark.json",
+                "qwen3-8b-moe16x768-dspark.json",
                 "qwen3.6-27b-dspark.json",
                 "qwen3.8-27b-moe-dspark.json",
             },
