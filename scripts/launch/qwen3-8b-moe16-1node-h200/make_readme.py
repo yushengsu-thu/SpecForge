@@ -55,16 +55,22 @@ def main():
     save_every = a.save_every or a.steps_per_epoch
     epoch_mode = save_every == a.steps_per_epoch
     last_step = a.epochs * a.steps_per_epoch // save_every * save_every
+    final_step = a.epochs * a.steps_per_epoch
+    steps = list(range(save_every, last_step + 1, save_every))
+    if final_step not in steps:
+        steps.append(final_step)  # the trainer saves its last step too, uploaded as final/
     ms = metrics(Path(a.run_dir) / "launch.log")
     results = {}
-    for step in range(save_every, a.steps_done + 1, save_every):
+    for step in steps:
+        if step > a.steps_done:
+            break
         m = at_step(ms, step)
         if m and m["acc"] is not None:
             results[step] = m
     best = max(results, key=lambda s: results[s]["acc"]) if results else None
     rows = []
-    for step in range(save_every, last_step + 1, save_every):
-        folder = f"{step // a.steps_per_epoch}ep/" if epoch_mode else f"step-{step}/"
+    for step in steps:
+        folder = f"{step // a.steps_per_epoch}ep/" if epoch_mode else ("final/" if step == final_step else f"step-{step}/")
         epoch = f"{step / a.steps_per_epoch:.2f}"
         if step in results:
             star = " **(best)**" if step == best else ""
@@ -76,9 +82,11 @@ def main():
     if epoch_mode:
         folders = f"One folder per finished epoch (`1ep/` … `{a.epochs}ep/`)"
     else:
-        folders = f"One folder per checkpoint, every {save_every} steps (`step-{save_every}/` … `step-{last_step}/`, {a.steps_per_epoch} steps per epoch)"
+        folders = f"One folder per checkpoint, every {save_every} steps (`step-{save_every}/` … `step-{last_step}/`, {a.steps_per_epoch} steps per epoch) plus the last step as `final/` (step {final_step})"
     where = f" under `{a.folder_prefix}`" if a.folder_prefix else ""
-    best_line = (f"Highest train/acc so far: **{results[best]['acc']:.3f}** at step {best} (`{a.folder_prefix}{'%dep' % (best // a.steps_per_epoch) if epoch_mode else 'step-%d' % best}/`)."
+    def folder_of(step):
+        return "%dep" % (step // a.steps_per_epoch) if epoch_mode else ("final" if step == final_step else "step-%d" % step)
+    best_line = (f"Highest train/acc so far: **{results[best]['acc']:.3f}** at step {best} (`{a.folder_prefix}{folder_of(best)}/`)."
                  if best else "No checkpoint uploaded yet.")
     body = f"""---
 license: other

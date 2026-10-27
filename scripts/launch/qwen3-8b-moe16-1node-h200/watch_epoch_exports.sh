@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Export the checkpoints of a Qwen3-8B MoE drafter run as they appear: by default the epoch-end ones (steps 10764 * k,
 # uploaded to folder <k>ep/), or with SAVE_EVERY=<n> every interval checkpoint (steps n, 2n, ..., uploaded to
-# step-<N>/). Each export keeps a copy of the raw checkpoint under /scratch/moe8b16/epoch_ckpts/ (all of them in epoch
+# step-<N>/, plus the trainer's last-step checkpoint as final/). Each export keeps a copy of the raw checkpoint under /scratch/moe8b16/epoch_ckpts/ (all of them in epoch
 # mode, the last three in interval mode; the trainer rotates its own after max_checkpoints), converts it with
 # `specforge export`, normalises the config for SGLang (block 16 as jiapingW serves it, architectures
 # Qwen3MoeDSparkModel so SGLang picks the MoE draft class), adds the target tokenizer and uploads it under $HF_PREFIX
@@ -19,7 +19,8 @@ DRAFT_CONFIG=${DRAFT_CONFIG:-configs/qwen3-8b-moe16x768-16A1-dspark.json}
 TARGET=${TARGET:-/scratch/moe2ep/models/Qwen3-8B}
 STEPS_PER_EPOCH=10764; EPOCHS=${EPOCHS:-6}; EPOCH_OFFSET=${EPOCH_OFFSET:-0}   # EPOCH_OFFSET: epochs finished by earlier phases (warm-start continuation)
 SAVE_EVERY=${SAVE_EVERY:-$STEPS_PER_EPOCH}                                    # the recipe's save_interval when it is not an epoch
-LAST_STEP=$(( EPOCHS * STEPS_PER_EPOCH / SAVE_EVERY * SAVE_EVERY ))            # the trainer saves on interval hits only
+LAST_STEP=$(( EPOCHS * STEPS_PER_EPOCH / SAVE_EVERY * SAVE_EVERY ))            # the last interval hit
+FINAL_STEP=$(( EPOCHS * STEPS_PER_EPOCH ))                                     # the trainer also saves its last step (trainer.py), grid or not: uploaded as final/
 KEEP_RAW=${KEEP_RAW:-3}                                                        # raw checkpoint copies kept in interval mode
 HF_REPO=${HF_REPO:-yushengsu/qwen3-8b-moe16x768-16A1-dspark}; HF_PREFIX=${HF_PREFIX:-}   # HF_PREFIX=<folder>/ nests everything, README included
 export HF_HOME=/scratch/moe2ep/hf-home HF_HUB_CACHE=/scratch/moe2ep/hf-home/hub HF_DATASETS_CACHE=/scratch/moe2ep/hf-home/datasets
@@ -39,10 +40,16 @@ complete() {
   return 1
 }
 epoch_mode=0; [ "$SAVE_EVERY" -eq "$STEPS_PER_EPOCH" ] && epoch_mode=1
-for step in $(seq "$SAVE_EVERY" "$SAVE_EVERY" "$LAST_STEP"); do
-  if [ "$epoch_mode" = 1 ]; then label="$((step / STEPS_PER_EPOCH + EPOCH_OFFSET))ep"; else label="step-$step"; fi
+steps=$(seq "$SAVE_EVERY" "$SAVE_EVERY" "$LAST_STEP"); [ "$LAST_STEP" -lt "$FINAL_STEP" ] && steps="$steps $FINAL_STEP"
+for step in $steps; do
+  if [ "$epoch_mode" = 1 ]; then label="$((step / STEPS_PER_EPOCH + EPOCH_OFFSET))ep"
+  elif [ "$step" -eq "$FINAL_STEP" ]; then label=final
+  else label="step-$step"; fi
+  # A restarted watcher skips what it already uploaded (the trainer rotates old checkpoints away).
+  done_marker="$D/exports/done-$RUN_ID-$label"
+  [ -f "$done_marker" ] && { log "$label: already uploaded, skipping"; continue; }
   ck="$RUN_DIR/$RUN_ID-step$step"; keep="$D/epoch_ckpts/$RUN_ID-step$step"; dst="$D/exports/$RUN_ID-$label"
-  kind=""; [ "$step" -eq "$LAST_STEP" ] && kind=final
+  kind=""; [ "$step" -eq "$FINAL_STEP" ] && kind=final
   log "$label: waiting for a complete $ck"
   until complete "$ck" "$kind"; do sleep 120; done
   sleep 60
@@ -73,6 +80,7 @@ for step in $(seq "$SAVE_EVERY" "$SAVE_EVERY" "$LAST_STEP"); do
     if hf upload "$HF_REPO" "$dst" "$HF_PREFIX$label" --repo-type model --commit-message "$RUN_ID $label export" > "$D/exports/upload-$RUN_ID-$label.log" 2>&1 \
        && hf upload "$HF_REPO" "$readme" "${HF_PREFIX}README.md" --repo-type model --commit-message "$RUN_ID README after $label" >> "$D/exports/upload-$RUN_ID-$label.log" 2>&1; then
       log "$label: EPOCH_EXPORT_DONE https://huggingface.co/$HF_REPO/tree/main/$HF_PREFIX$label"
+      touch "$done_marker"
       if [ "$epoch_mode" = 0 ]; then   # interval mode: the upload is the archive; keep only the last $KEEP_RAW raw copies and no export dirs
         rm -rf "$dst"
         for old in $(ls -d "$D/epoch_ckpts/$RUN_ID-step"* 2>/dev/null | sed "s|.*-step||" | sort -n | head -n -"$KEEP_RAW"); do rm -rf "$D/epoch_ckpts/$RUN_ID-step$old"; done
