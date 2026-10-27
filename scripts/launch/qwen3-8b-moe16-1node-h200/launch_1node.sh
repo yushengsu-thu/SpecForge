@@ -17,15 +17,15 @@ main() {
   export HF_TOKEN="$(cat /scratch/secrets/hf_token)"
   unset RANK LOCAL_RANK WORLD_SIZE MASTER_ADDR MASTER_PORT NODE_RANK
   R=examples/configs/online/disaggregated/managed-local/qwen3-8b-moe16x768-16A1-dspark-2server-dp6-h200.yaml
-  RUN=qwen3-8b-moe16x768-16A1-dspark-2server-dp6-h200
+  RUN=${RUN:-qwen3-8b-moe16x768-16A1-dspark-2server-dp6-h200}   # RUN=<name> renames the run (output dir, W&B run)
   PATHS="model.target_model_path=/scratch/moe2ep/models/Qwen3-8B data.train_data_path=/scratch/moe2ep/data/perfectblend_train_regen_temperature0_no_think.jsonl data.cache_dir=/scratch/moe2ep/cache/qwen3-8b-dspark-perfectblend-8192"
   if [ "$MODE" = smoke ]; then
     RUN=$RUN-smoke; OUT=$D/outputs/$RUN; rm -rf "$OUT"; mkdir -p "$OUT"
     OV="$PATHS training.max_steps=${SMOKE_STEPS:-3} training.save_interval=1000000 tracking.report_to=none run_id=$RUN output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state"
   else
     OUT=$D/outputs/$RUN; mkdir -p "$OUT"
-    export WANDB_API_KEY="$(cat /scratch/secrets/wandb_key)" WANDB_ENTITY=${WANDB_ENTITY:-eigent_radixark_training} WANDB_RUN_ID=${WANDB_RUN_ID:-qwen3-8b-moe16x768-16A1-6ep-h200} WANDB_RESUME=allow
-    OV="$PATHS tracking.report_to=wandb tracking.wandb_project=${WANDB_PROJECT:-specforge-qwen3-8b-moe16x768} tracking.wandb_name=$RUN tracking.wandb_dir=$OUT/wandb output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state"
+    export WANDB_API_KEY="$(cat /scratch/secrets/wandb_key)" WANDB_ENTITY=${WANDB_ENTITY:-eigent_radixark_training} WANDB_RUN_ID=${WANDB_RUN_ID:-$RUN} WANDB_RESUME=allow
+    OV="$PATHS tracking.report_to=wandb tracking.wandb_project=${WANDB_PROJECT:-specforge-qwen3-8b-moe16x768} tracking.wandb_name=$RUN tracking.wandb_dir=$OUT/wandb run_id=$RUN output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state"
   fi
   echo "[$(date -u +%H:%M:%S)] launching $MODE run $RUN (overrides: $OV)"
   setsid nohup python -m specforge.cli train -c "$R" $OV > "$OUT/launch.log" 2>&1 < /dev/null &
