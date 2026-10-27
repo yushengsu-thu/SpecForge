@@ -16,7 +16,8 @@ main() {
   export HF_HOME=/scratch/moe2ep/hf-home HF_HUB_CACHE=/scratch/moe2ep/hf-home/hub HF_DATASETS_CACHE=/scratch/moe2ep/hf-home/datasets HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
   export HF_TOKEN="$(cat /scratch/secrets/hf_token)"
   unset RANK LOCAL_RANK WORLD_SIZE MASTER_ADDR MASTER_PORT NODE_RANK
-  R=examples/configs/online/disaggregated/managed-local/qwen3-8b-moe16x768-16A1-dspark-2server-dp6-h200.yaml
+  # RECIPE=<yaml> trains another draft with the same protocol (e.g. the 8 x 1536 recipe next to this one).
+  R=${RECIPE:-examples/configs/online/disaggregated/managed-local/qwen3-8b-moe16x768-16A1-dspark-2server-dp6-h200.yaml}
   RUN=${RUN:-qwen3-8b-moe16x768-16A1-dspark-2server-dp6-h200}   # RUN=<name> renames the run (output dir, W&B run)
   PATHS="model.target_model_path=/scratch/moe2ep/models/Qwen3-8B data.train_data_path=/scratch/moe2ep/data/perfectblend_train_regen_temperature0_no_think.jsonl data.cache_dir=/scratch/moe2ep/cache/qwen3-8b-dspark-perfectblend-8192"
   if [ "$MODE" = smoke ]; then

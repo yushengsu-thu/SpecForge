@@ -1,20 +1,27 @@
 #!/usr/bin/env bash
-# Export each epoch-end checkpoint (steps 10764 * k) of the Qwen3-8B 16 x 768 MoE run: keep a copy of the raw checkpoint
-# under /scratch/moe8b16/epoch_ckpts/, convert it with `specforge export`, normalise the config for SGLang (block 16 as
-# jiapingW serves it, architectures Qwen3MoeDSparkModel so SGLang picks the MoE draft class), add the target tokenizer
-# and upload it to folder <k>ep/ of the public repo $HF_REPO together with a refreshed README.
+# Export the checkpoints of a Qwen3-8B MoE drafter run as they appear: by default the epoch-end ones (steps 10764 * k,
+# uploaded to folder <k>ep/), or with SAVE_EVERY=<n> every interval checkpoint (steps n, 2n, ..., uploaded to
+# step-<N>/). Each export keeps a copy of the raw checkpoint under /scratch/moe8b16/epoch_ckpts/ (all of them in epoch
+# mode, the last three in interval mode; the trainer rotates its own after max_checkpoints), converts it with
+# `specforge export`, normalises the config for SGLang (block 16 as jiapingW serves it, architectures
+# Qwen3MoeDSparkModel so SGLang picks the MoE draft class), adds the target tokenizer and uploads it under $HF_PREFIX
+# of the public repo $HF_REPO together with a refreshed README.
 # A checkpoint counts as complete once the trainer has repointed <run_id>-latest at it (CheckpointManager.save does
 # that after every rank wrote its state).
 #   setsid nohup bash watch_epoch_exports.sh > /scratch/moe8b16/logs/watch_epoch_exports.log 2>&1 < /dev/null &
+#   RUN_ID=<run> DRAFT_CONFIG=configs/qwen3-8b-moe8x1536-8A1-dspark.json SAVE_EVERY=1000 HF_PREFIX=<run>/ bash ...
 set -u
 RUN_ID=${RUN_ID:-qwen3-8b-moe16x768-16A1-dspark-2server-dp6-h200}
 D=/scratch/moe8b16; RUN_DIR=$D/outputs/$RUN_ID
 VENV=${VENV:-/scratch/moe2ep/venv}; [ -f "$VENV/bin/activate" ] && . "$VENV/bin/activate"   # the boxes' sglang 0.5.18 + spec-capture + mooncake env
 export PYTHONPATH=/scratch/SpecForge
-DRAFT_CONFIG=configs/qwen3-8b-moe16x768-16A1-dspark.json
+DRAFT_CONFIG=${DRAFT_CONFIG:-configs/qwen3-8b-moe16x768-16A1-dspark.json}
 TARGET=${TARGET:-/scratch/moe2ep/models/Qwen3-8B}
 STEPS_PER_EPOCH=10764; EPOCHS=${EPOCHS:-6}; EPOCH_OFFSET=${EPOCH_OFFSET:-0}   # EPOCH_OFFSET: epochs finished by earlier phases (warm-start continuation)
-HF_REPO=${HF_REPO:-yushengsu/qwen3-8b-moe16x768-16A1-dspark}
+SAVE_EVERY=${SAVE_EVERY:-$STEPS_PER_EPOCH}                                    # the recipe's save_interval when it is not an epoch
+LAST_STEP=$(( EPOCHS * STEPS_PER_EPOCH / SAVE_EVERY * SAVE_EVERY ))            # the trainer saves on interval hits only
+KEEP_RAW=${KEEP_RAW:-3}                                                        # raw checkpoint copies kept in interval mode
+HF_REPO=${HF_REPO:-yushengsu/qwen3-8b-moe16x768-16A1-dspark}; HF_PREFIX=${HF_PREFIX:-}   # HF_PREFIX=<folder>/ nests everything, README included
 export HF_HOME=/scratch/moe2ep/hf-home HF_HUB_CACHE=/scratch/moe2ep/hf-home/hub HF_DATASETS_CACHE=/scratch/moe2ep/hf-home/datasets
 export HF_TOKEN="$(cat /scratch/secrets/hf_token)"
 export CUDA_VISIBLE_DEVICES=
@@ -31,32 +38,42 @@ complete() {
   [ "$2" = final ] && ! pgrep -f "specforge.cli trai[n]" >/dev/null && return 0
   return 1
 }
-for j in $(seq 1 "$EPOCHS"); do
-  k=$((j + EPOCH_OFFSET)); step=$((j * STEPS_PER_EPOCH)); ck="$RUN_DIR/$RUN_ID-step$step"; keep="$D/epoch_ckpts/$RUN_ID-step$step"; dst="$D/exports/$RUN_ID-${k}ep"
-  kind=""; [ "$j" -eq "$EPOCHS" ] && kind=final
-  log "epoch $k: waiting for a complete $ck"
+epoch_mode=0; [ "$SAVE_EVERY" -eq "$STEPS_PER_EPOCH" ] && epoch_mode=1
+for step in $(seq "$SAVE_EVERY" "$SAVE_EVERY" "$LAST_STEP"); do
+  if [ "$epoch_mode" = 1 ]; then label="$((step / STEPS_PER_EPOCH + EPOCH_OFFSET))ep"; else label="step-$step"; fi
+  ck="$RUN_DIR/$RUN_ID-step$step"; keep="$D/epoch_ckpts/$RUN_ID-step$step"; dst="$D/exports/$RUN_ID-$label"
+  kind=""; [ "$step" -eq "$LAST_STEP" ] && kind=final
+  log "$label: waiting for a complete $ck"
   until complete "$ck" "$kind"; do sleep 120; done
   sleep 60
-  [ -d "$keep" ] || { log "epoch $k: keeping a copy at $keep"; rm -rf "$keep.tmp"; cp -a "$ck" "$keep.tmp" && mv "$keep.tmp" "$keep"; }
-  log "epoch $k: exporting $keep -> $dst"
+  [ -d "$keep" ] || { log "$label: keeping a copy at $keep"; rm -rf "$keep.tmp"; cp -a "$ck" "$keep.tmp" && mv "$keep.tmp" "$keep"; }
+  log "$label: exporting $keep -> $dst"
   rm -rf "$dst"; mkdir -p "$D/exports"
   specforge export --to hf --checkpoint "$keep" --draft-config "$DRAFT_CONFIG" --output-dir "$dst" \
-    --embedding-source "$TARGET" --embedding-key model.embed_tokens.weight > "$D/exports/export-${k}ep.log" 2>&1 \
-    || { log "epoch $k: EXPORT_FAILED (see $D/exports/export-${k}ep.log)"; tail -5 "$D/exports/export-${k}ep.log"; continue; }
+    --embedding-source "$TARGET" --embedding-key model.embed_tokens.weight > "$D/exports/export-$RUN_ID-$label.log" 2>&1 \
+    || { log "$label: EXPORT_FAILED (see $D/exports/export-$RUN_ID-$label.log)"; tail -5 "$D/exports/export-$RUN_ID-$label.log"; continue; }
   python3 scripts/gates/normalize_dflash_export.py --config "$dst/config.json" --block-size 16 2>&1 | tail -1
   # SGLang picks the draft class by this name; the stock DSparkDraftModel name would load the dense class and drop the experts.
   python3 -c "import json; p='$dst/config.json'; c=json.load(open(p)); c['architectures']=['Qwen3MoeDSparkModel']; json.dump(c, open(p,'w'), indent=2)"
   python3 -c "from transformers import AutoTokenizer; AutoTokenizer.from_pretrained('$TARGET', trust_remote_code=True).save_pretrained('$dst')" 2>&1 | tail -1
   python3 -c "import json; c=json.load(open('$dst/config.json')); print('config:', c['architectures'], 'layers', c['num_hidden_layers'], 'experts', c['num_experts'], 'x', c['moe_intermediate_size'], 'top', c['num_experts_per_tok'], 'block', c.get('block_size'))"
   du -sh "$dst" | tail -1
-  python3 scripts/launch/qwen3-8b-moe16-1node-h200/make_readme.py --run-dir "$RUN_DIR" --steps-per-epoch "$STEPS_PER_EPOCH" --epochs-done "$k" --epochs "$((EPOCHS + EPOCH_OFFSET))" --hf-repo "$HF_REPO" --out "$D/exports/README.md"
-  log "epoch $k: uploading to $HF_REPO/${k}ep"
+  readme="$D/exports/README-$RUN_ID.md"
+  python3 scripts/launch/qwen3-8b-moe16-1node-h200/make_readme.py --run-dir "$RUN_DIR" --draft-config "$DRAFT_CONFIG" \
+    --steps-per-epoch "$STEPS_PER_EPOCH" --save-every "$SAVE_EVERY" --steps-done "$step" --epochs "$((EPOCHS + EPOCH_OFFSET))" \
+    --hf-repo "$HF_REPO" --folder-prefix "$HF_PREFIX" --out "$readme"
+  log "$label: uploading to $HF_REPO/$HF_PREFIX$label"
   for try in 1 2 3 4 5; do
-    if hf upload "$HF_REPO" "$dst" "${k}ep" --repo-type model --commit-message "epoch $k export (step $step)" > "$D/exports/upload-${k}ep.log" 2>&1 \
-       && hf upload "$HF_REPO" "$D/exports/README.md" README.md --repo-type model --commit-message "README after epoch $k" >> "$D/exports/upload-${k}ep.log" 2>&1; then
-      log "epoch $k: EPOCH_EXPORT_DONE https://huggingface.co/$HF_REPO/tree/main/${k}ep"; break
+    if hf upload "$HF_REPO" "$dst" "$HF_PREFIX$label" --repo-type model --commit-message "$RUN_ID $label export" > "$D/exports/upload-$RUN_ID-$label.log" 2>&1 \
+       && hf upload "$HF_REPO" "$readme" "${HF_PREFIX}README.md" --repo-type model --commit-message "$RUN_ID README after $label" >> "$D/exports/upload-$RUN_ID-$label.log" 2>&1; then
+      log "$label: EPOCH_EXPORT_DONE https://huggingface.co/$HF_REPO/tree/main/$HF_PREFIX$label"
+      if [ "$epoch_mode" = 0 ]; then   # interval mode: the upload is the archive; keep only the last $KEEP_RAW raw copies and no export dirs
+        rm -rf "$dst"
+        for old in $(ls -d "$D/epoch_ckpts/$RUN_ID-step"* 2>/dev/null | sed "s|.*-step||" | sort -n | head -n -"$KEEP_RAW"); do rm -rf "$D/epoch_ckpts/$RUN_ID-step$old"; done
+      fi
+      break
     fi
-    log "epoch $k: upload attempt $try failed: $(grep -v -i token "$D/exports/upload-${k}ep.log" | tail -1)"; sleep 600
+    log "$label: upload attempt $try failed: $(grep -v -i token "$D/exports/upload-$RUN_ID-$label.log" | tail -1)"; sleep 600
   done
 done
 log ALL_EPOCHS_EXPORTED
