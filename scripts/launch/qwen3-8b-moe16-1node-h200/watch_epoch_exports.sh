@@ -46,12 +46,18 @@ for step in $(seq "$SAVE_EVERY" "$SAVE_EVERY" "$LAST_STEP"); do
   log "$label: waiting for a complete $ck"
   until complete "$ck" "$kind"; do sleep 120; done
   sleep 60
+  mkdir -p "$D/epoch_ckpts" "$D/exports"
   [ -d "$keep" ] || { log "$label: keeping a copy at $keep"; rm -rf "$keep.tmp"; cp -a "$ck" "$keep.tmp" && mv "$keep.tmp" "$keep"; }
+  [ -f "$keep/training_state.pt" ] || { log "$label: COPY_FAILED ($keep has no training_state.pt)"; continue; }
   log "$label: exporting $keep -> $dst"
-  rm -rf "$dst"; mkdir -p "$D/exports"
-  specforge export --to hf --checkpoint "$keep" --draft-config "$DRAFT_CONFIG" --output-dir "$dst" \
-    --embedding-source "$TARGET" --embedding-key model.embed_tokens.weight > "$D/exports/export-$RUN_ID-$label.log" 2>&1 \
-    || { log "$label: EXPORT_FAILED (see $D/exports/export-$RUN_ID-$label.log)"; tail -5 "$D/exports/export-$RUN_ID-$label.log"; continue; }
+  exported=0
+  for etry in 1 2 3; do
+    rm -rf "$dst"
+    specforge export --to hf --checkpoint "$keep" --draft-config "$DRAFT_CONFIG" --output-dir "$dst" \
+      --embedding-source "$TARGET" --embedding-key model.embed_tokens.weight > "$D/exports/export-$RUN_ID-$label.log" 2>&1 && { exported=1; break; }
+    log "$label: export attempt $etry failed: $(tail -1 "$D/exports/export-$RUN_ID-$label.log" | cut -c1-200)"; sleep 300
+  done
+  [ "$exported" = 1 ] || { log "$label: EXPORT_FAILED (see $D/exports/export-$RUN_ID-$label.log)"; continue; }
   python3 scripts/gates/normalize_dflash_export.py --config "$dst/config.json" --block-size 16 2>&1 | tail -1
   # SGLang picks the draft class by this name; the stock DSparkDraftModel name would load the dense class and drop the experts.
   python3 -c "import json; p='$dst/config.json'; c=json.load(open(p)); c['architectures']=['Qwen3MoeDSparkModel']; json.dump(c, open(p,'w'), indent=2)"
