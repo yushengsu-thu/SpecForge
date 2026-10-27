@@ -3,15 +3,20 @@
 #   usage: launch_1node.sh smoke|full
 # smoke: SMOKE_STEPS (default 3) optimizer steps, no checkpoints, no W&B, separate output dir (same tokenizer cache).
 MODE=${1:?smoke|full}
-# The body runs from main() so that the git reset below cannot change the file bash is still reading (bash reads
-# scripts incrementally; the first launch after a push otherwise runs with the previous version's settings).
+BR=${BR:-dspark-v2-moe-launch}
+# Sync the checkout first and then re-exec this script, so that what runs below is the synced version (bash has
+# already parsed the version that was on disk when it started; a first launch after a push would otherwise run the
+# previous version's recipe and settings - that is how an 8 x 1536 run once started with the 16 x 768 recipe).
+if [ -z "${LAUNCH_SYNCED:-}" ]; then
+  cd /scratch/SpecForge || exit 1
+  git fetch -q origin "$BR" && git checkout -q "$BR" 2>/dev/null; git reset -q --hard "origin/$BR" && echo "code: $(git log -1 --format=%h) $BR"
+  LAUNCH_SYNCED=1 exec bash "$0" "$@"
+fi
 main() {
-  BR=${BR:-dspark-v2-moe-launch}
   D=/scratch/moe8b16; mkdir -p $D/outputs
   VENV=${VENV:-/scratch/moe2ep/venv}; [ -f "$VENV/bin/activate" ] && . "$VENV/bin/activate"   # the boxes' sglang 0.5.18 + spec-capture + mooncake env
   export PYTHONPATH=/scratch/SpecForge
   cd /scratch/SpecForge || exit 1
-  git fetch -q origin "$BR" && git checkout -q "$BR" 2>/dev/null; git reset -q --hard "origin/$BR" && echo "code: $(git log -1 --format=%h) $BR"
   python3 -c "import specforge, mooncake, sglang.srt.spec_capture_sink" || { echo "env not ready (run setup_box.sh first)"; exit 1; }
   export HF_HOME=/scratch/moe2ep/hf-home HF_HUB_CACHE=/scratch/moe2ep/hf-home/hub HF_DATASETS_CACHE=/scratch/moe2ep/hf-home/datasets HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
   export HF_TOKEN="$(cat /scratch/secrets/hf_token)"
