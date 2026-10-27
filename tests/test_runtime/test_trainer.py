@@ -854,6 +854,31 @@ class TestBestTracking(unittest.TestCase):
             self.assertAlmostEqual(meta["score"], 0.5, places=6)
 
 
+class TestSaveSteps(unittest.TestCase):
+    def test_save_steps_checkpoint_off_the_interval_grid(self):
+        # save_interval=2 plus an explicit step 3 (an epoch end, say): steps 2, 3
+        # and 4 are checkpointed, step 1 is not.
+        strat = FakeStrategy()
+        core = TrainerCore(strat, FakeBackend(strat.model), accumulation_steps=1)
+        with tempfile.TemporaryDirectory() as d:
+            ctrl = TrainerController(
+                core,
+                run_id="r",
+                output_dir=d,
+                max_steps=4,
+                num_epochs=1,
+                save_interval=2,
+                save_steps=[3],
+            )
+            ctrl.fit([_batch() for _ in range(6)])
+            saved = sorted(
+                int(name.split("-step")[1])
+                for name in os.listdir(d)
+                if "-step" in name and os.path.isdir(os.path.join(d, name))
+            )
+            self.assertEqual(saved, [2, 3, 4])
+
+
 class TestEvalMetricsFlow(unittest.TestCase):
     def test_eval_metrics_reach_logger_and_last_metrics(self):
         strat = FakeStrategy()

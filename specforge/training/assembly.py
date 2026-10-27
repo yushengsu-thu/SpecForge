@@ -560,6 +560,7 @@ def _common_launch_kwargs(
         max_steps=t.max_steps,
         total_steps=t.total_steps,
         save_interval=t.save_interval,
+        save_steps=t.save_steps,
         eval_interval=t.eval_interval,
         max_checkpoints=t.max_checkpoints,
         logger=logger,

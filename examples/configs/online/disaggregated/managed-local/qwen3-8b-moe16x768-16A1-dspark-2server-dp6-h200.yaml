@@ -10,7 +10,7 @@
 # DDP with 128 MB buckets; BF16 target.  The differences:
 #   - the draft's FFN is the MoE above (the dense 12288-wide FFN split 16 ways, one expert per token);
 #   - the optimizer step is 6 ranks x 2 x 11 = 132 samples (jiapingW: 32 x 2 x 2 = 128), 10,764 steps per epoch;
-#   - a checkpoint every 1,196 steps (= 1/9 epoch, so every epoch end too; three kept) instead of every 3,000;
+#   - a checkpoint every 1,000 steps and at every epoch end (three kept; each one exported and uploaded) instead of every 3,000;
 #   - aux loss 0.02 instead of 0.005 (0.005 collapsed at peak lr; a 0.01 selection-bias step made the router
 #     oscillate from step 40 and collapse during the warm-up, so the bias step stays at 0.001);
 #   - Liger kernels and projection flattening / caching are not wired for DSpark on this branch.
@@ -58,9 +58,11 @@ training:
   dspark_ce_loss_alpha: 0.1
   dspark_l1_loss_alpha: 0.9
   dspark_confidence_head_alpha: 0.0
-  # 10,764 steps per epoch = 9 x 1196: a checkpoint every 1,196 steps lands on every epoch end too, and
-  # a router collapse (the first run lost its router 120 steps after the warm-up) can be rolled back.
-  save_interval: 1196
+  # A checkpoint every 1,000 steps (each exported and uploaded), so a router collapse (the first run lost its
+  # router 120 steps after the warm-up) can be rolled back.
+  save_interval: 1000
+  # Epoch ends (10,764 steps each) are not on the 1,000-step grid: checkpoint them too (ep1 … ep5; ep6 is the last step).
+  save_steps: [10764, 21528, 32292, 43056, 53820]
   max_checkpoints: 3
   log_interval: 10
   dist_timeout: 30

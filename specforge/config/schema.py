@@ -1056,6 +1056,10 @@ class TrainingConfig(StrictConfigModel):
     down_sample_ratio_min: float = 0.2
     norm_before_residual: Optional[bool] = None
     save_interval: int = Field(default=0, ge=0)
+    #: Extra optimizer steps that always get a checkpoint, on top of the
+    #: ``save_interval`` grid: e.g. the epoch ends of an online run, whose
+    #: steps-per-epoch is rarely a multiple of the interval.
+    save_steps: List[int] = Field(default_factory=list)
     #: Run a full evaluation pass every N optimizer steps (0 = disabled).
     eval_interval: int = Field(default=0, ge=0)
     log_interval: int = Field(default=50, gt=0)

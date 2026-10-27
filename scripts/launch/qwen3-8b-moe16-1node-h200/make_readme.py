@@ -40,6 +40,7 @@ def main():
     ap.add_argument("--draft-config", default="configs/qwen3-8b-moe16x768-16A1-dspark.json")
     ap.add_argument("--steps-per-epoch", type=int, default=10764)
     ap.add_argument("--save-every", type=int, default=0, help="checkpoint interval; default = one epoch")
+    ap.add_argument("--save-steps", default="", help="the recipe's training.save_steps (epoch ends), space-separated")
     ap.add_argument("--steps-done", type=int, required=True, help="step of the checkpoint just uploaded")
     ap.add_argument("--epochs", type=int, default=6)
     ap.add_argument("--hf-repo", default="yushengsu/qwen3-8b-moe16x768-16A1-dspark")
@@ -56,9 +57,8 @@ def main():
     epoch_mode = save_every == a.steps_per_epoch
     last_step = a.epochs * a.steps_per_epoch // save_every * save_every
     final_step = a.epochs * a.steps_per_epoch
-    steps = list(range(save_every, last_step + 1, save_every))
-    if final_step not in steps:
-        steps.append(final_step)  # the trainer saves its last step too, uploaded as final/
+    # Every step the trainer checkpoints: the interval grid, the recipe's save_steps and its last step.
+    steps = sorted({*range(save_every, last_step + 1, save_every), *(int(s) for s in a.save_steps.split()), final_step})
     ms = metrics(Path(a.run_dir) / "launch.log")
     results = {}
     for step in steps:
@@ -69,8 +69,10 @@ def main():
             results[step] = m
     best = max(results, key=lambda s: results[s]["acc"]) if results else None
     rows = []
+    def folder_of(step):
+        return "ep%d" % (step // a.steps_per_epoch) if step % a.steps_per_epoch == 0 else "step-%d" % step
     for step in steps:
-        folder = f"{step // a.steps_per_epoch}ep/" if epoch_mode else ("final/" if step == final_step else f"step-{step}/")
+        folder = folder_of(step) + "/"
         epoch = f"{step / a.steps_per_epoch:.2f}"
         if step in results:
             star = " **(best)**" if step == best else ""
@@ -80,12 +82,11 @@ def main():
         else:
             rows.append(f"| {epoch} | `{folder}` | {step} | (training) | |")
     if epoch_mode:
-        folders = f"One folder per finished epoch (`1ep/` … `{a.epochs}ep/`)"
+        folders = f"One folder per finished epoch (`ep1/` … `ep{a.epochs}/`)"
     else:
-        folders = f"One folder per checkpoint, every {save_every} steps (`step-{save_every}/` … `step-{last_step}/`, {a.steps_per_epoch} steps per epoch) plus the last step as `final/` (step {final_step})"
+        folders = (f"One folder per checkpoint, every {save_every} steps (`step-{save_every}/` … `step-{last_step}/`), "
+                   f"plus the end of every epoch as `ep1/` … `ep{a.epochs}/` ({a.steps_per_epoch} steps per epoch; `ep{a.epochs}/` is the last step, {final_step})")
     where = f" under `{a.folder_prefix}`" if a.folder_prefix else ""
-    def folder_of(step):
-        return "%dep" % (step // a.steps_per_epoch) if epoch_mode else ("final" if step == final_step else "step-%d" % step)
     best_line = (f"Highest train/acc so far: **{results[best]['acc']:.3f}** at step {best} (`{a.folder_prefix}{folder_of(best)}/`)."
                  if best else "No checkpoint uploaded yet.")
     body = f"""---

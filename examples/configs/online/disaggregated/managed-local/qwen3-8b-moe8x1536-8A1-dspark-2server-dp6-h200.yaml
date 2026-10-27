@@ -62,6 +62,8 @@ training:
   # A checkpoint every 1,000 steps, each exported and uploaded; the trainer only saves on interval hits, so the
   # last one of the 64,584-step run is step 64,000 (the cosine lr is ~0 by then).
   save_interval: 1000
+  # Epoch ends (10,764 steps each) are not on the 1,000-step grid: checkpoint them too (ep1 … ep5; ep6 is the last step).
+  save_steps: [10764, 21528, 32292, 43056, 53820]
   max_checkpoints: 3
   log_interval: 10
   dist_timeout: 30

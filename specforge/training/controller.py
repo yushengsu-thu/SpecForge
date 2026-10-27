@@ -759,6 +759,7 @@ class TrainerController:
         run_id: str,
         output_dir: str = "./output",
         save_interval: int = 0,
+        save_steps: Optional[Iterable[int]] = None,
         eval_interval: int = 0,
         eval_data_factory: Optional[
             Callable[[], Optional[Iterable[TrainBatch]]]
@@ -789,6 +790,8 @@ class TrainerController:
         self.run_id = run_id
         self.output_dir = output_dir
         self.save_interval = save_interval
+        # Explicit extra save points (epoch ends of an online run, say).
+        self.save_steps = frozenset(int(step) for step in (save_steps or ()))
         self.eval_interval = eval_interval
         self.eval_data_factory = eval_data_factory
         self.log_interval = log_interval
@@ -1099,7 +1102,8 @@ class TrainerController:
                 # the manager); its guard is rank-identical because eval metrics
                 # are DP-reduced. Empty eval metrics skip best tracking.
                 interval_hit = bool(
-                    self.save_interval and self.global_step % self.save_interval == 0
+                    (self.save_interval and self.global_step % self.save_interval == 0)
+                    or self.global_step in self.save_steps
                 )
                 is_best = bool(
                     eval_metrics and self._checkpoint_manager().is_better(eval_metrics)
