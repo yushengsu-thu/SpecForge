@@ -768,6 +768,9 @@ class TestPackageArchitecture(unittest.TestCase):
             # Box-side wrappers of the two-node Qwen3.8-27B MoE DSpark run.
             Path("scripts/launch/qwen38-moe-2node-h200/launch_train.sh"),
             Path("scripts/launch/qwen38-moe-2node-h200/trainer_node.sh"),
+            Path("scripts/launch/qwen3-8b-moe16-2node-h200/launch_train.sh"),
+            Path("scripts/launch/qwen3-8b-moe16-2node-h200/trainer_node.sh"),
+            Path("scripts/launch/qwen3-8b-moe16-2node-h200/run_8b.sh"),
         }
         bypasses = []
         train_command = re.compile(r"\btrain\s+(?:--config|-c)\b")
