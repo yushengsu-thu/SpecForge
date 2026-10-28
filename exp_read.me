@@ -7,7 +7,7 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 
 ## Status
 
-**running** - optimizer step 355,310 / 430,575 (82.5%), epoch 34/40; launched 2026-10-15 20:55Z (relaunched 2026-10-26 10:48Z, 5 launches); 261.9 h elapsed, 1,357 steps/h, ETA 2026-10-29 02:18Z. total_steps from schedule payload, num_prompts 1,420,903.
+**NOT RUNNING (launcher gone)** - optimizer step 364,870 / 430,575 (84.7%), epoch 34/40; launched 2026-10-15 20:55Z (relaunched 2026-10-26 10:48Z, 5 launches); 311.1 h elapsed, 1,173 steps/h, ETA 2026-10-31 03:59Z. total_steps from schedule payload, num_prompts 1,420,903.
 
 ## Setup
 
@@ -99,7 +99,7 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 | 31 | 333,693 | 1076 | 0.7299 | 0.7340 | 1.1923 / 1.1722 | 0.0000 / 0.0000 | 0.4696 / 0.4635 | 0.2366 / 0.2485 | 0.0010 / 0.0010 | 0.000008 | 7.9 | not kept (epochs 1-12 only) |
 | 32 | 344,460 | 1077 | 0.7316 | 0.7302 | 1.1859 / 1.1962 | 0.0000 / 0.0000 | 0.4665 / 0.4685 | 0.2384 / 0.2285 | 0.0010 / 0.0010 | 0.000000 | - | not kept (epochs 1-12 only) |
 | 33 | 355,224 | 1076 | 0.7246 | 0.7221 | 1.2066 / 1.2189 | 0.0000 / 0.0000 | 0.4786 / 0.4825 | 0.2727 / 0.2994 | 0.0010 / 0.0010 | 0.000193 | 16.1 | not kept (epochs 1-12 only) |
-| 34 | 365,988 | 9 | 0.7190 | 0.7190 | 1.2365 / 1.2365 | 0.0000 / 0.0000 | 0.4888 / 0.4888 | 0.2400 / 0.2400 | 0.0010 / 0.0010 | 0.000193 | - | in progress |
+| 34 | 365,988 | 965 | 0.7243 | 0.7208 | 1.2090 / 1.2217 | 0.0000 / 0.0000 | 0.4794 / 0.4859 | 0.2776 / 0.2646 | 0.0010 / 0.0011 | 0.000175 | - | in progress |
 
 ## How the numbers are computed
 
@@ -109,4 +109,4 @@ Reference dense run: https://huggingface.co/jiapingW/Qwen3-8b-dspark-SpecForge (
 - *wall-clock* is the time between consecutive epoch checkpoints (epoch 1: since launch); it includes the dataset cache build for epoch 1.
 - Exports are `specforge export --to hf` of the epoch checkpoint with the frozen Qwen3-8B embedding, plus the Qwen3-8B tokenizer; the raw training checkpoints (optimizer state included) stay on the box under `/scratch/ckpt-keep/`.
 
-_Generated 2026-10-26 18:49Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
+_Generated 2026-10-28 19:58Z by `experiments/qwen3-8b-dspark-moe-8expert-1activate/epoch_report.py`; do not edit by hand._
