@@ -8,8 +8,8 @@ the PR's `configs/qwen3-8b-moe-dspark.json`). No code change.
   expert bias 0.001 per step, DSpark projector over target layers 1/9/17/25/33, block size 16.
 - Recipe (as jiapingW/Qwen3-8b-dspark-SpecForge, FFN swapped for the MoE): PerfectBlend regen (temperature 0, thinking
   off), `qwen3-instruct`, max length 8192, global batch 132 (2 x 11 x 6 ranks), lr 6e-4 cosine over 6 epochs with 4%
-  warmup, 0.1 CE + 0.9 L1, 512 anchors, loss_decay_gamma 7.0, `use_liger_kernel: true` (Liger RMSNorm; the experts
-  stay on grouped_mm), seed 42.
+  warmup, 0.1 CE + 0.9 L1, 512 anchors, loss_decay_gamma 7.0, `use_liger_kernel: false` (the first attempt, Liger on, was stopped at step 17,450 and its
+  W&B run and Hub checkpoints deleted), seed 42.
 - Node: specforge-qwen-h200 (8x H200): 2 SGLang capture servers (GPU 0-1) + 6 DDP trainer ranks (GPU 2-7).
 - Checkpoints: every 1,196 optimizer steps (= 1/9 epoch; 10,764 steps per epoch, 64,584 in total), so the 9th, 18th, ...
   checkpoints are exact epoch ends. The trainer keeps all of them (`max_checkpoints: 0`); `watch_ckpts.sh` exports each
