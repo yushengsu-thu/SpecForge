@@ -66,7 +66,7 @@ card = f"""# {RUN}
 
 Qwen3-8B DSpark draft with the MoE FFN of SpecForge PR [#1031](https://github.com/sgl-project/SpecForge/pull/1031)
 (branch `exp/pr1031-qwen3-8b-moe8x1536-8A1-dspark-6ep` of yushengsu-thu/SpecForge, on top of dev-moe-ffn 3543fa2a):
-2 decoder layers, GQA 8 heads / 2 KV heads, 8 experts x 1536 per layer, top-1, batch-wise load-balance loss 0.005, expert
+5 decoder layers, GQA 32 heads / 8 KV heads, 8 experts x 1536 per layer, top-1, batch-wise load-balance loss 0.005, expert
 bias 0.001 per step, DSpark projector over target layers 1/9/17/25/33, block size 16. Recipe as jiapingW/Qwen3-8b-dspark-SpecForge:
 PerfectBlend regen (temperature 0, thinking off, 1,420,909 rows), `qwen3-instruct`, max length 8192, global batch 132
 (2 x 11 x 6 ranks), lr 6e-4 cosine over 6 epochs ({LAST:,} steps) with 4% warmup, 0.1 CE + 0.9 L1, 512 anchors,

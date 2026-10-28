@@ -1,10 +1,10 @@
 # pr1031-qwen3-8b-moe8x1536-8A1-dspark-run1
 
 A 6-epoch Qwen3-8B DSpark draft whose FFN is the MoE of PR [#1031](https://github.com/sgl-project/SpecForge/pull/1031)
-(this branch = `dev-moe-ffn` @ 3543fa2a plus this folder and `configs/qwen3-8b-moe8x1536-8A1-dspark.json`, a copy of
-the PR's `configs/qwen3-8b-moe-dspark.json`). No code change.
+(this branch = `dev-moe-ffn` @ 3543fa2a plus this folder and `configs/qwen3-8b-moe8x1536-8A1-dspark.json`, PR #1022's file of the
+same name with `moe_router_selection_bias` renamed to `moe_router_enable_expert_bias` for #1031). No code change.
 
-- Draft: 2 layers, GQA 8 heads / 2 KV heads, 8 experts x 1536 per layer, top-1, batch-wise load-balance loss 0.005,
+- Draft: 5 layers, GQA 32 heads / 8 KV heads (head_dim 128), 8 experts x 1536 per layer, top-1, batch-wise load-balance loss 0.005,
   expert bias 0.001 per step, DSpark projector over target layers 1/9/17/25/33, block size 16.
 - Recipe (as jiapingW/Qwen3-8b-dspark-SpecForge, FFN swapped for the MoE): PerfectBlend regen (temperature 0, thinking
   off), `qwen3-instruct`, max length 8192, global batch 132 (2 x 11 x 6 ranks), lr 6e-4 cosine over 6 epochs with 4%
