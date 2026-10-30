@@ -21,7 +21,10 @@ TARGET=${TARGET:-/scratch/moe2ep/models/Qwen3-8B}
 STEPS_PER_EPOCH=10764; EPOCHS=${EPOCHS:-6}; EPOCH_OFFSET=${EPOCH_OFFSET:-0}   # EPOCH_OFFSET: epochs finished by earlier phases (warm-start continuation)
 SAVE_EVERY=${SAVE_EVERY:-$STEPS_PER_EPOCH}                                    # the recipe's save_interval when it is not an epoch
 LAST_STEP=$(( EPOCHS * STEPS_PER_EPOCH / SAVE_EVERY * SAVE_EVERY ))            # the last interval hit
-FINAL_STEP=$(( EPOCHS * STEPS_PER_EPOCH ))                                     # the trainer also saves its last step (trainer.py), grid or not
+# The trainer also saves its last step (trainer.py), grid or not. The online schedule's horizon is
+# floor(num_prompts * epochs / global batch) = 64,586 for 1,420,903 prompts x 6 / 132, not EPOCHS * STEPS_PER_EPOCH
+# (64,584): pass FINAL_STEP explicitly.
+FINAL_STEP=${FINAL_STEP:-$(( EPOCHS * STEPS_PER_EPOCH ))}
 SAVE_STEPS=${SAVE_STEPS:-}                                                     # the recipe's training.save_steps (epoch ends), space-separated
 KEEP_RAW=${KEEP_RAW:-1}                                                        # raw copies of interval checkpoints kept (epoch-end copies are kept for good)
 HF_REPO=${HF_REPO:-yushengsu/qwen3-8b-moe16x768-16A1-dspark}; HF_PREFIX=${HF_PREFIX:-}   # HF_PREFIX=<folder>/ nests everything, README included
@@ -45,7 +48,8 @@ epoch_mode=0; [ "$SAVE_EVERY" -eq "$STEPS_PER_EPOCH" ] && epoch_mode=1
 # Every step the trainer checkpoints: the interval grid, the recipe's save_steps and its last step, in order.
 steps=$(printf '%s\n' $(seq "$SAVE_EVERY" "$SAVE_EVERY" "$LAST_STEP") $SAVE_STEPS "$FINAL_STEP" | sort -n | uniq)
 for step in $steps; do
-  if [ $((step % STEPS_PER_EPOCH)) -eq 0 ]; then label="ep$((step / STEPS_PER_EPOCH + EPOCH_OFFSET))"   # an epoch end (the last step included)
+  if [ "$step" -eq "$FINAL_STEP" ]; then label="ep$((EPOCHS + EPOCH_OFFSET))"                        # the last step = the last epoch's end
+  elif [ $((step % STEPS_PER_EPOCH)) -eq 0 ]; then label="ep$((step / STEPS_PER_EPOCH + EPOCH_OFFSET))"   # an epoch end
   else label="step-$step"; fi
   # A restarted watcher skips what it already uploaded (the trainer rotates old checkpoints away).
   done_marker="$D/exports/done-$RUN_ID-$label"
@@ -75,7 +79,7 @@ for step in $steps; do
   du -sh "$dst" | tail -1
   readme="$D/exports/README-$RUN_ID.md"
   python3 scripts/launch/qwen3-8b-moe16-1node-h200/make_readme.py --run-dir "$RUN_DIR" --draft-config "$DRAFT_CONFIG" \
-    --steps-per-epoch "$STEPS_PER_EPOCH" --save-every "$SAVE_EVERY" --save-steps "$SAVE_STEPS" --steps-done "$step" --epochs "$((EPOCHS + EPOCH_OFFSET))" \
+    --steps-per-epoch "$STEPS_PER_EPOCH" --save-every "$SAVE_EVERY" --save-steps "$SAVE_STEPS" --steps-done "$step" --epochs "$((EPOCHS + EPOCH_OFFSET))" --final-step "$FINAL_STEP" \
     --hf-repo "$HF_REPO" --folder-prefix "$HF_PREFIX" --out "$readme"
   log "$label: uploading to $HF_REPO/$HF_PREFIX$label"
   for try in 1 2 3 4 5; do

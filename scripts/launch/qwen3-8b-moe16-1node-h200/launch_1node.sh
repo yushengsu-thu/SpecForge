@@ -33,6 +33,8 @@ main() {
     export WANDB_API_KEY="$(cat /scratch/secrets/wandb_key)" WANDB_ENTITY=${WANDB_ENTITY:-eigent_radixark_training} WANDB_RUN_ID=${WANDB_RUN_ID:-$RUN} WANDB_RESUME=allow
     OV="$PATHS tracking.report_to=wandb tracking.wandb_project=${WANDB_PROJECT:-specforge-qwen3-8b-moe16x768} tracking.wandb_name=$RUN tracking.wandb_dir=$OUT/wandb run_id=$RUN output_dir=$OUT deployment.disaggregated.control_dir=$OUT/control deployment.disaggregated.consumer_state_dir=$OUT/consumer-state"
   fi
+  # EXTRA_OV="key=value ..." appends overrides, e.g. model.draft_checkpoint_path=<raw ckpt> for a warm-started continuation.
+  OV="$OV ${EXTRA_OV:-}"
   echo "[$(date -u +%H:%M:%S)] launching $MODE run $RUN (overrides: $OV)"
   setsid nohup python -m specforge.cli train -c "$R" $OV > "$OUT/launch.log" 2>&1 < /dev/null &
   echo "launcher pid $! log $OUT/launch.log"

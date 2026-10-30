@@ -41,6 +41,7 @@ def main():
     ap.add_argument("--steps-per-epoch", type=int, default=10764)
     ap.add_argument("--save-every", type=int, default=0, help="checkpoint interval; default = one epoch")
     ap.add_argument("--save-steps", default="", help="the recipe's training.save_steps (epoch ends), space-separated")
+    ap.add_argument("--final-step", type=int, default=0, help="the trainer's last step when it is not epochs x steps-per-epoch")
     ap.add_argument("--steps-done", type=int, required=True, help="step of the checkpoint just uploaded")
     ap.add_argument("--epochs", type=int, default=6)
     ap.add_argument("--hf-repo", default="yushengsu/qwen3-8b-moe16x768-16A1-dspark")
@@ -56,7 +57,7 @@ def main():
     save_every = a.save_every or a.steps_per_epoch
     epoch_mode = save_every == a.steps_per_epoch
     last_step = a.epochs * a.steps_per_epoch // save_every * save_every
-    final_step = a.epochs * a.steps_per_epoch
+    final_step = a.final_step or a.epochs * a.steps_per_epoch
     # Every step the trainer checkpoints: the interval grid, the recipe's save_steps and its last step.
     steps = sorted({*range(save_every, last_step + 1, save_every), *(int(s) for s in a.save_steps.split()), final_step})
     ms = metrics(Path(a.run_dir) / "launch.log")
@@ -70,6 +71,8 @@ def main():
     best = max(results, key=lambda s: results[s]["acc"]) if results else None
     rows = []
     def folder_of(step):
+        if step == final_step:
+            return "ep%d" % a.epochs
         return "ep%d" % (step // a.steps_per_epoch) if step % a.steps_per_epoch == 0 else "step-%d" % step
     for step in steps:
         folder = folder_of(step) + "/"
