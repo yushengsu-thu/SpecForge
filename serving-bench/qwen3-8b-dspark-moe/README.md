@@ -48,3 +48,21 @@ rx devbox run specforge-moe-serving -- bash -c '(cd /personal/moe-serving && set
 | `summarize_prof.py` | means of draft / target-verify / step GPU ms at the steady-state batch size from those records. |
 | `setup2.sh`, `fix.sh` | devbox bootstrap (see above). |
 | `pr47181-sglang-c10e0e17.patch` | sgl-project/sglang#47181 as a patch for sglang main c10e0e17. |
+
+## `mixed-and-tasks/`: per-task and mixed-workload e2e throughput (2026-11-01)
+
+A second set of scripts, written for an rx devbox where SGLang c10e0e17 + PR #47181 is installed from source in its own venv
+(`BENCH_DIR`, default `/scratch/moe8b16/serving-bench`) and the `specforge benchmark` client runs from a separate checkout
+(`SPECFORGE_SRC`, `CLIENT_PY`). Every server start is guarded: the script refuses to start unless its GPU has no compute
+process and under 1 GB in use, and logs the check. One server per GPU, `--tp-size 1`, bf16 target, flashinfer,
+`--mem-fraction-static 0.8 --max-running-requests 256 --cuda-graph-max-bs-decode 256 --speculative-dspark-block-size 16`
+(at c10e0e17 the decode flag is `--cuda-graph-max-bs-decode` and verify graphs capture up to batch 256 at block 16);
+`task_sweep.sh`/`mixed_sweep.sh` add jiapingW's `--context-length 16384 --disable-radix-cache`. The MoE draft runs the fused-MoE
+Triton kernel with its default config unless the tuned `E=8,N=1536` file is present.
+
+| file | role |
+|---|---|
+| `tp_sweep.sh <name> <draft> [server args]` | `bench_accept.py` concurrency sweep (16 prompts, 256 tokens) with `TP=`/`DP=`/`GPUS=`/`REPEAT=` env; `tp_table.py` tabulates. |
+| `task_sweep.sh <name> <draft>` | one draft over the five tasks with full prompt sets (gsm8k 1319, math500 500, humaneval 164, mbpp 257, mt-bench 160) via `specforge benchmark` at c = 1/8/16/32/64 (+128/256 for the two large sets); `run_tasks_all.sh` (dense then MoE, one GPU), `run_tasks_groups_par.sh` / `run_tasks_groups45.sh` (repeat groups on idle GPUs); `task_table.py` prints one table per task, mean over groups. step ms there is wall x min(c, requests) / verify steps (exact at c=1). |
+| `mixed_bench.py --model <tokenizer> --concurrency c --output-json f` | the five tasks shuffled into ONE request stream (2,400 requests, seed 42, same order for every draft), each prompt built with the CLI's own `_load_prompts` formatter and chat template, CLI sampling defaults; reports tok/s, per-request verify-step ms (e2e_latency / spec_verify_ct), accept length and a per-task breakdown. At c=1 the per-task accept lengths inside the mix equal the standalone runs to three decimals. |
+| `mixed_sweep.sh <name> <draft>` / `run_mixed_all.sh` | the mixed sweep at c = 1..256 for one draft / three groups x {dense, MoE} on six empty GPUs; `mixed_table.py` prints the final table (mean over groups). |

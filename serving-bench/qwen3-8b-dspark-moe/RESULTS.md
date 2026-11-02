@@ -132,3 +132,100 @@ Box `gmi-h200-n01-nda`, `~/claude-dflash-moe/`: `logs/bench_<tag>_g8_<dataset>_c
 `logs/all_g8_<tag>.txt`, `logs/sweep_g8_{dense,moe43000}.txt`; `python3 ../table.py` inside `logs/` rebuilds the table;
 `bench_all.sh <container> <draft dir> <port> <tag>` runs one draft over the five tasks; image `claude-dflash-moe:pr47181`
 holds the sglang build with the PR applied for screening further checkpoints.
+
+## Per-task and mixed-workload e2e throughput, run2 ep10 vs dense (rx devbox specforge-exp-branch, H200, 2026-11-01 PST)
+
+MoE draft: `qwen3-8b-moe8x1536-8A1-dspark-run2/ep10` (the best checkpoint of the run2 accept-length sweep: 8 x 1536 top-1,
+block 16; pooled request-macro AL 8.925 vs dense 9.101 on the five tasks at c=1). Stack: SGLang main c10e0e17 + PR #47181 applied
+with `git apply` (venv from source: torch 2.14.1, flashinfer 0.7.2, triton 3.8.0), scripts in `mixed-and-tasks/`. Server per draft:
+`--tp-size 1` on ONE H200 (draft on the same card), bf16 target, flashinfer, `--mem-fraction-static 0.8 --max-running-requests 256
+--cuda-graph-max-bs-decode 256 --speculative-dspark-block-size 16 --context-length 16384 --disable-radix-cache`; the MoE server used the
+fused-MoE Triton kernel's DEFAULT config (the tuned `E=8,N=1536` file was disabled; log line "Using default MoE kernel config").
+Every server was started on a GPU verified empty (0 compute processes, 0 MiB; the scripts refuse otherwise); repeat groups ran one
+server per GPU. Client: `specforge benchmark` with jiapingW's settings (thinking off, temperature 0, top_p 1, top_k 1,
+max_new_tokens 2048), full prompt sets (gsm8k 1319, math500 500, humaneval 164, mbpp 257, mt-bench 160); the three small sets stop at
+c=64 (above that they cannot fill the batch). tok/s = output tokens / wall time; per-task step ms = wall x min(c, requests) / verify
+steps (exact at c=1); mixed step ms = mean per-request e2e_latency / spec_verify_ct. Mean +- sample std over 5 groups (per task) and
+3 groups (mixed); diff = difference of the means.
+
+
+### gsm8k
+| c | dense tok/s (mean ± std) | MoE tok/s (mean ± std) | diff | dense step ms (mean ± std) | MoE step ms (mean ± std) | n |
+|---|---|---|---|---|---|---|
+| 1 | 1108 ± 2 | 1059 ± 3 | -4.4% | 8.5 ± 0.0 | 8.6 ± 0.0 | 5/5 |
+| 8 | 6531 ± 31 | 6225 ± 30 | -4.7% | 11.5 ± 0.1 | 11.8 ± 0.0 | 5/5 |
+| 16 | 9009 ± 31 | 8690 ± 58 | -3.5% | 16.7 ± 0.1 | 16.8 ± 0.1 | 5/5 |
+| 32 | 11354 ± 26 | 11202 ± 91 | -1.3% | 26.5 ± 0.1 | 26.1 ± 0.2 | 5/5 |
+| 64 | 12586 ± 55 | 12431 ± 68 | -1.2% | 48.0 ± 0.2 | 47.2 ± 0.3 | 5/5 |
+| 128 | 13160 ± 113 | 13252 ± 150 | +0.7% | 91.2 ± 0.9 | 88.4 ± 0.8 | 5/5 |
+| 256 | 13861 ± 72 | 13830 ± 125 | -0.2% | 173.6 ± 1.1 | 169.3 ± 1.4 | 5/5 |
+
+### math500
+| c | dense tok/s (mean ± std) | MoE tok/s (mean ± std) | diff | dense step ms (mean ± std) | MoE step ms (mean ± std) | n |
+|---|---|---|---|---|---|---|
+| 1 | 1071 ± 3 | 1038 ± 3 | -3.1% | 8.2 ± 0.0 | 8.3 ± 0.0 | 5/5 |
+| 8 | 6549 ± 25 | 6410 ± 34 | -2.1% | 10.6 ± 0.0 | 10.9 ± 0.0 | 5/5 |
+| 16 | 8873 ± 57 | 8747 ± 94 | -1.4% | 15.7 ± 0.0 | 15.9 ± 0.2 | 5/5 |
+| 32 | 10649 ± 87 | 10633 ± 101 | -0.2% | 26.1 ± 0.2 | 26.0 ± 0.2 | 5/5 |
+| 64 | 11778 ± 45 | 11977 ± 141 | +1.7% | 47.1 ± 0.3 | 46.2 ± 0.5 | 5/5 |
+| 128 | 12305 ± 38 | 12552 ± 83 | +2.0% | 89.8 ± 0.4 | 87.9 ± 0.5 | 5/5 |
+| 256 | 13047 ± 76 | 13289 ± 104 | +1.9% | 169.7 ± 0.7 | 166.2 ± 1.1 | 5/5 |
+
+### humaneval
+| c | dense tok/s (mean ± std) | MoE tok/s (mean ± std) | diff | dense step ms (mean ± std) | MoE step ms (mean ± std) | n |
+|---|---|---|---|---|---|---|
+| 1 | 890 ± 3 | 875 ± 2 | -1.6% | 8.3 ± 0.0 | 8.4 ± 0.0 | 5/5 |
+| 8 | 5362 ± 38 | 5221 ± 20 | -2.6% | 11.0 ± 0.0 | 11.2 ± 0.0 | 5/5 |
+| 16 | 7479 ± 34 | 7320 ± 71 | -2.1% | 16.1 ± 0.1 | 16.2 ± 0.1 | 5/5 |
+| 32 | 9119 ± 71 | 9195 ± 49 | +0.8% | 25.7 ± 0.2 | 25.6 ± 0.1 | 5/5 |
+| 64 | 9485 ± 80 | 9693 ± 92 | +2.2% | 49.4 ± 0.5 | 48.2 ± 0.5 | 5/5 |
+
+### mbpp
+| c | dense tok/s (mean ± std) | MoE tok/s (mean ± std) | diff | dense step ms (mean ± std) | MoE step ms (mean ± std) | n |
+|---|---|---|---|---|---|---|
+| 1 | 796 ± 2 | 784 ± 3 | -1.6% | 8.3 ± 0.0 | 8.4 ± 0.0 | 5/5 |
+| 8 | 4810 ± 15 | 4701 ± 5 | -2.3% | 11.0 ± 0.0 | 11.1 ± 0.0 | 5/5 |
+| 16 | 6611 ± 93 | 6488 ± 87 | -1.9% | 15.9 ± 0.2 | 16.0 ± 0.2 | 5/5 |
+| 32 | 8162 ± 107 | 8192 ± 179 | +0.4% | 25.6 ± 0.4 | 25.4 ± 0.5 | 5/5 |
+| 64 | 9228 ± 97 | 9247 ± 140 | +0.2% | 45.4 ± 0.2 | 45.0 ± 0.7 | 5/5 |
+
+### mt-bench
+| c | dense tok/s (mean ± std) | MoE tok/s (mean ± std) | diff | dense step ms (mean ± std) | MoE step ms (mean ± std) | n |
+|---|---|---|---|---|---|---|
+| 1 | 478 ± 1 | 484 ± 2 | +1.2% | 8.1 ± 0.0 | 8.3 ± 0.0 | 5/5 |
+| 8 | 2927 ± 17 | 2975 ± 31 | +1.6% | 10.6 ± 0.0 | 10.8 ± 0.1 | 5/5 |
+| 16 | 3849 ± 15 | 3923 ± 28 | +1.9% | 16.1 ± 0.1 | 16.2 ± 0.1 | 5/5 |
+| 32 | 4709 ± 33 | 4915 ± 83 | +4.4% | 26.3 ± 0.1 | 25.9 ± 0.4 | 5/5 |
+| 64 | 5164 ± 37 | 5437 ± 44 | +5.3% | 48.4 ± 0.3 | 46.3 ± 0.3 | 5/5 |
+
+### mixed: the five datasets shuffled into one request stream (2,400 requests; the FINAL comparison)
+| c | dense tok/s (mean ± std) | MoE tok/s (mean ± std) | diff | dense step ms (mean ± std) | MoE step ms (mean ± std) | n |
+|---|---|---|---|---|---|---|
+| 1 | 957 ± 1 | 931 ± 2 | -2.8% | 8.4 ± 0.0 | 8.6 ± 0.0 | 3/3 |
+| 8 | 5809 ± 23 | 5660 ± 20 | -2.6% | 11.1 ± 0.0 | 11.3 ± 0.0 | 3/3 |
+| 16 | 7994 ± 34 | 7997 ± 49 | +0.0% | 16.1 ± 0.1 | 15.9 ± 0.1 | 3/3 |
+| 32 | 9590 ± 17 | 9826 ± 73 | +2.5% | 26.4 ± 0.1 | 25.6 ± 0.3 | 3/3 |
+| 64 | 10574 ± 72 | 10912 ± 70 | +3.2% | 47.6 ± 0.2 | 45.8 ± 0.2 | 3/3 |
+| 128 | 11273 ± 79 | 11733 ± 106 | +4.1% | 88.5 ± 0.5 | 84.6 ± 0.5 | 3/3 |
+| 256 | 11790 ± 70 | 12313 ± 54 | +4.4% | 166.2 ± 0.7 | 158.0 ± 0.6 | 3/3 |
+
+### bench_accept.py sweep (16 prompts, 256 tokens, radix cache on), one run of two repeats each, same servers otherwise
+| c | dense tok/s | MoE tok/s | diff | dense step ms | MoE step ms | dense AL | MoE AL |
+|---|---|---|---|---|---|---|---|
+| 1 | 777 | 784 | +0.9% | 9.3 | 9.5 | 9.99 | 10.23 |
+| 8 | 3207 | 3054 | -4.8% | 13.7 | 14.4 | 10.21 | 9.80 |
+| 16 | 4320 | 4307 | -0.3% | 19.5 | 19.7 | 9.96 | 10.15 |
+| 32 | 5786 | 5717 | -1.2% | 28.3 | 28.6 | 9.80 | 10.11 |
+| 64 | 6926 | 7166 | +3.5% | 46.1 | 44.5 | 9.75 | 10.12 |
+| 128 | 7567 | 7831 | +3.5% | 82.7 | 83.0 | 9.58 | 10.14 |
+| 256 | 7409 | 7783 | +5.0% | 152.3 | 147.0 | 9.61 | 10.11 |
+
+Findings
+- Inside the mixed stream the per-task accept lengths equal the standalone runs to three decimals (dense c=1: gsm8k 9.971, math500
+  9.600, humaneval 7.551, mbpp 7.059, mt-bench 5.239), i.e. mixing changes the batch composition only, not the prompts.
+- Group-to-group spread is under 1% (max +-2% on mbpp at c=32), so differences of 2% and more in the tables are real.
+- Mixed workload: the MoE draft is 2.6-2.8% slower at c = 1-8 (its 1.9% lower accept length plus ~0.2 ms of routing per step),
+  equal at c=16, and 2.5-4.4% faster from c=32 up because its per-step time is 3-5% lower there (the draft's FFN FLOPs are 1/8 of
+  dense and matter once the step is compute-bound); the same pattern holds per task, strongest on mt-bench where its AL is higher.
+- At c=1 the MoE saves no memory traffic: a 16-token block routed top-1 touches ~7 of the 8 experts, so the FFN bytes read per step
+  equal the dense FFN's.
