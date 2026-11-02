@@ -66,3 +66,22 @@ Triton kernel with its default config unless the tuned `E=8,N=1536` file is pres
 | `task_sweep.sh <name> <draft>` | one draft over the five tasks with full prompt sets (gsm8k 1319, math500 500, humaneval 164, mbpp 257, mt-bench 160) via `specforge benchmark` at c = 1/8/16/32/64 (+128/256 for the two large sets); `run_tasks_all.sh` (dense then MoE, one GPU), `run_tasks_groups_par.sh` / `run_tasks_groups45.sh` (repeat groups on idle GPUs); `task_table.py` prints one table per task, mean over groups. step ms there is wall x min(c, requests) / verify steps (exact at c=1). |
 | `mixed_bench.py --model <tokenizer> --concurrency c --output-json f` | the five tasks shuffled into ONE request stream (2,400 requests, seed 42, same order for every draft), each prompt built with the CLI's own `_load_prompts` formatter and chat template, CLI sampling defaults; reports tok/s, per-request verify-step ms (e2e_latency / spec_verify_ct), accept length and a per-task breakdown. At c=1 the per-task accept lengths inside the mix equal the standalone runs to three decimals. |
 | `mixed_sweep.sh <name> <draft>` / `run_mixed_all.sh` | the mixed sweep at c = 1..256 for one draft / three groups x {dense, MoE} on six empty GPUs; `mixed_table.py` prints the final table (mean over groups). |
+
+## `ckpt-sweep/`: accept-length sweep over every uploaded checkpoint (how ep10 was picked)
+
+The scripts behind the run1 (65 checkpoints) and run2 (51 checkpoints) accept-length sweeps on the training box after
+training ended: each checkpoint is served with jiapingW's protocol (non-thinking, temperature 0, max_new_tokens 2048, block 16,
+context 16384, radix cache off, c=1) and benchmarked on the five tasks with their full prompt sets; the best checkpoint is the one
+with the highest pooled request-macro accept length over the 2,400 requests (equal-weight mean listed beside it). This sweep used
+SpecForge's `dev-moe-serving` external model package (`SGLANG_EXTERNAL_MODEL_PACKAGE=specforge.serving.sglang_models`) on
+SGLang 0.5.18, i.e. before PR #47181; the client is `specforge benchmark`. Paths default to the box layout (`EVAL_DIR`, `VENV`,
+`TARGET`, `HF_TOKEN` override them).
+
+| file | role |
+|---|---|
+| `serve_eval.sh <name> <abs draft dir> [moe]` | one memory-bounded server (`--mem-fraction-static 0.35`, graphs to batch 128, so it can share GPU 0 with the training capture server) + `specforge benchmark` over `TASKS="ds:n ..."` at `CONCS="..."`; results `serve/<name>/<task>_c<C>.json`; the server is killed by its own process group. |
+| `sweep_all.sh` (`RUN= SWEEP= CKPTS=`) | 16 workers, two per GPU, each pulling the next checkpoint from a shared queue: download from HF, serve, five tasks at c=1, stop, delete the weights. Refuses to start while training is on the GPUs. |
+| `one_ckpt.sh <ckpt> <gpu> <port>` | re-run a single checkpoint (used when an HF download timed out). |
+| `summarize_sweep.py [sweep\|sweep-run2]` | the ranking table (per task, pooled macro, pooled micro, equal-weight), the dense reference row and run1 reference rows; writes `summary.json`. |
+| `eval_one.sh <run> <ckpt>` / `run_eval.sh` / `run_tasks.sh` | the earlier single-checkpoint evals on GPU 0 beside the running trainer (perf before/after check). |
+| `finish_ep6.sh` | exports and uploads the trainer's final step (64,586, off the 1,000-step grid) as `ep6/`. |
