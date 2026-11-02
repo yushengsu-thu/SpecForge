@@ -248,6 +248,17 @@ Takeaways:
 - Against the published 5-layer dense drafter (FFN 12288): -25% at D16/V16 (5.85 vs 7.81) and -15% at D16/V8
   (4.94 vs 5.80) on pooled micro τ at T0; on GSM8K alone 7.1 vs 9.2 at D16/V16.
 
+## Retrain on PR #1003 code: `dense-1-8-only-5-epoch`
+
+The same 2-layer dense-1/8 draft retrained from scratch on a 5-epoch cosine schedule (lr 6e-4, warmup 4%, otherwise the
+`dense-1-8-only-2-epoch` recipe) with the code of SpecForge PR #1003 at `cde2f059`, on `specforge-qwen-h200`,
+2026-10-31 23:53 to 2026-11-02 12:35 UTC (36.7 h, 2.45 s/step). Recipe, scripts and the full per-epoch table:
+[`experiments/dense-1-8-only-5-epoch/README.md`](experiments/dense-1-8-only-5-epoch/README.md). Checkpoints:
+https://huggingface.co/yushengsu/dense-1-8-only-5-epoch (private, `1ep/` ... `5ep/`); W&B
+https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/w7a1a4et. Training acc at the last logged
+step of each epoch: 0.6032, 0.6441, 0.6582, 0.6714, 0.6624 (1,000-step means 0.6117, 0.6420, 0.6564, 0.6610, 0.6696),
+against 0.5948, 0.6233, 0.6433, 0.6455, 0.6494 for epochs 1-5 of the 12-epoch run above.
+
 ## Run log
 
 - 2026-10-15 19:xx UTC: at the user's request the day's optimization commits (same-precision fast

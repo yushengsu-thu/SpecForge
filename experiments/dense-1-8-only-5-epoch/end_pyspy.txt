@@ -1,0 +1,39 @@
+=== pid 1166605: python -m specforge.cli train --config /scratch/pr1003/train_dense-1-8-only-5-epoch.yaml
+Process 1166605: python -m specforge.cli train --config /scratch/pr1003/train_dense-1-8-only-5-epoch.yaml
+Python v3.12.3 (/usr/bin/python3.12)
+
+Thread 1166605 (idle): "MainThread"
+    run_commands (specforge/launch_plan.py:1583)
+    train (specforge/cli.py:265)
+    invoke (click/core.py:907)
+    invoke (click/core.py:1353)
+    invoke (click/core.py:1970)
+    main (click/core.py:1490)
+    main (specforge/cli.py:363)
+    <module> (specforge/cli.py:371)
+    _run_code (<frozen runpy>:88)
+    _run_module_as_main (<frozen runpy>:198)
+=== pid 1167708: /scratch/pr1003/venv/bin/python -m specforge.cli train --config /scratch/pr1003/train_dense-1-8-only-5-epoch.yaml --role
+Process 1167708: /scratch/pr1003/venv/bin/python -m specforge.cli train --config /scratch/pr1003/train_dense-1-8-only-5-epoch.yaml --role producer
+Python v3.12.3 (/usr/bin/python3.12)
+
+Thread 1167708 (active): "MainThread"
+    poll (specforge/runtime/data_plane/streaming_ref_channel.py:361)
+    produce (specforge/training/disaggregated.py:779)
+    run (specforge/training/assembly.py:80)
+    _train (specforge/cli.py:133)
+    train (specforge/cli.py:261)
+    invoke (click/core.py:907)
+    invoke (click/core.py:1353)
+    invoke (click/core.py:1970)
+    main (click/core.py:1490)
+    main (specforge/cli.py:363)
+    <module> (specforge/cli.py:371)
+    _run_code (<frozen runpy>:88)
+    _run_module_as_main (<frozen runpy>:198)
+Thread 1169794 (idle): "tqdm_monitor"
+    wait (threading.py:359)
+    wait (threading.py:655)
+    run (tqdm/_monitor.py:69)
+    _bootstrap_inner (threading.py:1073)
+    _bootstrap (threading.py:1030)
