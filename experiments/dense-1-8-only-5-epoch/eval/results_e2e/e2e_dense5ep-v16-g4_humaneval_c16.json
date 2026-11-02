@@ -1,0 +1,10 @@
+{
+  "average_acceptance_length": 5.236840355711238,
+  "backend": "sglang",
+  "dataset": "humaneval",
+  "latency_seconds": 14.731847498100251,
+  "output_tokens": 83066,
+  "samples": 200,
+  "spec_verify_count": 16128,
+  "throughput_tokens_per_second": 5638.532438698663
+}

@@ -1,0 +1,75 @@
+{
+  "label": "accept-dense5ep-ep2-v16",
+  "elapsed_s": 900.0537056922913,
+  "servers": [
+    "http://127.0.0.1:23104",
+    "http://127.0.0.1:23105",
+    "http://127.0.0.1:23106",
+    "http://127.0.0.1:23107"
+  ],
+  "errors": [],
+  "protocol": {
+    "temperature": 0,
+    "enable_thinking": false,
+    "system_prompt": "",
+    "max_new_tokens": 2048,
+    "max_running_requests_per_server": 1,
+    "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+    "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+  },
+  "datasets": {
+    "gsm8k": {
+      "requests": 1319,
+      "request_macro_tau": 7.263264129078215,
+      "micro_tau": 6.838395251184674,
+      "output_tokens": 405510,
+      "verify_count": 59299,
+      "length_limited_requests": 4
+    },
+    "math500": {
+      "requests": 500,
+      "request_macro_tau": 6.788624289457347,
+      "micro_tau": 6.114901599211522,
+      "output_tokens": 384664,
+      "verify_count": 62906,
+      "length_limited_requests": 50
+    },
+    "humaneval": {
+      "requests": 164,
+      "request_macro_tau": 4.926499543002154,
+      "micro_tau": 4.885300955825368,
+      "output_tokens": 75644,
+      "verify_count": 15484,
+      "length_limited_requests": 0
+    },
+    "mbpp": {
+      "requests": 257,
+      "request_macro_tau": 4.722033140504543,
+      "micro_tau": 4.499036711976881,
+      "output_tokens": 84069,
+      "verify_count": 18686,
+      "length_limited_requests": 0
+    },
+    "mt-bench": {
+      "requests": 160,
+      "request_macro_tau": 3.6764811530237567,
+      "micro_tau": 3.0492059941847462,
+      "output_tokens": 81798,
+      "verify_count": 26826,
+      "length_limited_requests": 2
+    }
+  },
+  "pooled": {
+    "requests": 2400,
+    "request_macro_tau": 6.4934595656786085,
+    "micro_tau": 5.631437601323137,
+    "output_tokens": 1031685,
+    "verify_count": 183201,
+    "length_limited_requests": 56,
+    "benchmark_equal_weight_macro_tau": 5.475380451013203,
+    "benchmark_equal_weight_micro_tau": 5.077368102476639
+  },
+  "model": "dense5ep-ep2",
+  "width": 16,
+  "draft_dir": "/scratch/pr1003/eval5ep/drafts/dense5ep-ep2"
+}

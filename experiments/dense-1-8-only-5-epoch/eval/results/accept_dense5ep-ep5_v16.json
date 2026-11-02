@@ -1,0 +1,79 @@
+{
+  "label": "accept-dense5ep-ep5-v16",
+  "elapsed_s": 450.05449318885803,
+  "servers": [
+    "http://127.0.0.1:23100",
+    "http://127.0.0.1:23101",
+    "http://127.0.0.1:23102",
+    "http://127.0.0.1:23103",
+    "http://127.0.0.1:23104",
+    "http://127.0.0.1:23105",
+    "http://127.0.0.1:23106",
+    "http://127.0.0.1:23107"
+  ],
+  "errors": [],
+  "protocol": {
+    "temperature": 0,
+    "enable_thinking": false,
+    "system_prompt": "",
+    "max_new_tokens": 2048,
+    "max_running_requests_per_server": 1,
+    "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+    "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+  },
+  "datasets": {
+    "gsm8k": {
+      "requests": 1319,
+      "request_macro_tau": 7.568568669106194,
+      "micro_tau": 7.111839913011452,
+      "output_tokens": 405510,
+      "verify_count": 57019,
+      "length_limited_requests": 4
+    },
+    "math500": {
+      "requests": 500,
+      "request_macro_tau": 7.089263184006268,
+      "micro_tau": 6.4014644699617245,
+      "output_tokens": 384664,
+      "verify_count": 60090,
+      "length_limited_requests": 50
+    },
+    "humaneval": {
+      "requests": 164,
+      "request_macro_tau": 5.222019166494771,
+      "micro_tau": 5.149703860031316,
+      "output_tokens": 75644,
+      "verify_count": 14689,
+      "length_limited_requests": 0
+    },
+    "mbpp": {
+      "requests": 257,
+      "request_macro_tau": 5.020430239404706,
+      "micro_tau": 4.74483576024382,
+      "output_tokens": 84069,
+      "verify_count": 17718,
+      "length_limited_requests": 0
+    },
+    "mt-bench": {
+      "requests": 160,
+      "request_macro_tau": 3.8789397583250484,
+      "micro_tau": 3.1768681062606805,
+      "output_tokens": 81798,
+      "verify_count": 25748,
+      "length_limited_requests": 2
+    }
+  },
+  "pooled": {
+    "requests": 2400,
+    "request_macro_tau": 6.789527392799318,
+    "micro_tau": 5.8864627076866896,
+    "output_tokens": 1031685,
+    "verify_count": 175264,
+    "length_limited_requests": 56,
+    "benchmark_equal_weight_macro_tau": 5.755844203467397,
+    "benchmark_equal_weight_micro_tau": 5.316942421901798
+  },
+  "model": "dense5ep-ep5",
+  "width": 16,
+  "draft_dir": "/scratch/pr1003/eval5ep/drafts/dense5ep-ep5"
+}

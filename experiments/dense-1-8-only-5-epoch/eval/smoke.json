@@ -1,0 +1,45 @@
+{
+  "label": "smoke",
+  "elapsed_s": 30.00139880180359,
+  "servers": [
+    "http://127.0.0.1:23100"
+  ],
+  "errors": [],
+  "protocol": {
+    "temperature": 0,
+    "enable_thinking": false,
+    "system_prompt": "",
+    "max_new_tokens": 2048,
+    "max_running_requests_per_server": 1,
+    "prompt_formats": "specforge.benchmarks.sglang.DATASETS",
+    "mt_bench": "2 turns, turn 2 after the served turn-1 answer"
+  },
+  "datasets": {
+    "gsm8k": {
+      "requests": 2,
+      "request_macro_tau": 6.997348886532343,
+      "micro_tau": 7.265625,
+      "output_tokens": 465,
+      "verify_count": 64,
+      "length_limited_requests": 0
+    },
+    "mt-bench": {
+      "requests": 4,
+      "request_macro_tau": 3.271539737099857,
+      "micro_tau": 3.1353046594982077,
+      "output_tokens": 3499,
+      "verify_count": 1116,
+      "length_limited_requests": 1
+    }
+  },
+  "pooled": {
+    "requests": 6,
+    "request_macro_tau": 4.513476120244019,
+    "micro_tau": 3.359322033898305,
+    "output_tokens": 3964,
+    "verify_count": 1180,
+    "length_limited_requests": 1,
+    "benchmark_equal_weight_macro_tau": 5.1344443118161,
+    "benchmark_equal_weight_micro_tau": 5.200464829749103
+  }
+}

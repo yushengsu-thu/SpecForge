@@ -1,0 +1,10 @@
+{
+  "average_acceptance_length": 4.301792569157706,
+  "backend": "sglang",
+  "dataset": "mbpp",
+  "latency_seconds": 11.830085519701242,
+  "output_tokens": 155188,
+  "samples": 512,
+  "spec_verify_count": 37326,
+  "throughput_tokens_per_second": 13118.079302263499
+}

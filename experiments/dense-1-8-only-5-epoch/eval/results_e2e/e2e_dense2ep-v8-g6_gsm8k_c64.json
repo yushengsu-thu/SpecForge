@@ -1,0 +1,10 @@
+{
+  "average_acceptance_length": 5.782301095625984,
+  "backend": "sglang",
+  "dataset": "gsm8k",
+  "latency_seconds": 5.825011709704995,
+  "output_tokens": 76024,
+  "samples": 256,
+  "spec_verify_count": 13625,
+  "throughput_tokens_per_second": 13051.304235721476
+}

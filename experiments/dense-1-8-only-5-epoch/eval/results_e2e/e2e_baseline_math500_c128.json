@@ -1,0 +1,10 @@
+{
+  "average_acceptance_length": null,
+  "backend": "sglang",
+  "dataset": "math500",
+  "latency_seconds": 18.36631979327649,
+  "output_tokens": 223682,
+  "samples": 512,
+  "spec_verify_count": null,
+  "throughput_tokens_per_second": 12178.923296428995
+}
