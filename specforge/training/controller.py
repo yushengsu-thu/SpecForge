@@ -808,6 +808,8 @@ class TrainerController:
         run_id: str,
         output_dir: str = "./output",
         save_interval: int = 0,
+        save_at_epoch_end: bool = False,
+        save_at_steps: Optional[Iterable[int]] = None,
         eval_interval: int = 0,
         eval_data_factory: Optional[
             Callable[[], Optional[Iterable[TrainBatch]]]
@@ -838,6 +840,11 @@ class TrainerController:
         self.run_id = run_id
         self.output_dir = output_dir
         self.save_interval = save_interval
+        # Checkpoint when an epoch's batches are exhausted (fit() iterates the
+        # epochs itself) and at these explicit optimizer steps (a streamed run
+        # whose epoch boundaries the caller resolved in steps).
+        self.save_at_epoch_end = bool(save_at_epoch_end)
+        self.save_at_steps = frozenset(int(step) for step in (save_at_steps or ()))
         self.eval_interval = eval_interval
         self.eval_data_factory = eval_data_factory
         self.log_interval = log_interval
@@ -1150,10 +1157,11 @@ class TrainerController:
                 interval_hit = bool(
                     self.save_interval and self.global_step % self.save_interval == 0
                 )
+                step_hit = self.global_step in self.save_at_steps
                 is_best = bool(
                     eval_metrics and self._checkpoint_manager().is_better(eval_metrics)
                 )
-                if interval_hit or is_best:
+                if interval_hit or step_hit or is_best:
                     self.save_checkpoint(self.global_step)
                 if is_best:
                     self._checkpoint_manager().update_best(
@@ -1170,6 +1178,17 @@ class TrainerController:
             # work, not epoch ``N`` at batch zero (which would replay that
             # entire epoch on resume).
             self.epoch = epoch + 1
+            if (
+                self.save_at_epoch_end
+                and self.global_step > 0
+                and self.last_checkpoint_step != self.global_step
+            ):
+                logger.info(
+                    "epoch %d finished at optimizer step %d; saving its checkpoint",
+                    epoch + 1,
+                    self.global_step,
+                )
+                self.save_checkpoint(self.global_step)
         remainder = self.core.accumulation_remainder
         if remainder:
             raise RuntimeError(

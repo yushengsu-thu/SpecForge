@@ -685,6 +685,10 @@ prerequisites, managed-local ownership, freshness rules, and both launch forms.
 `training.max_checkpoints` controls rotation. Checkpoints are written beneath
 `output_dir`. A completed trainer run always saves its final runtime checkpoint,
 even when `save_interval` is zero or the final step is not an interval boundary.
+`training.save_at_epoch_end: true` also checkpoints at the end of every data
+epoch, whether or not `save_interval` divides the epoch's step count; an online
+disaggregated consumer takes each epoch end to be the optimizer step that
+consumes that prompt epoch's last scheduled prompt.
 The `<run_id>-latest` symlink resolves to the newest complete checkpoint.
 
 Offline colocated runs restore draft weights, optimizer/scheduler, epoch/step/data
