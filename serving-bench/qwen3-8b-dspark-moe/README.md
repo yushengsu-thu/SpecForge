@@ -1,5 +1,10 @@
 # Qwen3-8B DSpark MoE drafter: serving and benchmarking against the dense draft
 
+**Start here for a new draft:** [EVAL-GUIDE.md](EVAL-GUIDE.md) walks through the whole pipeline with this PR and
+sgl-project/sglang#47181: build SGLang with the MoE draft support, load any SpecForge MoE DSpark export, tune the fused-MoE kernel config
+for its expert shape (`tune/`), run the per-task + mixed throughput protocol, and generate the result tables and chart (`make_report.py`).
+The 2 x 12288 draft's results are in [RESULTS-2x12288.md](RESULTS-2x12288.md).
+
 Scripts and results for serving SpecForge's Qwen3-8B DSpark MoE drafts (8 experts x 1536, top-1) with SGLang and comparing them
 with jiapingW's dense draft. The numbers and their discussion are in [RESULTS.md](RESULTS.md).
 
