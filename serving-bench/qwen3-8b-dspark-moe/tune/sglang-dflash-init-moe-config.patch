@@ -1,0 +1,15 @@
+--- models/dflash.py.orig	2026-11-03 01:55:39.216211160 +0000
++++ models/dflash.py	2026-11-03 01:55:39.237211438 +0000
+@@ -861,6 +861,12 @@
+             "gate_expert_bias", torch.zeros(spec.num_experts, dtype=torch.float32)
+         )
+         self.has_expert_bias = False
++        # PATCH (yusheng, 2026-11-03): the DSpark draft is built before the scheduler runs
++        # initialize_moe_config(), so get_moe_runner_backend() still returns the lazy
++        # default "auto" here and every draft FusedMoE lands on the Triton runner regardless
++        # of --moe-runner-backend. Resolve the flags from the server args first.
++        from sglang.srt.layers.moe.utils import initialize_moe_config as _init_moe_cfg
++        _init_moe_cfg()
+         self.experts = get_moe_impl_class(quant_config)(
+             num_experts=spec.num_experts,
+             hidden_size=self.hidden_size,
