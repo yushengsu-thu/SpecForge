@@ -6,9 +6,17 @@ usage: upload_ckpt.py N FOLDER        upload the export in FOLDER as step N
        upload_ckpt.py --epoch-of N    print K when step N ends prompt epoch K, else nothing
        upload_ckpt.py --last-step     print the run's final optimizer step
 """
-import ast, hashlib, json, os, re, sys
+import ast
+import hashlib
+import json
+import os
+import re
+import sys
 
-for _v in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"):  # the launcher's offline flags must not reach the uploader
+for _v in (
+    "HF_HUB_OFFLINE",
+    "TRANSFORMERS_OFFLINE",
+):  # the launcher's offline flags must not reach the uploader
     os.environ.pop(_v, None)
 
 W = "/scratch/pr1031"
@@ -25,11 +33,16 @@ def schedule():
     with open(SCHEDULE) as stream:
         s = json.load(stream)
     ends = resolve_online_epoch_end_steps(
-        num_prompts=s["num_prompts"], prompt_epochs=s["prompt_epochs"], dp_size=s["dp_size"],
-        batch_size=s["batch_size"], accumulation_steps=s["accumulation_steps"],
+        num_prompts=s["num_prompts"],
+        prompt_epochs=s["prompt_epochs"],
+        dp_size=s["dp_size"],
+        batch_size=s["batch_size"],
+        accumulation_steps=s["accumulation_steps"],
     )
     s["epoch_of"] = {step: epoch for epoch, step in enumerate(ends, start=1)}
-    s["steps_per_epoch"] = s["num_prompts"] / (s["dp_size"] * s["batch_size"] * s["accumulation_steps"])
+    s["steps_per_epoch"] = s["num_prompts"] / (
+        s["dp_size"] * s["batch_size"] * s["accumulation_steps"]
+    )
     return s
 
 
@@ -59,8 +72,13 @@ def sha256(path):
 
 targets = [f"step-{n}"] + ([f"ep{ep}"] if ep else [])
 for t in targets:
-    api.upload_folder(repo_id=REPO, folder_path=folder, path_in_repo=t, ignore_patterns=[".exported"],
-                      commit_message=f"{RUN}: step {n}" + (f" = end of epoch {ep}" if ep else ""))
+    api.upload_folder(
+        repo_id=REPO,
+        folder_path=folder,
+        path_in_repo=t,
+        ignore_patterns=[".exported"],
+        commit_message=f"{RUN}: step {n}" + (f" = end of epoch {ep}" if ep else ""),
+    )
     for name in ("config.json", "model.safetensors"):
         local = os.path.join(folder, name)
         info = api.get_paths_info(REPO, [f"{t}/{name}"])[0]
@@ -87,16 +105,31 @@ def metrics_at(step):
     except (ValueError, SyntaxError):
         return f"step {best[0]}: n/a"
     g = lambda k: d.get(f"train/{k}", d.get(k))
-    acc, ce, walk, bal = g("acc"), g("ce_loss"), g("dspark/hard_label/walk_accepted_length"), g("moe/step_balance")
+    acc, ce, walk, bal = (
+        g("acc"),
+        g("ce_loss"),
+        g("dspark/hard_label/walk_accepted_length"),
+        g("moe/step_balance"),
+    )
     f = lambda v, p=4: "n/a" if v is None else f"{v:.{p}f}"
     return f"step {best[0]}: acc {f(acc)}, ce_loss {f(ce)}, walk accept length {f(walk, 3)}, step_balance {f(bal, 3)}"
 
 
 files = api.list_repo_files(REPO)
-steps = sorted({int(m.group(1)) for p in files if (m := re.match(r"^step-(\d+)/model\.safetensors$", p))})
+steps = sorted(
+    {
+        int(m.group(1))
+        for p in files
+        if (m := re.match(r"^step-(\d+)/model\.safetensors$", p))
+    }
+)
 spe, last = sched["steps_per_epoch"], sched["total_steps"]
-rows = "\n".join(f"| `step-{s}/` | {s:,} | {s / spe:.2f} | " + (f"`ep{sched['epoch_of'][s]}/`" if s in sched["epoch_of"] else "") +
-                 f" | {metrics_at(s)} |" for s in steps)
+rows = "\n".join(
+    f"| `step-{s}/` | {s:,} | {s / spe:.2f} | "
+    + (f"`ep{sched['epoch_of'][s]}/`" if s in sched["epoch_of"] else "")
+    + f" | {metrics_at(s)} |"
+    for s in steps
+)
 card = f"""# {REPO.split('/')[1]}: Qwen3-8B DSpark draft, MoE 16 experts x 768, top-1 (run `{RUN}`)
 
 Qwen3-8B DSpark draft with the MoE FFN of SpecForge PR [#1031](https://github.com/sgl-project/SpecForge/pull/1031)
@@ -115,5 +148,10 @@ normalized for SGLang 0.5.18. Epoch ends are duplicated as `ep1/` .. `ep6/`. Ser
 |---|---|---|---|---|
 {rows}
 """
-api.upload_file(path_or_fileobj=card.encode(), path_in_repo="README.md", repo_id=REPO, commit_message=f"{RUN}: README after step {n}")
+api.upload_file(
+    path_or_fileobj=card.encode(),
+    path_in_repo="README.md",
+    repo_id=REPO,
+    commit_message=f"{RUN}: README after step {n}",
+)
 print(f"README updated; steps on the Hub: {steps}")
