@@ -16,18 +16,25 @@ g=lambda k:d.get('train/'+k,d.get(k))
 f=lambda v,p=4:'n/a' if v is None else f'{v:.{p}f}'
 print('acc',f(g('acc')),'| ce',f(g('ce_loss')),'| walk',f(g('dspark/hard_label/walk_accepted_length'),3),'| balance',f(g('moe/step_balance'),3),'| lr',f(g('lr'),6))" 2>/dev/null)
   echo "step $step / ${total:-?} (${pct:-?})  $m"
-  # steps logged in the last hour -> ETA
-  rate=$(python3 - "$LOG" "$step" <<'PY'
-import os,sys,time,re
-log,step=sys.argv[1],int(sys.argv[2]); size=os.path.getsize(log)
-with open(log,'rb') as f:
-    f.seek(max(0,size-8_000_000)); tail=f.read().decode('utf-8','replace')
-steps=[int(m) for m in re.findall(r'^step (\d+): ',tail,re.M)]
-mt=os.path.getmtime(log); age=time.time()-mt
-print(f"log age {age/60:.1f} min; last {len(steps)} logged steps span {steps[-1]-steps[0] if len(steps)>1 else 0} steps")
+  # Rate from the (time, step) samples this script appends on every call -> ETA.
+  S=$W/logs/status_samples.txt; echo "$(date +%s) $step" >> $S
+  python3 - "$S" "$step" "${total:-0}" "$LOG" <<'PY'
+import os,sys,time
+path,step,total,log=sys.argv[1],int(sys.argv[2]),int(sys.argv[3]),sys.argv[4]
+now=time.time(); rows=[tuple(map(int,l.split())) for l in open(path) if l.strip()]
+print(f"train log last written {(now-os.path.getmtime(log))/60:.1f} min ago")
+cands=[r for r in rows if 600 <= now-r[0] <= 86400 and r[1] < step]
+if not cands:
+    print("rate: n/a yet (needs a status sample at least 10 min old)")
+else:
+    t0,s0=cands[0]; rate=(step-s0)/(now-t0)
+    if rate <= 0 or not total:
+        print("rate: no progress since the earlier sample")
+    else:
+        eta=(total-step)/rate
+        print(f"rate {rate*3600:.0f} steps/h over the last {(now-t0)/3600:.1f} h; ETA ~{eta/3600:.1f} h ({eta/86400:.1f} d): "
+              f"~{time.strftime('%m-%d %H:%M', time.gmtime(now+eta))} UTC = {time.strftime('%m-%d %H:%M', time.gmtime(now+eta-8*3600))} PST")
 PY
-)
-  echo "$rate"
 else
   echo "no optimizer step logged yet; last log line: $(tail -1 $LOG 2>/dev/null | cut -c1-160)"
 fi
