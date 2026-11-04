@@ -1,6 +1,6 @@
 #!/bin/bash
 # Devbox-only: every 5 min, for each finished epoch checkpoint (step k*10764, k=1..EPOCHS): export to the HF layout with the
-# target embedding, normalize the config for SGLang, upload to yushengsu/dense-1-8-only-5-epoch/<k>ep, refresh the model
+# target embedding, normalize the config for SGLang, upload to yushengsu/Qwen3-8B-2layer-Dense/<k>ep (renamed 2026-11-04 from dense-1-8-only-5-epoch), refresh the model
 # card. Idempotent (.exported / .uploaded markers). Exits after the last epoch is uploaded, or if the trainer dies.
 # Usage: RUN=<run_id> DRAFT=<draft config json> [EPOCHS=5] bash watch_epochs_5ep.sh
 W=/scratch/pr1003; RUN=${RUN:?}; DRAFT=${DRAFT:?}; EPOCHS=${EPOCHS:-5}; OUT=$W/outputs/$RUN; EX=$W/exports/$RUN

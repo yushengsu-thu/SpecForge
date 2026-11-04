@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Upload one epoch export to yushengsu/dense-1-8-only-5-epoch/<k>ep, verify sizes and sha256, refresh the model card.
+"""Upload one epoch export to yushengsu/Qwen3-8B-2layer-Dense/<k>ep (repo renamed 2026-11-04 from dense-1-8-only-5-epoch),
+verify sizes and sha256, refresh the model card.
 Usage: RUN=<run_id> DRAFT=<draft config json> [EPOCHS=5] python upload_epoch_5ep.py <k> <export folder>"""
 import ast, hashlib, json, os, re, sys
 for _v in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"):  # inherited from the trainer launch; the upload needs the network
@@ -7,7 +8,7 @@ for _v in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"):  # inherited from the trai
 from huggingface_hub import HfApi
 
 k, folder = int(sys.argv[1]), sys.argv[2]
-REPO = "yushengsu/dense-1-8-only-5-epoch"
+REPO = "yushengsu/Qwen3-8B-2layer-Dense"  # renamed 2026-11-04 from yushengsu/dense-1-8-only-5-epoch
 RUN = os.environ["RUN"]
 EPOCHS = int(os.environ.get("EPOCHS", "5"))
 LOG = f"/scratch/pr1003/logs/train_{RUN}.log"

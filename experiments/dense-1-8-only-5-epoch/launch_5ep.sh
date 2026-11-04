@@ -1,6 +1,6 @@
 #!/bin/bash
 # Devbox-only: start the 5-epoch dense-1/8 run (PR #1003 venv, same recipe as dense-1-8-only-2-epoch with num_epochs 5)
-# and the per-epoch export/upload watcher (uploads to yushengsu/dense-1-8-only-5-epoch), both detached.
+# and the per-epoch export/upload watcher (uploads to yushengsu/Qwen3-8B-2layer-Dense, renamed 2026-11-04 from dense-1-8-only-5-epoch), both detached.
 W=/scratch/pr1003; RUN=dense-1-8-only-5-epoch
 DRAFT=$W/configs/qwen3-8b-dspark-dense-1-8-2layer-causal-noconf-b16.json
 cd $W/SpecForge && . $W/venv/bin/activate
