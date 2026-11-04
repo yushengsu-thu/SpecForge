@@ -12,7 +12,7 @@ no system prompt, seed 42, Liger off (PR #1003's DSpark rejects it), one checkpo
 | node | `specforge-qwen-h200` (8x H200), work dir `/scratch/pr1003`, 2 SGLang capture servers (GPU 0-1) + 6 DDP ranks (GPU 2-7) |
 | started | 2026-10-31 23:53 UTC; about 7.2 h per epoch (2.41 s/step), 53,820 steps total |
 | W&B | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/w7a1a4et (run name `dense-1-8-only-5-epoch`) |
-| checkpoints | https://huggingface.co/yushengsu/Qwen3-8B-2layer-Dense (private): `1ep/` ... `5ep/`, each a servable SGLang 0.5.18 export. Renamed on 2026-11-04 from `yushengsu/dense-1-8-only-5-epoch` (naming scheme `<base model>-<layers>layer-<Dense|MoE>[-<E>E<A>A]`; the old id redirects); before that the repo was `dense-1-8-only-2-epoch`, whose 1ep/2ep folders were removed on 2026-10-31 (still in the repo history) |
+| checkpoints | https://huggingface.co/yushengsu/Qwen3-8B-2layer-Dense-v2 (private): `1ep/` ... `5ep/`, each a servable SGLang 0.5.18 export. Renamed on 2026-11-04 from `yushengsu/dense-1-8-only-5-epoch` (naming scheme `<base model>-<layers>layer-<Dense|MoE>[-<E>E<A>A]`, `-vN` = N-th run of that architecture by repo creation date; `-v1` is the 32-epoch `dense-1-8` run, now `yushengsu/Qwen3-8B-2layer-Dense-v1`; old ids redirect); before that the repo was `dense-1-8-only-2-epoch`, whose 1ep/2ep folders were removed on 2026-10-31 (still in the repo history) |
 
 Files: `setup_pr1003.sh` (checkout + venv), `train_dense-1-8-only-5-epoch.yaml` (recipe), `launch_5ep.sh` (trainer + watcher),
 `watch_epochs_5ep.sh` / `upload_epoch_5ep.py` (per-epoch export, SGLang normalization, upload, model card),

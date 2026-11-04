@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upload one epoch export to yushengsu/Qwen3-8B-2layer-Dense/<k>ep (repo renamed 2026-11-04 from dense-1-8-only-5-epoch),
+"""Upload one epoch export to yushengsu/Qwen3-8B-2layer-Dense-v2/<k>ep (repo renamed 2026-11-04 from dense-1-8-only-5-epoch),
 verify sizes and sha256, refresh the model card.
 Usage: RUN=<run_id> DRAFT=<draft config json> [EPOCHS=5] python upload_epoch_5ep.py <k> <export folder>"""
 import ast, hashlib, json, os, re, sys
@@ -8,7 +8,7 @@ for _v in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"):  # inherited from the trai
 from huggingface_hub import HfApi
 
 k, folder = int(sys.argv[1]), sys.argv[2]
-REPO = "yushengsu/Qwen3-8B-2layer-Dense"  # renamed 2026-11-04 from yushengsu/dense-1-8-only-5-epoch
+REPO = "yushengsu/Qwen3-8B-2layer-Dense-v2"  # renamed 2026-11-04 from yushengsu/dense-1-8-only-5-epoch
 RUN = os.environ["RUN"]
 EPOCHS = int(os.environ.get("EPOCHS", "5"))
 LOG = f"/scratch/pr1003/logs/train_{RUN}.log"
@@ -64,7 +64,7 @@ tags:
 
 A DSpark draft model for [Qwen/Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B), trained with the code of SpecForge
 PR [#1003](https://github.com/sgl-project/SpecForge/pull/1003) (commit cde2f059) with the hyperparameters of
-[yushengsu/dense-1-8](https://huggingface.co/yushengsu/dense-1-8) on a {EPOCHS}-epoch cosine schedule (run `{RUN}`).
+[yushengsu/dense-1-8](https://huggingface.co/yushengsu/Qwen3-8B-2layer-Dense-v1) on a {EPOCHS}-epoch cosine schedule (run `{RUN}`).
 One folder per epoch, each directly servable by SGLang 0.5.18
 (`--speculative-algorithm DSPARK --speculative-draft-model-path <folder>`).
 

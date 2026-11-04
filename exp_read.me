@@ -11,7 +11,7 @@ of 5, attention width 1/4 (GQA 8/2 heads x 128), MLP hidden dim 1/8 (1536); resi
 | --- | --- |
 | Code / config | this branch: `configs/qwen3-8b-dspark-dense-1-8-2layer-causal-noconf-b16.json` + the launch yaml below |
 | W&B (one line for all epochs) | https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/dense-1-8-r8 (display name `dense-1-8`) |
-| Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/dense-1-8 (`epoch-01/` ... `epoch-12/`, each a `specforge export`ed servable directory; epochs 13-32 were removed from the repo on 2026-10-26 at the user's request and remain in its git history, commit `cc18cac5`) |
+| Checkpoints (one folder per epoch) | https://huggingface.co/yushengsu/Qwen3-8B-2layer-Dense-v1 (`epoch-01/` ... `epoch-12/`, each a `specforge export`ed servable directory; epochs 13-32 were removed from the repo on 2026-10-26 at the user's request and remain in its git history, commit `cc18cac5`) |
 | Machine | one 8x H200 node (`specforge-dsv4-h200`, cluster h200-sci-k8s-1), SGLang 0.5.18 + spec-capture patch, torch 2.13.0+cu130 |
 | Launch yaml | `examples/configs/online/disaggregated/managed-local/qwen3-8b-dspark-dense-1-8-noconf-b16-perfectblend-2server-dp6-disaggregated.yaml` |
 
@@ -254,7 +254,7 @@ The same 2-layer dense-1/8 draft retrained from scratch on a 5-epoch cosine sche
 `dense-1-8-only-2-epoch` recipe) with the code of SpecForge PR #1003 at `cde2f059`, on `specforge-qwen-h200`,
 2026-10-31 23:53 to 2026-11-02 12:35 UTC (36.7 h, 2.45 s/step). Recipe, scripts and the full per-epoch table:
 [`experiments/dense-1-8-only-5-epoch/README.md`](experiments/dense-1-8-only-5-epoch/README.md). Checkpoints:
-https://huggingface.co/yushengsu/Qwen3-8B-2layer-Dense (private, `1ep/` ... `5ep/`; renamed 2026-11-04 from `yushengsu/dense-1-8-only-5-epoch`); W&B
+https://huggingface.co/yushengsu/Qwen3-8B-2layer-Dense-v2 (private, `1ep/` ... `5ep/`; renamed 2026-11-04 from `yushengsu/dense-1-8-only-5-epoch`; `-v1` is the 32-epoch `dense-1-8` run); W&B
 https://wandb.ai/eigent_radixark_training/specforge-qwen3-8b-dspark-dense/runs/w7a1a4et. Training acc at the last logged
 step of each epoch: 0.6032, 0.6441, 0.6582, 0.6714, 0.6624 (1,000-step means 0.6117, 0.6420, 0.6564, 0.6610, 0.6696),
 against 0.5948, 0.6233, 0.6433, 0.6455, 0.6494 for epochs 1-5 of the 12-epoch run above.
