@@ -7,12 +7,14 @@ from unittest import mock
 
 from specforge.training.disaggregated import (
     _ONLINE_SCHEDULE_SUFFIX,
+    _online_epoch_end_steps,
     _online_flow_window,
     _online_schedule_payload,
     _read_online_total_steps,
     _write_control,
 )
 from specforge.training.schedule import (
+    resolve_online_epoch_end_steps,
     resolve_online_total_steps,
     resolve_total_steps,
     validate_fixed_accumulation_plan,
@@ -154,6 +156,53 @@ class TestResolveTotalSteps(unittest.TestCase):
                 batch_size=2,
                 accumulation_steps=1,
             )
+
+    def test_online_epoch_ends_are_the_windows_consuming_each_last_prompt(self):
+        # 10 prompts x 3 epochs in windows of 4: epoch 1's last prompt (index 9)
+        # is consumed by step 3, epoch 2's (19) by step 5, and the plan has only
+        # 7 complete windows, so epoch 3 ends at the last step.
+        self.assertEqual(
+            resolve_online_epoch_end_steps(
+                num_prompts=10,
+                prompt_epochs=3,
+                dp_size=1,
+                batch_size=2,
+                accumulation_steps=2,
+            ),
+            [3, 5, 7],
+        )
+        # Epochs that fill whole windows end exactly on their boundaries.
+        self.assertEqual(
+            resolve_online_epoch_end_steps(
+                num_prompts=8,
+                prompt_epochs=2,
+                dp_size=2,
+                batch_size=1,
+                accumulation_steps=2,
+            ),
+            [2, 4],
+        )
+
+    def test_online_schedule_record_resolves_its_epoch_ends(self):
+        cfg = SimpleNamespace(
+            training=SimpleNamespace(
+                num_epochs=3,
+                seed=17,
+                prompt_seed=None,
+                batch_size=2,
+                accumulation_steps=4,
+            ),
+            deployment=SimpleNamespace(
+                trainer=SimpleNamespace(nnodes=2, nproc_per_node=2)
+            ),
+        )
+        # 100 prompts x 3 epochs in windows of 32 = 9 steps; epochs end at
+        # steps 4, 7 and (clamped from 10) 9.
+        payload = _online_schedule_payload(cfg, num_prompts=100)
+        self.assertEqual(_online_epoch_end_steps(payload, source="t"), [4, 7, 9])
+        payload["num_prompts"] = 0
+        with self.assertRaisesRegex(ValueError, "invalid num_prompts"):
+            _online_epoch_end_steps(payload, source="t")
 
     def test_online_schedule_sidecar_round_trips_the_producer_horizon(self):
         cfg = SimpleNamespace(

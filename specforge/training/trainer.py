@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 import sys
 from contextlib import nullcontext
-from typing import Callable, Mapping, Optional
+from typing import Callable, Mapping, Optional, Sequence
 
 import torch
 
@@ -95,6 +95,8 @@ class Trainer:
         num_epochs: int,
         max_steps: Optional[int],
         save_interval: int,
+        save_at_epoch_end: bool = False,
+        save_at_steps: Optional[Sequence[int]] = None,
         eval_interval: int = 0,
         eval_data_factory: Optional[Callable[[], object]] = None,
         logger,
@@ -472,6 +474,8 @@ class Trainer:
             max_steps=max_steps,
             total_steps=effective_total_steps,
             save_interval=save_interval,
+            save_at_epoch_end=save_at_epoch_end,
+            save_at_steps=save_at_steps,
             eval_interval=eval_interval,
             eval_data_factory=eval_data_factory,
             log_interval=log_interval,

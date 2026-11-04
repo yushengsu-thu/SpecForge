@@ -1056,6 +1056,11 @@ class TrainingConfig(StrictConfigModel):
     down_sample_ratio_min: float = 0.2
     norm_before_residual: Optional[bool] = None
     save_interval: int = Field(default=0, ge=0)
+    #: Also checkpoint at the end of every data epoch, whether or not
+    #: ``save_interval`` divides the epoch's step count. An online
+    #: disaggregated run checkpoints at the optimizer step that consumes each
+    #: prompt epoch's last scheduled prompt.
+    save_at_epoch_end: bool = False
     #: Run a full evaluation pass every N optimizer steps (0 = disabled).
     eval_interval: int = Field(default=0, ge=0)
     log_interval: int = Field(default=50, gt=0)

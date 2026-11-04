@@ -76,6 +76,37 @@ def resolve_online_total_steps(
     return total_steps
 
 
+def resolve_online_epoch_end_steps(
+    *,
+    num_prompts: int,
+    prompt_epochs: int,
+    dp_size: int,
+    batch_size: int,
+    accumulation_steps: int,
+) -> list[int]:
+    """Optimizer steps at which each prompt epoch of one online plan completes.
+
+    The online distributor streams the prompt epochs back to back in windows of
+    ``dp_size * batch_size * accumulation_steps`` prompts, so epoch ``k`` ends
+    inside the window that consumes its last scheduled prompt: the first step
+    whose cumulative prompt count reaches ``k * num_prompts``. The final epoch
+    ends at the last step when :func:`resolve_online_total_steps` drops its
+    partial tail window. One entry per prompt epoch, in order.
+    """
+    total_steps = resolve_online_total_steps(
+        num_prompts=num_prompts,
+        prompt_epochs=prompt_epochs,
+        dp_size=dp_size,
+        batch_size=batch_size,
+        accumulation_steps=accumulation_steps,
+    )
+    quantum = int(dp_size) * int(batch_size) * int(accumulation_steps)
+    return [
+        min(-(-(epoch * int(num_prompts)) // quantum), total_steps)
+        for epoch in range(1, int(prompt_epochs) + 1)
+    ]
+
+
 def validate_fixed_accumulation_plan(
     *,
     num_samples: int,

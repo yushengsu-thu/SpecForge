@@ -1,12 +1,23 @@
 #!/usr/bin/env python3
 """Upload one exported checkpoint to the public Hub repo under <run>/step-N (and <run>/epK), verify it, refresh the run README."""
-import ast, hashlib, os, re, sys
+import ast
+import hashlib
+import os
+import re
+import sys
 
-for _v in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"):  # the launcher's offline flags must not reach the uploader
+for _v in (
+    "HF_HUB_OFFLINE",
+    "TRANSFORMERS_OFFLINE",
+):  # the launcher's offline flags must not reach the uploader
     os.environ.pop(_v, None)
 from huggingface_hub import HfApi
 
-n, folder, ep = int(sys.argv[1]), sys.argv[2], (sys.argv[3] if len(sys.argv) > 3 else "")
+n, folder, ep = (
+    int(sys.argv[1]),
+    sys.argv[2],
+    (sys.argv[3] if len(sys.argv) > 3 else ""),
+)
 REPO = "yushengsu/new-repo-qwen3-8b-moe16x768-16A1-dspark"
 RUN = "pr1031-qwen3-8b-moe8x1536-8A1-dspark-run1"
 LOG = f"/scratch/pr1031/logs/train_{RUN}.log"
@@ -25,8 +36,13 @@ def sha256(path):
 
 targets = [f"{RUN}/step-{n}"] + ([f"{RUN}/ep{ep}"] if ep else [])
 for t in targets:
-    api.upload_folder(repo_id=REPO, folder_path=folder, path_in_repo=t, ignore_patterns=[".exported"],
-                      commit_message=f"{RUN}: step {n}" + (f" = end of epoch {ep}" if ep else ""))
+    api.upload_folder(
+        repo_id=REPO,
+        folder_path=folder,
+        path_in_repo=t,
+        ignore_patterns=[".exported"],
+        commit_message=f"{RUN}: step {n}" + (f" = end of epoch {ep}" if ep else ""),
+    )
     for name in ("config.json", "model.safetensors"):
         local = os.path.join(folder, name)
         info = api.get_paths_info(REPO, [f"{t}/{name}"])[0]
@@ -53,15 +69,30 @@ def metrics_at(step):
     except (ValueError, SyntaxError):
         return f"step {best[0]}: n/a"
     g = lambda k: d.get(f"train/{k}", d.get(k))
-    acc, ce, walk, bal = g("acc"), g("ce_loss"), g("dspark/hard_label/walk_accepted_length"), g("moe/step_balance")
+    acc, ce, walk, bal = (
+        g("acc"),
+        g("ce_loss"),
+        g("dspark/hard_label/walk_accepted_length"),
+        g("moe/step_balance"),
+    )
     f = lambda v, p=4: "n/a" if v is None else f"{v:.{p}f}"
     return f"step {best[0]}: acc {f(acc)}, ce_loss {f(ce)}, walk accept length {f(walk, 3)}, step_balance {f(bal, 3)}"
 
 
 files = api.list_repo_files(REPO)
-steps = sorted({int(m.group(1)) for p in files if (m := re.match(rf"^{re.escape(RUN)}/step-(\d+)/model\.safetensors$", p))})
-rows = "\n".join(f"| `{RUN}/step-{s}/` | {s:,} | {s / STEPS_PER_EPOCH:.2f} | " + (f"`ep{s // STEPS_PER_EPOCH}/`" if s % STEPS_PER_EPOCH == 0 else "") +
-                 f" | {metrics_at(s)} |" for s in steps)
+steps = sorted(
+    {
+        int(m.group(1))
+        for p in files
+        if (m := re.match(rf"^{re.escape(RUN)}/step-(\d+)/model\.safetensors$", p))
+    }
+)
+rows = "\n".join(
+    f"| `{RUN}/step-{s}/` | {s:,} | {s / STEPS_PER_EPOCH:.2f} | "
+    + (f"`ep{s // STEPS_PER_EPOCH}/`" if s % STEPS_PER_EPOCH == 0 else "")
+    + f" | {metrics_at(s)} |"
+    for s in steps
+)
 card = f"""# {RUN}
 
 Qwen3-8B DSpark draft with the MoE FFN of SpecForge PR [#1031](https://github.com/sgl-project/SpecForge/pull/1031)
@@ -79,5 +110,10 @@ SGLang 0.5.18. Epoch ends are duplicated as `ep1/` .. `ep6/`. Serving needs the 
 |---|---|---|---|---|
 {rows}
 """
-api.upload_file(path_or_fileobj=card.encode(), path_in_repo=f"{RUN}/README.md", repo_id=REPO, commit_message=f"{RUN}: README after step {n}")
+api.upload_file(
+    path_or_fileobj=card.encode(),
+    path_in_repo=f"{RUN}/README.md",
+    repo_id=REPO,
+    commit_message=f"{RUN}: README after step {n}",
+)
 print(f"README updated; steps on the Hub: {steps}")

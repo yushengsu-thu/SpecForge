@@ -322,7 +322,7 @@ def _online_schedule_payload(cfg: Config, *, num_prompts: int) -> dict:
     }
 
 
-def _read_online_total_steps(cfg: Config, channel_path: str) -> int:
+def _read_online_schedule(cfg: Config, channel_path: str) -> dict:
     """Read and validate the producer-owned online schedule contract."""
     schedule_path = channel_path + _ONLINE_SCHEDULE_SUFFIX
     _wait_for(
@@ -363,7 +363,30 @@ def _read_online_total_steps(cfg: Config, channel_path: str) -> int:
             f"online schedule record {schedule_path} has invalid "
             f"total_steps={total_steps!r}"
         )
-    return total_steps
+    return payload
+
+
+def _read_online_total_steps(cfg: Config, channel_path: str) -> int:
+    """The optimizer horizon of the producer-owned online schedule."""
+    return _read_online_schedule(cfg, channel_path)["total_steps"]
+
+
+def _online_epoch_end_steps(schedule: dict, *, source: str) -> list[int]:
+    """Epoch-end optimizer steps of one validated online schedule record."""
+    from specforge.training.schedule import resolve_online_epoch_end_steps
+
+    num_prompts = schedule.get("num_prompts")
+    if not isinstance(num_prompts, int) or num_prompts < 1:
+        raise ValueError(
+            f"online schedule record {source} has invalid num_prompts={num_prompts!r}"
+        )
+    return resolve_online_epoch_end_steps(
+        num_prompts=num_prompts,
+        prompt_epochs=schedule["prompt_epochs"],
+        dp_size=schedule["dp_size"],
+        batch_size=schedule["batch_size"],
+        accumulation_steps=schedule["accumulation_steps"],
+    )
 
 
 def _optional_timeout_s(name: str) -> Optional[float]:
@@ -560,6 +583,7 @@ def _build_offline(
         max_steps=cfg.training.max_steps,
         total_steps=cfg.training.total_steps,
         save_interval=cfg.training.save_interval,
+        save_at_epoch_end=cfg.training.save_at_epoch_end,
         eval_interval=cfg.training.eval_interval,
         eval_hidden_states_path=cfg.data.eval_hidden_states_path or None,
         logger=logger,
@@ -824,8 +848,20 @@ def _build_online(
     from specforge.launch import build_disagg_online_consumer
 
     total_steps = cfg.training.total_steps
+    save_at_steps: list[int] = []
     if total_steps is None and cfg.training.max_steps is None:
-        total_steps = _read_online_total_steps(cfg, channel_path)
+        schedule = _read_online_schedule(cfg, channel_path)
+        total_steps = schedule["total_steps"]
+        if cfg.training.save_at_epoch_end:
+            save_at_steps = _online_epoch_end_steps(
+                schedule, source=channel_path + _ONLINE_SCHEDULE_SUFFIX
+            )
+    elif cfg.training.save_at_epoch_end:
+        raise ValueError(
+            "training.save_at_epoch_end resolves the epoch ends from the "
+            "producer's online schedule; it cannot be combined with "
+            "training.total_steps or training.max_steps"
+        )
     bundle = build_model_bundle(cfg)
     trainer = build_disagg_online_consumer(
         algorithm=algorithm,
@@ -842,6 +878,7 @@ def _build_online(
         max_steps=cfg.training.max_steps,
         total_steps=total_steps,
         save_interval=cfg.training.save_interval,
+        save_at_steps=save_at_steps or None,
         idle_timeout_s=float(os.environ.get("DISAGG_IDLE_TIMEOUT", "0")) or None,
         metadata_db_path=_consumer_database_path(cfg),
         logger=logger,

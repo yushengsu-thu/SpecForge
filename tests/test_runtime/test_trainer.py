@@ -946,6 +946,66 @@ class TestBestTracking(unittest.TestCase):
             self.assertAlmostEqual(meta["score"], 0.5, places=6)
 
 
+class TestEpochEndCheckpoints(unittest.TestCase):
+    @staticmethod
+    def _saved_steps(output_dir):
+        return sorted(
+            int(name.rsplit("step", 1)[1])
+            for name in os.listdir(output_dir)
+            if name.startswith("r-step")
+        )
+
+    def test_explicit_steps_checkpoint_between_intervals(self):
+        strat = FakeStrategy()
+        core = TrainerCore(strat, FakeBackend(strat.model), accumulation_steps=1)
+        with tempfile.TemporaryDirectory() as d:
+            ctrl = TrainerController(
+                core,
+                run_id="r",
+                output_dir=d,
+                max_steps=5,
+                save_interval=4,
+                save_at_steps=[2, 5],
+            )
+            ctrl.fit([_batch() for _ in range(5)])
+            self.assertEqual(self._saved_steps(d), [2, 4, 5])
+            self.assertEqual(ctrl.last_checkpoint_step, 5)
+
+    def test_epoch_end_checkpoints_describe_the_next_epoch(self):
+        # Three steps per epoch with save_interval=2: steps 2 and 4 are interval
+        # saves, step 3 is epoch 1's end, and step 6 is both at once (one save).
+        strat = RecordingStrategy()
+        core = TrainerCore(strat, FakeBackend(strat.model), accumulation_steps=1)
+        data = [_named_batch(i) for i in range(3)]
+        with tempfile.TemporaryDirectory() as d:
+            ctrl = TrainerController(
+                core,
+                run_id="r",
+                output_dir=d,
+                num_epochs=2,
+                save_interval=2,
+                save_at_epoch_end=True,
+            )
+            self.assertEqual(ctrl.fit(data), 6)
+            self.assertEqual(self._saved_steps(d), [2, 3, 4, 6])
+            self.assertEqual(ctrl.last_checkpoint_step, 6)
+            state = CheckpointManager.read_resume_state(os.path.join(d, "r-step3"))
+            self.assertEqual(state["global_step"], 3)
+            self.assertEqual(state["epoch"], 1)
+            self.assertEqual(state["epoch_batch"], 0)
+            self.assertEqual(state["epoch_samples"], 0)
+
+    def test_epoch_end_checkpoints_are_off_by_default(self):
+        strat = FakeStrategy()
+        core = TrainerCore(strat, FakeBackend(strat.model), accumulation_steps=1)
+        with tempfile.TemporaryDirectory() as d:
+            ctrl = TrainerController(
+                core, run_id="r", output_dir=d, num_epochs=2, save_interval=2
+            )
+            ctrl.fit([_batch() for _ in range(3)])
+            self.assertEqual(self._saved_steps(d), [2, 4, 6])
+
+
 class TestEvalMetricsFlow(unittest.TestCase):
     def test_eval_metrics_reach_logger_and_last_metrics(self):
         strat = FakeStrategy()
