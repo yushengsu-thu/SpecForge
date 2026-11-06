@@ -1,0 +1,113 @@
+# 6-epoch Qwen3-8B DSpark draft with the MoE FFN (16 experts x 768 = the dense FFN's 12288 split 16 ways, top-2, batch-wise
+# load-balance loss 0.005, expert bias 0.001) on one 8x H200 node: 2 SGLang capture servers (GPU 0-1) + 6 DDP trainer ranks
+# (GPU 2-7). jiapingW's recipe (PerfectBlend regen, qwen3-instruct, 8192, lr 6e-4 cosine, warmup 4%, CE 0.1 / L1 0.9) with
+# the FFN swapped for the MoE. Paths are those of the devbox specforge-exp-branch (/scratch/pr1031); the target model and
+# the data are the copies already on that box under /scratch/moe2ep.
+model:
+  target_model_path: "/scratch/moe2ep/models/Qwen3-8B"
+  draft_model_config: "/scratch/pr1031/SpecForge/configs/qwen3-8b-moe16x768-16A2-dspark.json"
+  target_backend: "sglang"
+  trust_remote_code: true
+  embedding_key: "model.embed_tokens.weight"
+  torch_dtype: "bfloat16"
+  # Liger RMSNorm on (the MoE FFN keeps its grouped_mm experts), as in the 8x1536 run.
+  use_liger_kernel: true
+  mask_token_id: 151669
+  sglang_attention_backend: "triton"
+  sglang_mem_fraction_static: 0.85
+  sglang_disable_radix_cache: true
+  sglang_context_length: 8208
+  sglang_max_running_requests: 4
+  sglang_max_total_tokens: 65536
+
+data:
+  train_data_path: "/scratch/moe2ep/data/perfectblend_train_regen_temperature0_no_think.jsonl"
+  max_length: 8192
+  chat_template: "qwen3-instruct"
+  cache_dir: "/scratch/pr1031/cache/qwen3-8b-dspark-perfectblend-8192"
+  build_dataset_num_proc: 64
+  dataloader_num_workers: 8
+
+training:
+  strategy: "dspark"
+  num_epochs: 6
+  total_steps: null
+  max_steps: null
+  tp_size: 1
+  batch_size: 2
+  accumulation_steps: 11
+  fsdp_sharding: "NO_SHARD"
+  optimizer_cpu_offload: false
+  learning_rate: 0.0006
+  lr_scheduler: "cosine"
+  warmup_ratio: 0.04
+  max_grad_norm: 1.0
+  attention_backend: "flex_attention"
+  num_anchors: 512
+  loss_decay_gamma: 7.0
+  objective_chunk_blocks: 128
+  dspark_ce_loss_alpha: 0.1
+  dspark_l1_loss_alpha: 0.9
+  dspark_confidence_head_alpha: 0.0
+  # A checkpoint every 1,000 optimizer steps plus one at every epoch end. The epoch ends come from the producer's schedule
+  # record (num_prompts x 6 epochs in windows of 2 x 11 x 6 = 132 prompts): with the 8x1536 run's 1,420,903 prompts that
+  # is steps 10765 / 21529 / 32294 / 43058 / 53823 / 64586, the last one being the final step.
+  save_interval: 1000
+  save_at_epoch_end: true
+  # No pruning by the trainer: the watcher uploads each checkpoint to the Hub and then deletes it locally.
+  max_checkpoints: 0
+  log_interval: 10
+  dist_timeout: 30
+  seed: 42
+  prompt_seed: 42
+
+tracking:
+  report_to: "wandb"
+  # Entity eigent_radixark_training (WANDB_ENTITY in launch.sh).
+  wandb_project: "Qwen3-8B-5layer-MoE-16E2A-v1"
+  wandb_name: "pr1031-qwen3-8b-moe16x768-16A2-dspark-run1"
+  wandb_dir: "/scratch/pr1031/outputs/pr1031-qwen3-8b-moe16x768-16A2-dspark-run1/wandb"
+
+runtime:
+  producer_lease: 8
+  producer_concurrency: 8
+  in_flight_high_watermark: 528
+  in_flight_low_watermark: 396
+  resident_high_watermark_bytes: 214748364800
+  resident_low_watermark_bytes: 128849018880
+  feature_store_max_resident_bytes: 274877906944
+
+run_id: "pr1031-qwen3-8b-moe16x768-16A2-dspark-run1"
+output_dir: "/scratch/pr1031/outputs/pr1031-qwen3-8b-moe16x768-16A2-dspark-run1"
+
+deployment:
+  mode: disaggregated
+  trainer:
+    nnodes: 1
+    nproc_per_node: 6
+  disaggregated:
+    control_dir: /scratch/pr1031/outputs/pr1031-qwen3-8b-moe16x768-16A2-dspark-run1/control
+    backend: mooncake
+    client_buffer_size: 1073741824
+    managed_local:
+      trainer_cuda_visible_devices:
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+        - "6"
+        - "7"
+      mooncake:
+        protocol: tcp
+        global_segment_size_bytes: 107374182400
+        local_buffer_size_bytes: 1073741824
+        default_kv_lease_ttl_ms: 300000
+      capture_servers:
+        - port: 30000
+          cuda_visible_devices:
+            - "0"
+          tp_size: 1
+        - port: 30001
+          cuda_visible_devices:
+            - "1"
+          tp_size: 1
