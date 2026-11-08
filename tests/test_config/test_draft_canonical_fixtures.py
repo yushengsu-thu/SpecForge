@@ -22,6 +22,8 @@ from tests.test_config.test_draft_peagle_spec import peagle_config
 
 from tests.test_config.test_draft_mtp_spec import mtp_config
 
+from tests.test_config.test_draft_dmtp_spec import dmtp_config
+
 FIXTURES = Path(__file__).parent / "fixtures" / "canonical"
 
 
@@ -46,6 +48,7 @@ def dflash2_config():
 
 
 EXPECTED = {
+    "DMTPDraftModel": dmtp_config,
     "MTPDraftModel": mtp_config,
     "PEagleDraftModel": peagle_config,
     "Eagle3DraftModel": eagle_config,
