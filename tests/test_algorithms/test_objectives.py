@@ -135,7 +135,13 @@ class ObjectiveTest(unittest.TestCase):
             )
         )
         self.assertFalse(blocks.weights[..., 0].any())
-        visible = blocks.layer_inputs[0].attention_layout.visibility[0, 0]
+        from specforge.modeling.draft.layers.attention.masks import dense_attention_mask
+
+        visible = dense_attention_mask(
+            blocks.layer_inputs[0].attention_layout,
+            is_causal=False,
+            sliding_window=None,
+        )[0, 0]
         for index, anchor in enumerate(blocks.anchors[0]):
             self.assertFalse(visible[index * 4, anchor:9].any())
         self.assertFalse(visible[:4, 13:].any())

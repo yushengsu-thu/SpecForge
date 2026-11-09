@@ -10,9 +10,9 @@ from specforge.config.draft.rope import RopeSpec
 
 from ..registry import build_component, register_component_builder
 from ..rope import apply_rotary
-from .backends import eager_attention, sdpa_attention
+from .backends import attention_backend, execute_attention
 from .inputs import validate_attention_inputs
-from .masks import AttentionLayout, dense_attention_mask
+from .masks import AttentionLayout, prepare_attention_mask
 
 
 class GQAAttention(nn.Module):
@@ -38,9 +38,8 @@ class GQAAttention(nn.Module):
         if config.rope_parameters is not None and rope != config.rope_parameters:
             raise ValueError("rope must match the attention RoPE override")
         rotary_dim = rope.rotary_dim(config.head_dim)
-        if backend not in ("eager", "sdpa"):
-            raise ValueError("GQAAttention supports eager and sdpa backends")
-        self.attention = eager_attention if backend == "eager" else sdpa_attention
+        self.attention = attention_backend(backend)
+        self.backend = backend
         self.config = config
         self.rotary_dim = rotary_dim
         self.q_norm = (
@@ -94,20 +93,13 @@ class GQAAttention(nn.Module):
         batch, length = hidden.shape[:2]
         keys = context_length + length
         node = self.config
-        mask = dense_attention_mask(
-            layout, is_causal=node.is_causal, sliding_window=node.sliding_window
+        mask = prepare_attention_mask(
+            layout,
+            is_causal=node.is_causal,
+            sliding_window=node.sliding_window,
+            backend=self.backend,
         )
-        query = self.q_proj(hidden).view(
-            batch,
-            length,
-            node.num_attention_heads,
-            node.head_dim * (2 if node.output_gate else 1),
-        )
-        gate = None
-        if node.output_gate:
-            query, gate = query.chunk(2, dim=-1)
-            gate = gate.reshape(batch, length, node.num_attention_heads * node.head_dim)
-        query = self.q_norm(query).transpose(1, 2)
+        query, gate = self.project_query(hidden)
         key, value = self.k_proj(hidden), self.v_proj(hidden)
         if target_context is not None:
             # Keep separate projections to preserve the existing context path's
@@ -129,7 +121,8 @@ class GQAAttention(nn.Module):
         # FP32 norms/RoPE can promote Q/K under autocast. Preserve their precision
         # through softmax/dropout; the matmuls still follow the autocast policy.
         value = value.to(query.dtype)
-        output = self.attention(
+        output, active_queries = execute_attention(
+            self.attention,
             query,
             key,
             value,
@@ -138,6 +131,29 @@ class GQAAttention(nn.Module):
             dropout_p=node.attention_dropout,
             training=self.training,
         )
+        return self.project_output(output, gate, active_queries)
+
+    def project_query(self, hidden: Tensor):
+        """Project and normalize queries; return the optional output gate."""
+        batch, length = hidden.shape[:2]
+        node = self.config
+        query = self.q_proj(hidden).view(
+            batch,
+            length,
+            node.num_attention_heads,
+            node.head_dim * (2 if node.output_gate else 1),
+        )
+        gate = None
+        if node.output_gate:
+            query, gate = query.chunk(2, dim=-1)
+            gate = gate.reshape(batch, length, node.num_attention_heads * node.head_dim)
+        query = self.q_norm(query).transpose(1, 2)
+        return query, gate
+
+    def project_output(self, output, gate, active_queries):
+        """Apply the shared output gate/projection and suppress inactive rows."""
+        batch, _, length, _ = output.shape
+        node = self.config
         output = output.transpose(1, 2).reshape(
             batch, length, node.num_attention_heads * node.head_dim
         )
@@ -145,7 +161,7 @@ class GQAAttention(nn.Module):
             output = output * gate.sigmoid()
         output = self.o_proj(output)
         # Inactive queries must stay zero even when the output projection has bias.
-        return output.masked_fill(~mask.any(dim=-1).any(dim=1).unsqueeze(-1), 0)
+        return output.masked_fill(~active_queries.unsqueeze(-1), 0)
 
 
 register_component_builder("attention", GQASpec, GQAAttention)

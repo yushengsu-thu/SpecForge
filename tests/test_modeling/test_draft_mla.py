@@ -1,20 +1,19 @@
 """Node-driven MLA matches the existing eager projections and full-QK scaling."""
 
+import copy
 import unittest
 from dataclasses import replace
 from unittest.mock import patch
 
 import torch
-from transformers import Qwen3Config
 
 from specforge.config.draft.attention import MLASpec
 from specforge.config.draft.norm import RMSNormSpec
 from specforge.config.draft.rope import DefaultRoPESpec, NoRoPESpec, YaRNSpec
-from specforge.modeling.draft.dflash import Qwen3DFlashMLAAttention
-from specforge.modeling.draft.dflash_kernels import DEFAULT_DFLASH_KERNELS
 from specforge.modeling.draft.layers import MLAAttention, build_component
 from specforge.modeling.draft.layers.attention.masks import dense_attention_mask
 from specforge.modeling.draft.layers.rope import build_rotary
+from tests.test_modeling.attention_reference import context_mla
 from tests.test_modeling.test_draft_gqa import layout_for
 
 
@@ -88,28 +87,8 @@ class MLATest(unittest.TestCase):
                     rope=rope_kind,
                     autocast=autocast,
                 ):
-                    config = Qwen3Config(
-                        hidden_size=16,
-                        num_attention_heads=node.num_attention_heads,
-                        num_hidden_layers=1,
-                        layer_types=["full_attention"],
-                        q_lora_rank=rank,
-                        kv_lora_rank=node.kv_lora_rank,
-                        qk_nope_head_dim=node.qk_nope_head_dim,
-                        qk_rope_head_dim=node.qk_rope_head_dim,
-                        v_head_dim=node.v_head_dim,
-                        rope_interleave=interleaved,
-                        attention_bias=node.attention_bias,
-                        rms_norm_eps=1e-6,
-                        attention_dropout=node.attention_dropout,
-                        rope_parameters=rope_dict,
-                    )
-                    config._attn_implementation = "eager"
-                    reference = Qwen3DFlashMLAAttention(
-                        config, 0, DEFAULT_DFLASH_KERNELS
-                    ).to(device=device, dtype=dtype)
                     actual = build(node, rope, device=device, dtype=dtype)
-                    actual.load_state_dict(reference.state_dict(), strict=True)
+                    reference = copy.deepcopy(actual)
                     self.assertEqual(actual.scaling, reference.scaling)
                     hidden = torch.randn(
                         2, 4, 16, device=device, dtype=dtype, requires_grad=True
@@ -156,9 +135,9 @@ class MLATest(unittest.TestCase):
                     )
                     torch.manual_seed(79)
                     with torch.autocast(device, dtype=torch.bfloat16, enabled=autocast):
-                        expected = reference(
-                            other, other_context, reference_embeddings, mask
-                        )[0]
+                        expected = context_mla(
+                            reference, other, other_context, reference_embeddings, mask
+                        )
                     torch.manual_seed(79)
                     with torch.autocast(device, dtype=torch.bfloat16, enabled=autocast):
                         output = actual(
@@ -227,16 +206,18 @@ class MLATest(unittest.TestCase):
             all(parameter.grad is not None for parameter in module.parameters())
         )
         # Rotation changes only the declared prefix of the MLA rotary subspace.
-        from specforge.modeling.draft.layers.attention.mla import eager_attention
+        from specforge.modeling.draft.layers.attention.backends import eager_attention
 
         disabled = build(node, NoRoPESpec())
         disabled.load_state_dict(module.state_dict(), strict=True)
-        with patch(
-            "specforge.modeling.draft.layers.attention.mla.eager_attention",
+        with patch.object(
+            module,
+            "attention",
             wraps=eager_attention,
         ) as backend:
             module(hidden, layout=layout, position_embeddings=embeddings)
             rotated_q, rotated_k = backend.call_args.args[:2]
+        with patch.object(disabled, "attention", wraps=eager_attention) as backend:
             disabled(hidden, layout=layout, position_embeddings=None)
             plain_q, plain_k = backend.call_args.args[:2]
         for rotated, plain in ((rotated_q, plain_q), (rotated_k, plain_k)):
@@ -249,7 +230,7 @@ class MLATest(unittest.TestCase):
             for changes in (
                 {"input_size": 0},
                 {"hidden_size": True},
-                {"backend": "sdpa"},
+                {"backend": "unknown"},
                 {"rope": {}},
                 {"norm": {}},
             ):

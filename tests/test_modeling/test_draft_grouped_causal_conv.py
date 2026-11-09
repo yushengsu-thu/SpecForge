@@ -1,6 +1,7 @@
 """Block-local convolution preserves eager DFlash2 numerics and HF loading."""
 
 import copy
+import os
 import unittest
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -9,9 +10,9 @@ import torch
 from torch.utils.checkpoint import checkpoint
 
 from specforge.config.draft.conv import GroupedCausalConvSpec
-from specforge.modeling.draft.dflash2 import DFlashGroupedConv
 from specforge.modeling.draft.layers import GroupedCausalConv, build_component
 from specforge.modeling.draft.pretrained import DraftPreTrainedModel
+from tests.test_modeling.attention_reference import convolution_pair
 from tests.test_modeling.test_draft_pretrained import model_config
 
 
@@ -48,9 +49,7 @@ class GroupedCausalConvTest(unittest.TestCase):
                     actual = GroupedCausalConv(
                         node, hidden_size=16, block_size=4, device=device, dtype=dtype
                     )
-                    expected = DFlashGroupedConv(16, 4, taps, group).to(
-                        device=device, dtype=dtype
-                    )
+                    expected = copy.deepcopy(actual)
                     with torch.no_grad():
                         for parameter in expected.parameters():
                             parameter.normal_(std=0.1)
@@ -59,13 +58,13 @@ class GroupedCausalConvTest(unittest.TestCase):
                     left = torch.randn(2, 16, 8, device=device, dtype=dtype)
                     left = left.transpose(1, 2).requires_grad_()
                     right = left.detach().clone().requires_grad_()
-                    with patch.object(
-                        expected, "_fused_convolution", return_value=None
+                    with (
+                        patch.dict(os.environ, {"SPECFORGE_DFLASH2_FUSED_CONV": "0"}),
                     ):
                         with torch.autocast(
                             device, dtype=torch.bfloat16, enabled=autocast
                         ):
-                            reference = run_pair(expected, left)
+                            reference = convolution_pair(expected, left)
                             output = run_pair(actual, right)
                     torch.testing.assert_close(output, reference, rtol=0, atol=0)
                     upstream = torch.randn_like(output)

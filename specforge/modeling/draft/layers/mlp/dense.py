@@ -1,4 +1,4 @@
-"""Unfused gated dense FFN, constructed from its node and input width."""
+"""Gated dense FFN with an optional fused activation and unchanged parameters."""
 
 from torch import Tensor, nn
 from transformers.activations import ACT2FN
@@ -29,6 +29,7 @@ class DenseFFN(nn.Module):
                 f"supported: {sorted(SUPPORTED_ACTIVATIONS)}"
             )
         self.config = config
+        self.use_liger_kernel = False
         self.act_fn = ACT2FN[config.hidden_act]
         self.gate_proj = nn.Linear(
             hidden_size,
@@ -53,6 +54,12 @@ class DenseFFN(nn.Module):
         )
 
     def forward(self, hidden: Tensor) -> Tensor:
+        if self.use_liger_kernel:
+            from liger_kernel.ops.swiglu import LigerSiLUMulFunction
+
+            return self.down_proj(
+                LigerSiLUMulFunction.apply(self.gate_proj(hidden), self.up_proj(hidden))
+            )
         return self.down_proj(
             self.act_fn(self.gate_proj(hidden)) * self.up_proj(hidden)
         )

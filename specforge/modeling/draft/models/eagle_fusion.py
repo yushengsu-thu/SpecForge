@@ -103,11 +103,19 @@ class EagleDecoderStage(nn.Module):
         self.hidden_norm = build_component("norm", norm, **options)
         self.post_attention_layernorm = build_component("norm", norm, **options)
 
-    def forward(self, hidden: Tensor, inputs: LayerInputs) -> Tensor:
+    def forward(
+        self, hidden: Tensor, inputs: LayerInputs | None = None, *, cached_step=None
+    ):
         if hidden.ndim != 3 or hidden.shape[-1] != 2 * self.hidden_size:
             raise ValueError(
                 "EAGLE first stage requires [batch, sequence, 2 * hidden_size]"
             )
+        if cached_step is not None:
+            from .eagle_rollout import EagleCachedStep
+
+            if not isinstance(cached_step, EagleCachedStep) or inputs is not None:
+                raise TypeError("cached execution requires only EagleCachedStep inputs")
+            return cached_step.forward(self, hidden)
         if not isinstance(inputs, LayerInputs):
             raise TypeError("EAGLE first stage requires LayerInputs")
         if inputs.attention_layout is None or inputs.attention_mask is not None:

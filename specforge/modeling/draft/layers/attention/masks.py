@@ -1,5 +1,6 @@
-"""Dense visibility supplied by models, narrowed by attention-node semantics."""
+"""Explicit visibility narrowed by attention-node semantics for each backend."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import torch
@@ -16,13 +17,14 @@ class AttentionLayout:
     explicit even for bidirectional attention. Its batch/head axes may broadcast.
     Logical positions determine causality/window distance, independently of RoPE
     coordinates (which may have multiple axes). Do not mutate these tensors while
-    their autograd graph is live. Visibility currently uses a boolean tensor;
-    backend mask conversion is separate from the layout.
+    their autograd graph is live. Visibility is a boolean tensor or a head-independent
+    callable (batch, head, query_index, key_index) -> bool. Flex keeps callable
+    visibility sparse; dense backends materialize it on demand.
     """
 
     query_positions: Tensor
     key_positions: Tensor
-    visibility: Tensor
+    visibility: Tensor | Callable
 
     def __post_init__(self):
         q, k, allowed = self.query_positions, self.key_positions, self.visibility
@@ -32,6 +34,8 @@ class AttentionLayout:
             raise ValueError("logical positions must be rank-two integer tensors")
         if q.shape[0] != k.shape[0] or q.device != k.device:
             raise ValueError("query/key positions must share a batch size and device")
+        if callable(allowed):
+            return
         if (
             allowed.ndim != 4
             or allowed.dtype != torch.bool
@@ -59,7 +63,13 @@ def dense_attention_mask(
     boolean("is_causal", is_causal)
     if sliding_window is not None:
         positive_int("sliding_window", sliding_window)
+    q, k = layout.query_positions, layout.key_positions
     allowed = layout.visibility
+    if callable(allowed):
+        batch = torch.arange(q.shape[0], device=q.device)[:, None, None, None]
+        queries = torch.arange(q.shape[1], device=q.device)[None, None, :, None]
+        keys = torch.arange(k.shape[1], device=k.device)[None, None, None, :]
+        allowed = allowed(batch, torch.zeros_like(batch), queries, keys)
     q = layout.query_positions.unsqueeze(-1)
     k = layout.key_positions.unsqueeze(-2)
     if is_causal:
@@ -68,3 +78,54 @@ def dense_attention_mask(
     if sliding_window is not None:
         allowed = allowed & ((q - k).abs() < sliding_window).unsqueeze(1)
     return allowed
+
+
+def prepare_attention_mask(layout, *, is_causal, sliding_window, backend):
+    """Keep visibility symbolic for FlexAttention; materialize only for dense kernels."""
+    if backend != "flex_attention":
+        return dense_attention_mask(
+            layout, is_causal=is_causal, sliding_window=sliding_window
+        )
+    if not isinstance(layout, AttentionLayout):
+        raise TypeError("attention requires AttentionLayout")
+    boolean("is_causal", is_causal)
+    if sliding_window is not None:
+        positive_int("sliding_window", sliding_window)
+    from torch.nn.attention.flex_attention import create_block_mask
+
+    from specforge.modeling.draft.layers.attention.backends.policy import (
+        flex_attention_backend,
+    )
+
+    q, k = layout.query_positions, layout.key_positions
+    visibility = layout.visibility
+
+    def allowed(b, h, qi, ki):
+        within = (qi < q.shape[1]) & (ki < k.shape[1])
+        qi, ki = qi.clamp(max=q.shape[1] - 1), ki.clamp(max=k.shape[1] - 1)
+        if callable(visibility):
+            result = visibility(b, h, qi, ki)
+        else:
+            result = visibility[
+                b % visibility.shape[0], h % visibility.shape[1], qi, ki
+            ]
+        qp, kp = q[b % q.shape[0], qi], k[b % k.shape[0], ki]
+        if is_causal:
+            result = result & (qp >= kp)
+        if sliding_window is not None:
+            result = result & ((qp - kp).abs() < sliding_window)
+        return within & result
+
+    return create_block_mask(
+        allowed,
+        B=q.shape[0],
+        H=(
+            None
+            if callable(visibility) or visibility.shape[1] == 1
+            else visibility.shape[1]
+        ),
+        Q_LEN=q.shape[1],
+        KV_LEN=k.shape[1],
+        device=q.device,
+        BLOCK_SIZE=(256, 128) if flex_attention_backend() == "FLASH" else 128,
+    )

@@ -9,7 +9,7 @@ from transformers.modeling_rope_utils import _compute_dynamic_ntk_parameters
 from specforge.config.draft.codec.components import encode_component
 from specforge.config.draft.rope import DefaultRoPESpec, DynamicNTKRoPESpec, NoRoPESpec
 from specforge.modeling.draft.layers.rope import DynamicNTKRotaryEmbedding, build_rotary
-from specforge.modeling.draft.llama3_eagle import LlamaDynamicNTKScalingRotaryEmbedding
+from tests.test_modeling.rotary_reference import LlamaDynamicNTKScalingRotaryEmbedding
 
 
 def dynamic_node(partial=1.0):

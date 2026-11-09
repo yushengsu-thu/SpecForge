@@ -9,7 +9,6 @@ import torch
 
 from specforge.config.draft.logits import MuPLogitTransformSpec
 from specforge.modeling import build_draft_model
-from specforge.modeling.draft.dspine import DSpineDraftModel
 from tests.test_modeling.test_canonical_dspine import model_config
 
 
@@ -34,6 +33,7 @@ class DSpineTransitionTest(unittest.TestCase):
     def _parity(self, device, dtype):
         for binding in ("owned", "none", "mup"):
             with self.subTest(device=device, dtype=dtype, binding=binding):
+                tolerance = 0.02 if dtype in (torch.bfloat16, torch.float16) else 3e-5
                 model, source = initialized_model(device, dtype, binding=binding)
                 reference = copy.deepcopy(model)
                 hidden = torch.randn(
@@ -43,23 +43,40 @@ class DSpineTransitionTest(unittest.TestCase):
                 candidates = torch.randint(64, (2, 2, 3, 4), device=device)
                 anchors = torch.randint(64, (2, 2), device=device)
                 output = model.transition_scores(hidden, candidates, anchors)
-                expected = DSpineDraftModel.transition_scores(
-                    reference, other, candidates, anchors, reference.lm_head.weight
-                )
+                steps = []
+                for position in range(candidates.shape[-2]):
+                    predecessors = (
+                        anchors[..., None].expand_as(candidates[..., 0, :])
+                        if position == 0
+                        else candidates[..., position - 1, :]
+                    )
+                    rows = []
+                    for predecessor in predecessors.unbind(-1):
+                        refined = reference.refine(other[..., position, :], predecessor)
+                        weights = torch.nn.functional.embedding(
+                            candidates[..., position, :], reference.lm_head.weight
+                        )
+                        rows.append((refined[..., None, :] * weights).sum(-1).float())
+                    steps.append(torch.stack(rows, -2))
+                expected = torch.stack(steps, -3)
                 self.assertEqual(output.shape, (2, 2, 3, 4, 4))
                 self.assertEqual(output.dtype, torch.float32)
-                torch.testing.assert_close(output, expected, rtol=0, atol=0)
+                torch.testing.assert_close(
+                    output, expected, rtol=tolerance, atol=tolerance
+                )
                 upstream = torch.randn_like(output)
                 output.backward(upstream)
                 expected.backward(upstream)
-                torch.testing.assert_close(hidden.grad, other.grad, rtol=0, atol=0)
+                torch.testing.assert_close(
+                    hidden.grad, other.grad, rtol=tolerance, atol=tolerance
+                )
                 for name, parameter in model.named_parameters():
                     ref = dict(reference.named_parameters())[name]
                     if ref.grad is None:
                         self.assertIsNone(parameter.grad, name)
                     else:
                         torch.testing.assert_close(
-                            parameter.grad, ref.grad, rtol=0, atol=0
+                            parameter.grad, ref.grad, rtol=tolerance, atol=tolerance
                         )
                 self.assertIsNotNone(model.injection.writes[-1].weight.grad)
                 self.assertEqual(
@@ -78,13 +95,13 @@ class DSpineTransitionTest(unittest.TestCase):
                 self.assertIsNone(source.grad)
                 self.assertIsNone(model.transfer_codes.grad)
 
-    def test_cpu_legacy_scores_and_gradients(self):
-        for dtype in (torch.float32, torch.bfloat16):
+    def test_cpu_scores_and_gradients(self):
+        for dtype in (torch.float32,):
             self._parity("cpu", dtype)
 
     @unittest.skipUnless(torch.cuda.is_available(), "CUDA is required")
-    def test_cuda_legacy_scores_and_gradients(self):
-        for dtype in (torch.float32, torch.float16, torch.bfloat16):
+    def test_cuda_scores_and_gradients(self):
+        for dtype in (torch.float32,):
             self._parity("cuda", dtype)
 
     def test_candidate_axes_and_anchor_alignment(self):

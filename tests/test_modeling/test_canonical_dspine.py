@@ -6,18 +6,14 @@ from dataclasses import replace
 from tempfile import TemporaryDirectory
 
 import torch
-from transformers.models.qwen3.modeling_qwen3 import Qwen3RotaryEmbedding
 
 from specforge.config.draft.architecture.block import AnchoredBlockSpec
 from specforge.modeling import build_draft_model
-from specforge.modeling.draft.dflash_mask import create_dflash_sdpa_mask
-from specforge.modeling.draft.dspine import DSpineDraftModel as LegacyDSpineDraftModel
 from specforge.modeling.draft.layers.attention.masks import AttentionLayout
 from specforge.modeling.draft.layers.inputs import LayerInputs
 from specforge.modeling.draft.models import DSpineDraftModel
 from tests.test_config.test_draft_dspine_spec import dspine_config
-from tests.test_modeling.legacy_fixtures import legacy_dflash_config
-from tests.test_modeling.test_canonical_dflash import legacy_name
+from tests.test_modeling.test_draft_attention_masks import create_dflash_sdpa_mask
 
 
 def model_config(*, bound=False):
@@ -74,101 +70,6 @@ def model_inputs(config, device="cpu", dtype=torch.float32):
 
 
 class CanonicalDSpineTest(unittest.TestCase):
-    def _parity(self, device, dtype):
-        for cutoff in (0, 1, 2):
-            with self.subTest(device=device, dtype=dtype, cutoff=cutoff):
-                actual = initialized_model(device, dtype)
-                config = actual.config.draft
-                legacy = legacy_dflash_config(
-                    block_size=4,
-                    dflash_config={"target_layer_ids": [1, 3], "mask_token_id": 63},
-                    dspine_config={
-                        "transfer_rank": 8,
-                        "message_size": 4,
-                        "replacement_layers": cutoff,
-                    },
-                )
-                reference = LegacyDSpineDraftModel(legacy).to(
-                    device=device, dtype=dtype
-                )
-                reference.rotary_emb = Qwen3RotaryEmbedding(legacy, device=device)
-                reference.load_state_dict(
-                    {
-                        legacy_name(n) or n: v
-                        for n, v in actual.state_dict().items()
-                        if n not in ("embed_tokens.weight", "lm_head.weight")
-                    },
-                    strict=True,
-                )
-                embedding, head = copy.deepcopy(actual.embed_tokens), copy.deepcopy(
-                    actual.lm_head
-                )
-                (ids, features, entries), tokens, mask = model_inputs(
-                    config, device, dtype
-                )
-                other = features.detach().clone().requires_grad_()
-                output = actual(
-                    ids,
-                    features,
-                    entries,
-                    block_token_ids=tokens,
-                    replace_masks=[mask if i < cutoff else None for i in range(2)],
-                )
-                expected = reference(
-                    entries[0].position_ids,
-                    attention_mask=entries[0].attention_layout.visibility,
-                    noise_embedding=embedding(ids),
-                    target_hidden=other,
-                    block_token_ids=tokens,
-                    replace_mask=mask,
-                )
-                expected_logits = head(expected.hidden_states)
-                refined = actual.refine(
-                    output.pre_injection[..., 1:, :], tokens[..., :-1]
-                )
-                expected_refined = reference.refine(
-                    expected.pre_injection[..., 1:, :], tokens[..., :-1]
-                )
-                values = (
-                    output.hidden_states,
-                    output.pre_injection,
-                    output.layer_features,
-                    output.logits,
-                    refined,
-                )
-                references = (*expected, expected_logits, expected_refined)
-                gradients = [torch.randn_like(value) for value in values]
-                torch.testing.assert_close(values, references, rtol=0, atol=0)
-                sum(
-                    value.mul(grad).sum() for value, grad in zip(values, gradients)
-                ).backward()
-                sum(
-                    value.mul(grad).sum() for value, grad in zip(references, gradients)
-                ).backward()
-                torch.testing.assert_close(features.grad, other.grad, rtol=0, atol=0)
-                for name, parameter in actual.named_parameters():
-                    ref = (
-                        embedding.weight
-                        if name == "embed_tokens.weight"
-                        else (
-                            head.weight
-                            if name == "lm_head.weight"
-                            else dict(reference.named_parameters())[
-                                legacy_name(name) or name
-                            ]
-                        )
-                    )
-                    self.assertIsNotNone(parameter.grad, name)
-                    torch.testing.assert_close(parameter.grad, ref.grad, rtol=0, atol=0)
-
-    def test_cpu_legacy_composition(self):
-        for dtype in (torch.float32, torch.bfloat16):
-            self._parity("cpu", dtype)
-
-    @unittest.skipUnless(torch.cuda.is_available(), "CUDA is required")
-    def test_cuda_legacy_composition(self):
-        for dtype in (torch.float32, torch.float16, torch.bfloat16):
-            self._parity("cuda", dtype)
 
     def test_explicit_late_replacement_and_block_isolation(self):
         model = initialized_model()

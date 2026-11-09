@@ -10,9 +10,9 @@ from specforge.config.draft.rope import RopeSpec, YaRNSpec
 
 from ..registry import build_component, register_component_builder
 from ..rope import apply_rotary
-from .backends import eager_attention
+from .backends import attention_backend, execute_attention
 from .inputs import validate_attention_inputs
-from .masks import AttentionLayout, dense_attention_mask
+from .masks import AttentionLayout, prepare_attention_mask
 
 
 class MLAAttention(nn.Module):
@@ -45,8 +45,8 @@ class MLAAttention(nn.Module):
         if config.rope_parameters is not None and rope != config.rope_parameters:
             raise ValueError("rope must match the attention RoPE override")
         rotary_dim = rope.rotary_dim(config.qk_rope_head_dim)
-        if backend != "eager":
-            raise ValueError("MLAAttention currently supports only the eager backend")
+        self.attention = attention_backend(backend)
+        self.backend = backend
         self.config = config
         self.rotary_dim = rotary_dim
         self.scaling = config.qk_head_dim**-0.5
@@ -161,10 +161,14 @@ class MLAAttention(nn.Module):
             ),
             dim=-1,
         )
-        mask = dense_attention_mask(
-            layout, is_causal=node.is_causal, sliding_window=node.sliding_window
+        mask = prepare_attention_mask(
+            layout,
+            is_causal=node.is_causal,
+            sliding_window=node.sliding_window,
+            backend=self.backend,
         )
-        output = eager_attention(
+        output, active_queries = execute_attention(
+            self.attention,
             query,
             key,
             value.transpose(1, 2).to(query.dtype),
@@ -178,7 +182,7 @@ class MLAAttention(nn.Module):
                 batch, length, node.num_attention_heads * node.v_head_dim
             )
         )
-        return output.masked_fill(~mask.any(dim=-1).any(dim=1).unsqueeze(-1), 0)
+        return output.masked_fill(~active_queries.unsqueeze(-1), 0)
 
 
 register_component_builder("attention", MLASpec, MLAAttention)

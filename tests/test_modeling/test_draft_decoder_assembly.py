@@ -190,7 +190,7 @@ class DecoderAssemblyTest(unittest.TestCase):
             for config in (eagle_config(), peagle_config()):
                 with self.assertRaisesRegex(ValueError, "input fusion"):
                     build_decoder_backbone(config, backend="eager")
-            with self.assertRaisesRegex(ValueError, "eager"):
+            with self.assertRaisesRegex(ValueError, "unsupported attention backend"):
                 build_decoder_backbone(draft_config(), backend="flex")
             with self.assertRaisesRegex(TypeError, "DraftConfig"):
                 build_decoder_backbone({}, backend="eager")

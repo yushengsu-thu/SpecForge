@@ -49,7 +49,10 @@ def validate_attention_inputs(
         or layout.query_positions.shape[1] != length
         or layout.key_positions.shape[1] != keys
         or layout.query_positions.device != hidden.device
-        or layout.visibility.shape[1] not in (1, num_heads)
+        or (
+            not callable(layout.visibility)
+            and layout.visibility.shape[1] not in (1, num_heads)
+        )
     ):
         raise ValueError(
             "layout must describe the query and context-then-query KV tensors"
