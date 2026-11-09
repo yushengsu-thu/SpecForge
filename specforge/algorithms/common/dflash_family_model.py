@@ -667,6 +667,7 @@ class OnlineDFlashModel(nn.Module):
     def on_optimizer_step(self) -> Dict[str, torch.Tensor]:
         """The trainer's per-step hook: move the draft's MoE balancing state once."""
         return step_moe_balancing(self.draft_model)
+
     @staticmethod
     def _selector_token_terms(
         candidate_selector: nn.Module,
