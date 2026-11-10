@@ -11,14 +11,13 @@ from specforge.config.draft.conv import GroupedCausalConvSpec
 from specforge.config.draft.layer import LayerSpec
 from specforge.config.draft.registry import _SPECS
 from tests.test_config.draft_fixtures import draft_config
+from tests.test_config.test_draft_dmtp_spec import dmtp_config
 from tests.test_config.test_draft_domino_spec import domino_spec
 from tests.test_config.test_draft_dspark_spec import dspark_spec
 from tests.test_config.test_draft_dspine_spec import dspine_config
 from tests.test_config.test_draft_eagle3_spec import eagle_config
 from tests.test_config.test_draft_mtp_spec import mtp_config
 from tests.test_config.test_draft_peagle_spec import peagle_config
-
-from tests.test_config.test_draft_dmtp_spec import dmtp_config
 
 FIXTURES = Path(__file__).parent / "fixtures" / "canonical"
 
