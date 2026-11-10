@@ -1,0 +1,24 @@
+{
+ "M": 448,
+ "up": {
+  "BLOCK_SIZE_M": 128,
+  "BLOCK_SIZE_N": 256,
+  "BLOCK_SIZE_K": 64,
+  "GROUP_SIZE_M": 16,
+  "num_warps": 8,
+  "num_stages": 4,
+  "USE_TMA": true
+ },
+ "down": {
+  "BLOCK_SIZE_M": 128,
+  "BLOCK_SIZE_N": 128,
+  "BLOCK_SIZE_K": 64,
+  "GROUP_SIZE_M": 32,
+  "num_warps": 4,
+  "num_stages": 5,
+  "USE_TMA": true
+ },
+ "t_up_us": 155.65887808799744,
+ "t_down_us": 73.48959922790527,
+ "tune_seconds": 887.3543527126312
+}
