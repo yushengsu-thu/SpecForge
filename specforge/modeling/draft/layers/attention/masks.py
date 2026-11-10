@@ -32,21 +32,24 @@ class AttentionLayout:
             p.ndim != 2 or p.dtype not in (torch.int32, torch.int64) for p in (q, k)
         ):
             raise ValueError("logical positions must be rank-two integer tensors")
-        if q.shape[0] != k.shape[0] or q.device != k.device:
-            raise ValueError("query/key positions must share a batch size and device")
+        if q.device != k.device:
+            raise ValueError("query/key positions must share a device")
         if callable(allowed):
-            return
-        if (
-            allowed.ndim != 4
-            or allowed.dtype != torch.bool
-            or allowed.device != q.device
-            or allowed.shape[0] not in (1, q.shape[0])
-            or allowed.shape[1] < 1
-            or allowed.shape[2:] != (q.shape[1], k.shape[1])
-        ):
-            raise ValueError(
-                "visibility must be boolean [batch, heads, Q, K] on the positions device"
-            )
+            batches = {q.shape[0], k.shape[0]} - {1}
+        else:
+            if (
+                allowed.ndim != 4
+                or allowed.dtype != torch.bool
+                or allowed.device != q.device
+                or allowed.shape[1] < 1
+                or allowed.shape[2:] != (q.shape[1], k.shape[1])
+            ):
+                raise ValueError(
+                    "visibility must be boolean [batch, heads, Q, K] on the positions device"
+                )
+            batches = {q.shape[0], k.shape[0], allowed.shape[0]} - {1}
+        if len(batches) > 1:
+            raise ValueError("positions and visibility must have broadcastable batches")
 
 
 def dense_attention_mask(
@@ -66,7 +69,9 @@ def dense_attention_mask(
     q, k = layout.query_positions, layout.key_positions
     allowed = layout.visibility
     if callable(allowed):
-        batch = torch.arange(q.shape[0], device=q.device)[:, None, None, None]
+        batch = torch.arange(max(q.shape[0], k.shape[0]), device=q.device)[
+            :, None, None, None
+        ]
         queries = torch.arange(q.shape[1], device=q.device)[None, None, :, None]
         keys = torch.arange(k.shape[1], device=k.device)[None, None, None, :]
         allowed = allowed(batch, torch.zeros_like(batch), queries, keys)
@@ -118,7 +123,11 @@ def prepare_attention_mask(layout, *, is_causal, sliding_window, backend):
 
     return create_block_mask(
         allowed,
-        B=q.shape[0],
+        B=max(
+            q.shape[0],
+            k.shape[0],
+            1 if callable(visibility) else visibility.shape[0],
+        ),
         H=(
             None
             if callable(visibility) or visibility.shape[1] == 1

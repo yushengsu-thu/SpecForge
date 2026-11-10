@@ -45,7 +45,14 @@ def validate_attention_inputs(
     if not isinstance(layout, AttentionLayout):
         raise TypeError("attention requires AttentionLayout")
     if (
-        layout.query_positions.shape[0] not in (1, batch)
+        any(
+            value.shape[0] not in (1, batch)
+            for value in (layout.query_positions, layout.key_positions)
+        )
+        or (
+            not callable(layout.visibility)
+            and layout.visibility.shape[0] not in (1, batch)
+        )
         or layout.query_positions.shape[1] != length
         or layout.key_positions.shape[1] != keys
         or layout.query_positions.device != hidden.device
@@ -66,10 +73,11 @@ def validate_attention_inputs(
                 or value.shape[0] not in (1, batch)
                 or value.shape[1:] != (keys, rotary_dim)
                 or value.device != hidden.device
+                or value.dtype != hidden.dtype
                 or not value.is_floating_point()
             ):
                 raise ValueError(
-                    "RoPE tensors must describe all context-then-query positions"
+                    "RoPE tensors must describe all context-then-query positions and match hidden dtype"
                 )
     elif position_embeddings is not None:
         raise ValueError("disabled RoPE requires position_embeddings=None")

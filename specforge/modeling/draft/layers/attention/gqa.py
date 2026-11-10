@@ -79,7 +79,8 @@ class GQAAttention(nn.Module):
         Context is already fused to input_size by the owning architecture. The
         layout's query positions describe hidden; key positions describe context
         followed by hidden. No cache, algorithm settings, or family config enters
-        this component. rotary_dim=0 requires position_embeddings=None.
+        this component. rotary_dim=0 requires position_embeddings=None. Supplied
+        cosine/sine tables must have the hidden input's dtype, including under autocast.
         """
         context_length = validate_attention_inputs(
             hidden,
