@@ -58,4 +58,5 @@ spec_config:
     hidden_size: 4096
   norm_before_residual: false
   pad_token_id: null
+  mask_token_id: null
 target_bindings: []

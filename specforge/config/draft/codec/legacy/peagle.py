@@ -51,7 +51,7 @@ def decode_peagle(
     payload,
     *,
     target_config,
-    mask_token_id,
+    mask_token_id=None,
     capture_layers=None,
     norm_before_residual=None,
 ):

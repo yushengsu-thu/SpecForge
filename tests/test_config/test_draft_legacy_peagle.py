@@ -31,7 +31,7 @@ class LegacyPEagleTest(unittest.TestCase):
         payload = peagle_payload()
         payload.pop("norm_before_residual", None)
         target = target_for_peagle(payload)
-        for mask in (None, -1, True, payload["vocab_size"]):
+        for mask in (-1, True, payload["vocab_size"]):
             with (
                 self.subTest(mask=mask),
                 self.assertRaisesRegex(ValueError, "mask_token_id"),
@@ -41,6 +41,8 @@ class LegacyPEagleTest(unittest.TestCase):
             payload, target_config=target, mask_token_id=42, norm_before_residual=True
         )
         self.assertEqual(node.spec_config.mask_token_id, 42)
+        unrecorded = decode_legacy_config(payload, target_config=target)
+        self.assertIsNone(unrecorded.spec_config.mask_token_id)
         self.assertTrue(node.spec_config.norm_before_residual)
         self.assertEqual(decode_config(encode_config(node)), node)
         with self.assertRaisesRegex(ValueError, "conflicting.*norm_before_residual"):
