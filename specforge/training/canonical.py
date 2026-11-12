@@ -1,5 +1,6 @@
 """Compose canonical models/objectives with existing data and trainer ports."""
 
+import json
 import logging
 from dataclasses import asdict, replace
 from functools import partial
@@ -85,9 +86,14 @@ def resolve_config(cfg, *, target_config=None):
 
     draft = cfg.draft
     if isinstance(draft, str):
-        import yaml
+        path = Path(draft)
+        if path.suffix == ".json":
+            # YAML 1.1 reads JSON's 1e-06 as a string; JSON files are parsed as JSON.
+            draft = json.loads(path.read_text())
+        else:
+            import yaml
 
-        draft = yaml.safe_load(Path(draft).read_text())
+            draft = yaml.safe_load(path.read_text())
     supplied = (
         parse_draft(draft, target_config=target_config) if draft is not None else None
     )
