@@ -50,6 +50,10 @@ data:
 training:
   strategy: dspark
   num_epochs: 5
+  # 5 prompt epochs x 1,420,903 prompts at 16 x 2 x 4 = 128 per step (resolve_online_total_steps). Set explicitly for
+  # multi-node consumers: a remote trainer node cannot see the producer-owned schedule file in node 0's control_dir and
+  # would wait for it forever while node 0 waits in the first collective.
+  total_steps: 55504
   tp_size: 1
   # 16 ranks x 2 x 4 = 128 samples per optimizer step (jiapingW: 32 ranks x 2 x 2 = 128).
   batch_size: 2
