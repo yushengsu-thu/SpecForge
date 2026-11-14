@@ -11,7 +11,7 @@
 # non-thinking mode (yaro1214/open_data, perfectblend_train_regen_temperature0_no_think.jsonl), qwen3-instruct
 # template, no system prompt, 8,192-token context; AdamW lr 6e-4 cosine with a 4% warm-up, grad clip 1.0;
 # DSpark CE 0.1 / L1 0.9, no confidence head, 512 anchors, decay gamma 7, flex attention; BF16 target.
-# Everything below is identical to the 8E4A recipe (5 epochs, 6 ranks x 2 x 11 = 132 samples per optimizer
+# Everything below is identical to the 8E4A recipe except model.use_liger_kernel (a speed-only kernel choice) (5 epochs, 6 ranks x 2 x 11 = 132 samples per optimizer
 # step, 10,764 steps per epoch, one checkpoint per epoch, SHARD_GRAD_OP) so that the dense FFN-49152 draft is
 # directly comparable with the 8E4A MoE draft (yushengsu/Qwen3-8B-5layer-MoE-8E4A-v1), the dense FFN-24576 draft
 # (yushengsu/Qwen3-8B-5layer-Dense-FFN24576, the 8E2A active width) and the 5-layer dense FFN-12288 draft
@@ -23,6 +23,8 @@ model:
   trust_remote_code: true
   embedding_key: model.embed_tokens.weight
   torch_dtype: bfloat16
+  # Liger fused RMSNorm + SwiGLU for the draft (sgl-project/SpecForge#963; the native kernels are used where #963 is absent).
+  use_liger_kernel: true
   mask_token_id: 151669
   sglang_attention_backend: triton
   sglang_mem_fraction_static: 0.85
