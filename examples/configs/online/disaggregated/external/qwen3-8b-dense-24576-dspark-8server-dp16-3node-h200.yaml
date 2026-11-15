@@ -3,8 +3,8 @@
 # dense SwiGLU FFN whose intermediate size equals the two active experts (2 x 12288 = 24576), i.e. the same active
 # FFN FLOPs per token as 8E2A with 1/4 of its FFN parameters (0.30 B instead of 1.21 B per layer; ~1.8 B total).
 # Trained with the jiapingW/Qwen3-8b-dspark-SpecForge protocol on THREE 8x H200 nodes in the external-services layout:
-# six TP=1 patched-SGLang capture servers on GPUs 0-5 of the capture node (started by hand with the managed-local
-# server command line, --host 0.0.0.0, MOONCAKE_LOCAL_HOSTNAME = that node's address) publishing over Mooncake tcp
+# eight TP=1 patched-SGLang capture servers on all GPUs of the capture node (started by hand with the managed-local
+# server command line plus --disable-cuda-graph, --host 0.0.0.0, MOONCAKE_LOCAL_HOSTNAME = that node's address) publishing over Mooncake tcp
 # (~50 MB of features per sample, ~12 Gbps into each trainer node at 63 samples/s) to the Mooncake master on trainer
 # node 0, and a SIXTEEN-rank DDP trainer over all 8 GPUs of two trainer nodes (`--role consumer --node-rank 0|1`, static
 # torchrun rendezvous on trainer-node-0:28711 over InfiniBand; the producer runs on trainer node 0 and remote ranks pull
@@ -99,8 +99,8 @@ runtime:
   resident_low_watermark_bytes: 128849018880
   feature_store_max_resident_bytes: 274877906944
 
-run_id: qwen3-8b-dense-24576-dspark-6server-dp16-3node-h200
-output_dir: outputs/qwen3-8b-dense-24576-dspark-6server-dp16-3node-h200
+run_id: qwen3-8b-dense-24576-dspark-8server-dp16-3node-h200
+output_dir: outputs/qwen3-8b-dense-24576-dspark-8server-dp16-3node-h200
 
 deployment:
   mode: disaggregated
@@ -110,13 +110,15 @@ deployment:
     master_addr: trainer-node-0
     master_port: 28711
   disaggregated:
-    control_dir: outputs/qwen3-8b-dense-24576-dspark-6server-dp16-3node-h200/control
-    consumer_state_dir: outputs/qwen3-8b-dense-24576-dspark-6server-dp16-3node-h200/consumer-state
+    control_dir: outputs/qwen3-8b-dense-24576-dspark-8server-dp16-3node-h200/control
+    consumer_state_dir: outputs/qwen3-8b-dense-24576-dspark-8server-dp16-3node-h200/consumer-state
     # rank 0 serves the tensor-free reference stream to the remote trainer node (binds all interfaces)
     inbox_server_url: http://trainer-node-0:35900
     backend: mooncake
     client_buffer_size: 1073741824
-    # the six capture servers on the capture node (one H200 each, ports 30000-30005)
+    # the eight capture servers on the capture node (one H200 each, ports 30000-30007). They run with --disable-cuda-graph:
+    # a capture server that hit a 1-token decode batch through the CUDA-graph path crashed (patched SGLang's hidden-state
+    # capture-mode assertion), its published features became unreadable and the whole run failed at step 7,920.
     server_urls:
       - http://capture-node:30000
       - http://capture-node:30001
@@ -124,6 +126,8 @@ deployment:
       - http://capture-node:30003
       - http://capture-node:30004
       - http://capture-node:30005
+      - http://capture-node:30006
+      - http://capture-node:30007
     # mooncake_master on the trainer node: --enable_http_metadata_server=true --http_metadata_server_host=0.0.0.0
     # --rpc_port=35551 --http_metadata_server_port=35880 --default_kv_lease_ttl=300000
     mooncake_metadata_server: http://trainer-node-0:35880/metadata
