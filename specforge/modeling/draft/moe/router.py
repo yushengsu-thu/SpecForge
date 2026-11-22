@@ -11,6 +11,7 @@ from torch import nn
 from specforge.modeling.draft.moe.balance import (
     count_tokens_per_expert,
     load_balance_loss,
+    router_z_loss,
 )
 
 ScoreFn = Callable[[torch.Tensor], torch.Tensor]
@@ -37,6 +38,9 @@ class TopKRouter(nn.Module):
         aux_loss_coef: float = 0.0,
         aux_loss_type: str = "microbatch_wise",
         bias_update_rate: float = 0.001,
+        z_loss_coef: float = 0.0,
+        fp32_logits: bool = False,
+        init_scale: float = 1.0,
     ) -> None:
         super().__init__()
         if not 1 <= top_k <= num_experts:
@@ -65,8 +69,18 @@ class TopKRouter(nn.Module):
         self.aux_loss_coef = aux_loss_coef
         self.aux_loss_type = aux_loss_type
         self.bias_update_rate = bias_update_rate
+        # ST-MoE's router z-loss (logsumexp(logits)^2) keeps the logits small so the
+        # softmax never saturates; 0 keeps it as a metric only.
+        self.z_loss_coef = z_loss_coef
+        # Switch Transformer's selective precision: the logits in fp32 under bf16
+        # autocast / FSDP mixed precision, so the scores see unrounded logits.
+        self.fp32_logits = fp32_logits
+        # Switch Transformer's router init: std scaled down (0.1) for a near-uniform
+        # start instead of an already peaked softmax.
+        self.init_scale = init_scale
         # This micro-batch's load-balance (aux) loss, kept in training for the trainer.
         self.aux_loss: Optional[torch.Tensor] = None
+        self.z_loss: Optional[torch.Tensor] = None
         self.reset_parameters(initializer_range)
 
     def _apply(self, fn, recurse=True):
@@ -82,7 +96,7 @@ class TopKRouter(nn.Module):
 
     def reset_parameters(self, std: float) -> None:
         # HF's default _init_weights skips bare Parameters and buffers.
-        nn.init.normal_(self.weight, std=std)
+        nn.init.normal_(self.weight, std=std * self.init_scale)
         for buffer in (self.selection_bias, self.tokens_per_expert):
             if buffer is not None:
                 nn.init.zeros_(buffer)
@@ -92,8 +106,13 @@ class TopKRouter(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """``x`` [T, H] -> fp32 scores [T, E], indices [T, K], fp32 weights [T, K]."""
         self.aux_loss = None  # per-forward state: never carry a stale loss into eval
-        # Logits in x's dtype as in Qwen; DeepSeek-V4 projects in fp32.
-        scores = self.score_fn(F.linear(x, self.weight).float())
+        self.z_loss = None
+        if self.fp32_logits:
+            logits = F.linear(x.float(), self.weight.float())
+        else:
+            # Logits in x's dtype as in Qwen; DeepSeek-V4 projects in fp32.
+            logits = F.linear(x, self.weight).float()
+        scores = self.score_fn(logits)
         choice = scores if self.selection_bias is None else scores + self.selection_bias
         indices = choice.topk(self.top_k, dim=-1).indices
         weights = scores.gather(-1, indices)
@@ -104,6 +123,7 @@ class TopKRouter(nn.Module):
             self.tokens_per_expert += counts
             # Always kept in training: with coefficient 0 it is the balance metric.
             self.aux_loss = load_balance_loss(scores, self._aux_loss_load(counts), mask)
+            self.z_loss = router_z_loss(logits, mask)
         return scores, indices, weights * self.route_scale
 
     def _aux_loss_load(self, counts: torch.Tensor) -> torch.Tensor:
