@@ -35,6 +35,11 @@ def build_moe(config: PretrainedConfig) -> MoELayer:
             # DeepSeek-style aux-loss-free balancing, moved once per optimizer step.
             selection_bias=bool(dflash_config.get("moe_router_selection_bias", False)),
             bias_update_rate=dflash_config.get("moe_router_bias_update_rate", 0.001),
+            # Router saturation guards (ST-MoE z-loss, Switch's fp32 logits and
+            # scaled-down init); all off by default.
+            z_loss_coef=dflash_config.get("moe_router_z_loss_coef", 0.0),
+            fp32_logits=bool(dflash_config.get("moe_router_fp32_logits", False)),
+            init_scale=dflash_config.get("moe_router_init_scale", 1.0),
         ),
         experts=RoutedExperts(
             config.num_experts,
