@@ -36,6 +36,7 @@ from specforge.modeling.draft.moe.balance import (
 )
 from specforge.modeling.draft.moe.families.qwen3_5_moe import build_moe
 from specforge.modeling.draft.moe.router import TopKRouter
+from specforge.optimizer import BF16Optimizer, grad_norm_group
 from specforge.runtime.contracts import TrainBatch
 from specforge.training.backend import TrainingBackend
 from specforge.training.controller import TrainerCore
@@ -446,6 +447,9 @@ class _Backend(TrainingBackend):
     def step(self):
         return torch.tensor(1.0)
 
+    def optimizer_breakdown(self):
+        return {"grad_norm/layer0/router": torch.tensor(0.5)}
+
     def state_dict(self):
         return {}
 
@@ -503,7 +507,97 @@ class StepHookTest(unittest.TestCase):
             dispatch_balance(2 * counts).item(),
             places=5,
         )
+        # The backend's per-module grad norms join the boundary step's metrics too.
+        self.assertAlmostEqual(second.metrics["grad_norm/layer0/router"], 0.5)
+        self.assertNotIn("grad_norm/layer0/router", first.metrics)
         self.assertIsNone(_MoEStrategy(nn.Linear(2, 2)).on_optimizer_step())
+
+
+class _DraftLike(nn.Module):
+    """Parameter names shaped like a DSpark MoE draft: fc, layers.{i}.{self_attn,mlp,norms}, norm."""
+
+    def __init__(self):
+        super().__init__()
+        self.fc = nn.Linear(4, 4, bias=False)
+        layer = nn.Module()
+        layer.self_attn = nn.Module()
+        layer.self_attn.q_proj = nn.Linear(4, 4, bias=False)
+        layer.self_attn.q_norm = nn.Linear(4, 1, bias=False)
+        layer.mlp = nn.Module()
+        layer.mlp.gate = nn.Linear(4, 2, bias=False)
+        layer.mlp.experts = nn.Module()
+        layer.mlp.experts.gate_up_proj = nn.Parameter(torch.randn(2, 4, 4))
+        layer.input_layernorm = nn.Linear(4, 1, bias=False)
+        self.layers = nn.ModuleList([layer])
+        self.norm = nn.Linear(4, 1, bias=False)
+
+    def forward(self, x):
+        h = self.fc(x)
+        layer = self.layers[0]
+        h = layer.self_attn.q_proj(h) + layer.self_attn.q_norm(h) + layer.input_layernorm(h)
+        h = h + layer.mlp.gate(h).sum(-1, keepdim=True) + (h @ layer.mlp.experts.gate_up_proj[0]) @ layer.mlp.experts.gate_up_proj[1]
+        return self.norm(h)
+
+
+class GradNormBreakdownTest(unittest.TestCase):
+    """Per-module pre-clip grad norms next to the global one."""
+
+    def test_group_names_follow_the_draft_layout_and_skip_wrappers(self):
+        self.assertEqual(grad_norm_group("layers.3.mlp.gate.weight"), "layer3/router")
+        self.assertEqual(grad_norm_group("layers.3.mlp.experts.down_proj"), "layer3/experts")
+        self.assertEqual(grad_norm_group("layers.0.mlp.gate_proj.weight"), "layer0/mlp")
+        self.assertEqual(grad_norm_group("layers.0.self_attn.q_proj.weight"), "layer0/attn")
+        self.assertEqual(grad_norm_group("layers.0.post_attention_layernorm.weight"), "layer0/norm")
+        self.assertEqual(
+            grad_norm_group("_fsdp_wrapped_module.layers.1._fsdp_wrapped_module.self_attn.k_norm.weight"),
+            "layer1/attn",
+        )
+        self.assertEqual(grad_norm_group("module.fc.weight"), "fc")
+        self.assertEqual(grad_norm_group("markov_head.markov_w1.weight"), "markov_head")
+        self.assertEqual(grad_norm_group("norm.weight"), "norm")
+
+    def test_step_reports_the_breakdown_consistent_with_the_total(self):
+        torch.manual_seed(0)
+        model = _DraftLike()
+        model(torch.randn(3, 4)).square().sum().backward()
+        want = {
+            grad_norm_group(name): float(p.grad.float().square().sum())
+            for name, p in model.named_parameters()
+            if p.grad is not None
+        }
+        expected_leaf = {}
+        for name, p in model.named_parameters():
+            expected_leaf[grad_norm_group(name)] = expected_leaf.get(grad_norm_group(name), 0.0) + float(p.grad.float().square().sum())
+        total = sum(expected_leaf.values()) ** 0.5
+        opt = BF16Optimizer(
+            model, lr=1e-3, max_grad_norm=1e9, total_steps=10, warmup_ratio=0.0,
+            lr_scheduler="constant",
+        )
+        norm = opt.step()
+        groups = opt.last_grad_norm_groups
+        self.assertAlmostEqual(norm.item(), total, places=4)
+        # The first AdamW step moves every weight with a non-zero grad by ~lr.
+        updates = opt.last_update_norm_groups
+        fc_numel = model.fc.weight.numel()
+        self.assertAlmostEqual(
+            updates["update_norm/fc"].item(), 1e-3 * fc_numel**0.5, delta=1e-3 * fc_numel**0.5 * 0.02
+        )
+        params = opt.last_param_norm_groups
+        self.assertAlmostEqual(params["param_norm/fc"].item(), model.fc.weight.float().norm().item(), places=4)
+        self.assertEqual({k.split("/", 1)[1] for k in updates}, {k.split("/", 1)[1] for k in groups})
+        self.assertEqual(set(opt.last_breakdown()), set(groups) | set(updates) | set(params))
+        for leaf, sq in expected_leaf.items():
+            self.assertAlmostEqual(groups[f"grad_norm/{leaf}"].item(), sq**0.5, places=4, msg=leaf)
+        layer0 = sum(sq for leaf, sq in expected_leaf.items() if leaf.startswith("layer0/")) ** 0.5
+        self.assertAlmostEqual(groups["grad_norm/layer0"].item(), layer0, places=4)
+        self.assertAlmostEqual(groups["grad_norm/layers/router"].item(), expected_leaf["layer0/router"] ** 0.5, places=4)
+        self.assertEqual(
+            set(groups),
+            {"grad_norm/fc", "grad_norm/norm", "grad_norm/layer0", "grad_norm/layer0/attn", "grad_norm/layer0/router",
+             "grad_norm/layer0/experts", "grad_norm/layer0/norm", "grad_norm/layers/attn", "grad_norm/layers/router",
+             "grad_norm/layers/experts", "grad_norm/layers/norm"},
+        )
+        self.assertTrue(all(not v.requires_grad for v in groups.values()))
 
 
 if __name__ == "__main__":
