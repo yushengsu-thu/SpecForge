@@ -7,6 +7,7 @@ from unittest import mock
 
 import torch
 import torch.distributed as dist
+import torch.nn.functional as F
 from torch import nn
 from transformers import Qwen3Config
 from transformers.models.qwen3_5_moe.configuration_qwen3_5_moe import (
@@ -28,9 +29,11 @@ from specforge.modeling.draft.moe.balance import (
     count_tokens_per_expert,
     dispatch_balance,
     load_balance_loss,
+    router_z_loss,
     set_moe_token_mask,
     step_moe_balancing,
     take_moe_aux_loss,
+    take_moe_z_loss,
 )
 from specforge.modeling.draft.moe.families.qwen3_5_moe import build_moe
 from specforge.modeling.draft.moe.router import TopKRouter
@@ -172,6 +175,78 @@ class FP32BuffersTest(unittest.TestCase):
         torch.testing.assert_close(router.tokens_per_expert, torch.full((E,), 1001.0))
         self.assertIn("selection_bias", router.state_dict())
         self.assertNotIn("tokens_per_expert", router.state_dict())
+
+
+class RouterZLossTest(unittest.TestCase):
+    """ST-MoE's router z-loss: a metric by default, a loss term by config."""
+
+    def test_z_loss_is_the_mean_squared_logsumexp_over_kept_tokens(self):
+        torch.manual_seed(0)
+        logits = torch.randn(B * S, E, requires_grad=True)
+        want = torch.logsumexp(logits, dim=-1).square()
+        torch.testing.assert_close(router_z_loss(logits), want.mean())
+        mask = _real_token_mask().reshape(-1)
+        torch.testing.assert_close(router_z_loss(logits, mask), want[mask].mean())
+        self.assertEqual(router_z_loss(logits, torch.zeros_like(mask)).item(), 0.0)
+        (grad,) = torch.autograd.grad(router_z_loss(logits, mask), logits)
+        self.assertTrue(torch.all(grad[~mask] == 0))
+        self.assertTrue(torch.any(grad[mask] != 0))
+
+    def test_gradient_survives_a_saturated_softmax(self):
+        # A collapsed router: one logit far ahead. The aux and main losses see
+        # P(1 - P) ~ 0 there; the z-loss gradient 2 * lse * P still pulls it down.
+        logits = torch.zeros(4, E, requires_grad=True)
+        with torch.no_grad():
+            logits[:, 0] = 30.0
+        (grad,) = torch.autograd.grad(router_z_loss(logits), logits)
+        self.assertGreater(grad[:, 0].min().item(), 1.0)
+
+    def test_router_keeps_the_z_loss_in_training_and_the_hook_pops_it(self):
+        torch.manual_seed(0)
+        layers = nn.ModuleList(
+            [_moe(coef=0.5, moe_router_z_loss_coef=1e-3), _moe(coef=0.5)]
+        )
+        gates = [layer.gate for layer in layers]
+        self.assertEqual(gates[0].z_loss_coef, 1e-3)
+        self.assertEqual(gates[1].z_loss_coef, 0.0)  # off by default: a metric only
+        x = torch.randn(B, S, H)
+        for layer in layers:
+            layer(x)
+        for gate in gates:
+            logits = F.linear(x.reshape(-1, H), gate.weight).float()
+            torch.testing.assert_close(gate.z_loss, router_z_loss(logits))
+        losses = [gate.z_loss for gate in gates]
+        z, raw = take_moe_z_loss(layers)
+        torch.testing.assert_close(z, 1e-3 * losses[0] + 0.0 * losses[1])
+        torch.testing.assert_close(raw, (losses[0] + losses[1]) / 2)
+        for gate in gates:
+            self.assertIsNone(gate.z_loss)
+        self.assertIsNone(take_moe_z_loss(layers))
+        (grad,) = torch.autograd.grad(losses[0], gates[0].weight)
+        self.assertTrue(torch.any(grad != 0))
+        layers[0].eval()(x)
+        self.assertIsNone(gates[0].z_loss)
+
+    def test_objective_folds_the_z_loss_and_logs_it(self):
+        torch.manual_seed(0)
+        inputs = dict(
+            input_ids=torch.randint(0, V - 1, (1, 8)),
+            hidden_states=torch.randn(1, 8, H),
+            loss_mask=torch.ones(1, 8),
+        )
+        with_z = _online(_tiny_moe_draft(coef=0.0, moe_router_z_loss_coef=0.5))
+        plain = copy.deepcopy(with_z)
+        plain.draft_model.layers[0].mlp.gate.z_loss_coef = 0.0
+        torch.manual_seed(1)
+        loss, _, metrics = with_z(**inputs)
+        torch.manual_seed(1)
+        plain_loss, _, plain_metrics = plain(**inputs)
+        raw, _ = metrics["ratio_metrics"]["moe/z_loss"]
+        plain_raw, _ = plain_metrics["ratio_metrics"]["moe/z_loss"]
+        torch.testing.assert_close(plain_raw, raw)  # the metric is coefficient-free
+        self.assertGreater(raw.item(), 0.0)
+        torch.testing.assert_close(loss - plain_loss, 0.5 * raw)
+        self.assertIsNone(with_z.draft_model.layers[0].mlp.gate.z_loss)
 
 
 class BalancingHooksTest(unittest.TestCase):
