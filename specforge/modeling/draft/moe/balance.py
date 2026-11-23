@@ -73,6 +73,10 @@ def router_metrics(
     bias has evened out the counts. ``logit_gap``: mean top-1 minus top-2 logit.
     ``logit_absmax``: the largest |logit| of a kept token. ``bias_flip_frac``: the
     kept tokens whose top-k the selection bias moved off the scores' top-k.
+    ``entropy``: mean per-token entropy of the scores (ln E uniform, 0 saturated).
+    ``logsumexp_sq``: mean logsumexp(logits)^2 (ST-MoE's z-loss as a metric: the
+    logit scale). ``top1_logit``: mean top logit. ``mean_prob/e{k}``: expert k's
+    mean score, so the dominant expert can be named.
     """
     logits = logits.detach().float()
     scores = scores.detach().float()
@@ -91,13 +95,20 @@ def router_metrics(
         unbiased = scores.topk(top_k, dim=-1).indices.sort(dim=-1).values
         picked = indices.sort(dim=-1).values
         moved = (unbiased != picked).any(dim=-1).to(scores.dtype)
-    return {
+    entropy = -(scores * scores.clamp_min(1e-12).log()).sum(dim=-1)
+    out = {
         "top1_prob": (top_scores[:, 0] * kept).sum() / n,
         "prob_balance": num_experts * share.square().sum(),
         "logit_gap": (gap * kept).sum() / n,
         "logit_absmax": (logits.abs().amax(dim=-1) * kept).amax(),
         "bias_flip_frac": (moved * kept).sum() / n,
+        "entropy": (entropy * kept).sum() / n,
+        "logsumexp_sq": (torch.logsumexp(logits, dim=-1).square() * kept).sum() / n,
+        "top1_logit": (top_logits[:, 0] * kept).sum() / n,
     }
+    for expert in range(num_experts):
+        out[f"mean_prob/e{expert}"] = mean_score[expert]
+    return out
 
 
 # Hooks the DFlash-family model calls; routers and layers are found by their state.
@@ -200,6 +211,14 @@ def step_moe_balancing(model: nn.Module) -> Dict[str, torch.Tensor]:
         out[f"moe/{name}"] = torch.stack(values).mean()
         for index, value in enumerate(values):
             out[f"moe/layer{index}/{name}"] = value
+    # Per expert and layer: the step's dispatch share and the bias, to name the
+    # expert that took the tokens.
+    for index, (router, pooled) in enumerate(zip(routers, counts)):
+        share = pooled / pooled.sum().clamp(min=1)
+        for expert in range(share.shape[-1]):
+            out[f"moe/layer{index}/share/e{expert}"] = share[expert]
+            if router.selection_bias is not None:
+                out[f"moe/layer{index}/bias/e{expert}"] = router.selection_bias[expert]
     return out
 
 

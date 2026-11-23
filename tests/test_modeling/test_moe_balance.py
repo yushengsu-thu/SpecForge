@@ -2,6 +2,7 @@
 """balance.py and its wiring: loss, hooks, objective folds and the step boundary."""
 
 import copy
+import math
 import unittest
 from unittest import mock
 
@@ -181,7 +182,11 @@ class RouterMetricsTest(unittest.TestCase):
     """The router health metrics: how peaked the scores are and how large the
     logits grew, read independently of where the dispatch sent the tokens."""
 
-    NAMES = {"top1_prob", "prob_balance", "logit_gap", "logit_absmax", "bias_flip_frac"}
+    BASE = {
+        "top1_prob", "prob_balance", "logit_gap", "logit_absmax", "bias_flip_frac",
+        "entropy", "logsumexp_sq", "top1_logit",
+    }
+    NAMES = BASE | {f"mean_prob/e{k}" for k in range(E)}
 
     def test_metrics_read_uniform_and_saturated_routers(self):
         flat = torch.zeros(6, E)  # every expert equally likely
@@ -194,6 +199,10 @@ class RouterMetricsTest(unittest.TestCase):
         self.assertEqual(m["logit_gap"].item(), 0.0)
         self.assertEqual(m["logit_absmax"].item(), 0.0)
         self.assertEqual(m["bias_flip_frac"].item(), 0.0)
+        self.assertAlmostEqual(m["entropy"].item(), math.log(E), places=5)
+        self.assertAlmostEqual(m["logsumexp_sq"].item(), math.log(E) ** 2, places=5)
+        self.assertEqual(m["top1_logit"].item(), 0.0)
+        self.assertAlmostEqual(m["mean_prob/e3"].item(), 1 / E, places=6)
         peaked = flat.clone()
         peaked[:, 3] = 20.0  # expert 3 wins every token by 20 nats: saturated
         scores = peaked.softmax(dim=-1)
@@ -203,6 +212,11 @@ class RouterMetricsTest(unittest.TestCase):
         self.assertAlmostEqual(m["prob_balance"].item(), float(E), places=4)
         self.assertAlmostEqual(m["logit_gap"].item(), 20.0, places=5)
         self.assertEqual(m["logit_absmax"].item(), 20.0)
+        self.assertAlmostEqual(m["entropy"].item(), 0.0, places=4)
+        self.assertAlmostEqual(m["logsumexp_sq"].item(), 400.0, places=3)
+        self.assertEqual(m["top1_logit"].item(), 20.0)
+        self.assertAlmostEqual(m["mean_prob/e3"].item(), 1.0, places=5)
+        self.assertAlmostEqual(m["mean_prob/e0"].item(), 0.0, places=5)
 
     def test_metrics_skip_masked_tokens_and_count_bias_flips(self):
         logits = (torch.arange(E).float() * 0.1).repeat(4, 1)  # expert e scores 0.1 e
@@ -266,6 +280,11 @@ class RouterMetricsTest(unittest.TestCase):
         torch.testing.assert_close(metrics["moe/layer0/bias_range"], bias.max() - bias.min())
         self.assertGreater(metrics["moe/layer0/bias_range"].item(), 0.0)  # the step moved it
         self.assertEqual(metrics["moe/layer1/bias_range"].item(), 0.0)  # no bias there
+        self.assertEqual(metrics["moe/layer0/share/e0"].item(), 1.0)
+        self.assertEqual(metrics["moe/layer0/share/e1"].item(), 0.0)
+        self.assertAlmostEqual(metrics["moe/layer1/share/e5"].item(), 1 / E, places=6)
+        torch.testing.assert_close(metrics["moe/layer0/bias/e0"], bias[0])
+        self.assertNotIn("moe/layer1/bias/e0", metrics)  # no bias there
         for layer in layers:
             self.assertTrue(torch.all(layer.gate.tokens_per_expert == 0))
 
@@ -278,7 +297,7 @@ class RouterMetricsTest(unittest.TestCase):
             loss_mask=torch.ones(1, 8),
         )
         ratio = metrics["ratio_metrics"]
-        for name in self.NAMES:
+        for name in self.BASE | {"mean_prob/e0", "mean_prob/e3"}:  # the tiny draft has 4 experts
             value, weight = ratio[f"moe/{name}"]
             self.assertEqual(weight.item(), 1.0)
             self.assertFalse(value.requires_grad)
