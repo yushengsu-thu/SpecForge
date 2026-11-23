@@ -234,6 +234,7 @@ class BalancingHooksTest(unittest.TestCase):
                 want = _zero_mean_sign_step(total + other)
                 torch.testing.assert_close(gate.selection_bias, want)
                 self.assertTrue(torch.all(gate.tokens_per_expert == 0))
+                self.assertTrue(torch.all(gate.own_tokens_per_expert == 0))
             want = torch.stack([dispatch_balance(t + other) for t in totals]).mean()
             torch.testing.assert_close(metrics["moe/step_balance"], want)
             uniform, collapsed = torch.full((E,), 3.0), torch.tensor([24.0] + [0.0] * 7)
@@ -252,6 +253,73 @@ class BalancingHooksTest(unittest.TestCase):
             layers[0].eval()(x)
             self.assertIsNone(gates[0].aux_loss)
             self.assertEqual(step_moe_balancing(nn.Linear(2, 2)), {})
+
+
+class UnbiasedAuxLoadTest(unittest.TestCase):
+    """With a selection bias the aux loss balances the router's own top-k picks."""
+
+    def _router(self, selection_bias):
+        # hidden_size = num_experts and an identity weight: logits == x.
+        router = TopKRouter(
+            E, E, 1, norm_topk_prob=False, initializer_range=0.5, selection_bias=selection_bias
+        )
+        with torch.no_grad():
+            router.weight.copy_(torch.eye(E))
+        return router
+
+    def _skewed_tokens(self):
+        # Every token likes expert 0 best (logit 2) and expert t second (logit 1).
+        x = torch.zeros(E, E)
+        x[:, 0] = 2.0
+        x[torch.arange(1, E), torch.arange(1, E)] = 1.0
+        return x
+
+    def test_bias_balanced_dispatch_does_not_blind_the_loss(self):
+        router, x = self._router(True), self._skewed_tokens()
+        # A bias that pushes expert 0 just below each token's second choice: the
+        # biased dispatch is one token per expert, the router's own picks are not.
+        router.selection_bias[0] = -0.3
+        scores, indices, _ = router(x)
+        self.assertTrue(torch.equal(indices.squeeze(-1), torch.arange(E)))
+        torch.testing.assert_close(router.tokens_per_expert, torch.ones(E))
+        own = torch.zeros(E)
+        own[0] = E
+        torch.testing.assert_close(router.own_tokens_per_expert, own)
+        # The biased load gives the flat loss 1 with no gradient: blind to the skew.
+        blind = load_balance_loss(scores, router.tokens_per_expert)
+        torch.testing.assert_close(blind, torch.tensor(1.0))
+        (grad,) = torch.autograd.grad(blind, router.weight, retain_graph=True)
+        torch.testing.assert_close(grad, torch.zeros_like(grad))
+        # The router's own load gives E x mean P_0 > 1, and a gradient on the weight.
+        torch.testing.assert_close(router.aux_loss, load_balance_loss(scores, own))
+        self.assertGreater(router.aux_loss.item(), 3.0)
+        (grad,) = torch.autograd.grad(router.aux_loss, router.weight)
+        self.assertTrue(torch.any(grad != 0))
+
+    def test_batch_wise_load_pools_the_own_counts(self):
+        router, x = self._router(True), self._skewed_tokens()
+        router.aux_loss_type = "batch_wise"
+        router.selection_bias[0] = -0.3
+        router(x)
+        scores, _, _ = router(x)  # second micro-batch of the same step
+        own = torch.zeros(E)
+        own[0] = 2 * E
+        torch.testing.assert_close(router.own_tokens_per_expert, own)
+        torch.testing.assert_close(router.aux_loss, load_balance_loss(scores, own))
+
+    def test_without_a_bias_nothing_changes(self):
+        torch.manual_seed(0)
+        router, x = self._router(False), torch.randn(B * S, E)
+        scores, indices, _ = router(x)
+        torch.testing.assert_close(router.own_tokens_per_expert, router.tokens_per_expert)
+        torch.testing.assert_close(
+            router.aux_loss, load_balance_loss(scores, count_tokens_per_expert(indices, None, E))
+        )
+
+    def test_fp32_buffer_and_state_dict(self):
+        router = self._router(True).bfloat16()
+        self.assertEqual(router.own_tokens_per_expert.dtype, torch.float32)
+        self.assertNotIn("own_tokens_per_expert", router.state_dict())
 
 
 class ObjectiveTest(unittest.TestCase):
