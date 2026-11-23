@@ -130,7 +130,6 @@ def router_metrics(
 
 class _RouterLike(Protocol):
     tokens_per_expert: torch.Tensor
-    own_tokens_per_expert: torch.Tensor
     selection_bias: Optional[torch.Tensor]
     aux_loss: Optional[torch.Tensor]
     aux_loss_coef: float
@@ -227,7 +226,6 @@ def step_moe_balancing(model: nn.Module) -> Dict[str, torch.Tensor]:
         if router.selection_bias is not None:
             router.update_expert_bias(pooled)
         router.tokens_per_expert.zero_()  # the next step's count window
-        router.own_tokens_per_expert.zero_()
     # The step's pooled load: the collapse signal, unlike the per-micro-batch loss.
     per_layer = {
         "step_balance": [dispatch_balance(c) for c in counts],
