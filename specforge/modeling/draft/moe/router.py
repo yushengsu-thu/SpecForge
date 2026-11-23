@@ -57,20 +57,9 @@ class TopKRouter(nn.Module):
             "selection_bias",
             torch.zeros(num_experts, dtype=torch.float32) if selection_bias else None,
         )
-        # The step's kept-slot counts: bias update, step balance.
+        # The step's kept-slot counts: bias update, batch-wise loss, step balance.
         self.register_buffer(
             "tokens_per_expert",
-            torch.zeros(num_experts, dtype=torch.float32),
-            persistent=False,
-        )
-        # The same counts by the router's own top-k, without the selection bias:
-        # the load the aux loss balances. DeepSeek-V3 routes with the bias
-        # (eq. 16) but takes the balance loss's f_i from the unbiased scores
-        # (eq. 18); on the biased picks the loss is flat as soon as the bias has
-        # balanced them, however skewed the router is. Equal to tokens_per_expert
-        # without a bias.
-        self.register_buffer(
-            "own_tokens_per_expert",
             torch.zeros(num_experts, dtype=torch.float32),
             persistent=False,
         )
@@ -88,8 +77,8 @@ class TopKRouter(nn.Module):
         self.reset_parameters(initializer_range)
 
     def _apply(self, fn, recurse=True):
-        # Keep the buffers fp32, values included, through casts like .to(bfloat16).
-        names = ("selection_bias", "tokens_per_expert", "own_tokens_per_expert")
+        # Keep both buffers fp32, values included, through casts like .to(bfloat16).
+        names = ("selection_bias", "tokens_per_expert")
         kept = {name: getattr(self, name) for name in names}
         super()._apply(fn, recurse)
         for name, old in kept.items():
@@ -101,11 +90,7 @@ class TopKRouter(nn.Module):
     def reset_parameters(self, std: float) -> None:
         # HF's default _init_weights skips bare Parameters and buffers.
         nn.init.normal_(self.weight, std=std)
-        for buffer in (
-            self.selection_bias,
-            self.tokens_per_expert,
-            self.own_tokens_per_expert,
-        ):
+        for buffer in (self.selection_bias, self.tokens_per_expert):
             if buffer is not None:
                 nn.init.zeros_(buffer)
 
@@ -126,27 +111,17 @@ class TopKRouter(nn.Module):
         if self.training:
             counts = count_tokens_per_expert(indices, mask, self.num_experts)
             self.tokens_per_expert += counts
-            # The aux loss sees the router's own picks, not the biased ones.
-            if self.selection_bias is None:
-                own_counts = counts
-            else:
-                own = scores.topk(self.top_k, dim=-1).indices
-                own_counts = count_tokens_per_expert(own, mask, self.num_experts)
-            self.own_tokens_per_expert += own_counts
-            # Always kept in training: with coefficient 0 it is the router's own
-            # balance metric (moe/step_balance scores the biased dispatch).
-            self.aux_loss = load_balance_loss(
-                scores, self._aux_loss_load(own_counts), mask
-            )
+            # Always kept in training: with coefficient 0 it is the balance metric.
+            self.aux_loss = load_balance_loss(scores, self._aux_loss_load(counts), mask)
             self.z_loss = router_z_loss(logits, mask)
         return scores, indices, weights * self.route_scale
 
-    def _aux_loss_load(self, own_counts: torch.Tensor) -> torch.Tensor:
-        """The load the aux loss balances: this micro-batch's own counts, or the step's."""
+    def _aux_loss_load(self, counts: torch.Tensor) -> torch.Tensor:
+        """The load the aux loss balances: this micro-batch's counts, or the step's."""
         if self.aux_loss_type != "batch_wise":
-            return own_counts
+            return counts
         # Batch-wise: the step's counts so far, pooled over ranks; the loss uses shares.
-        load = self.own_tokens_per_expert.clone()
+        load = self.tokens_per_expert.clone()
         if dist.is_available() and dist.is_initialized():
             dist.all_reduce(load)
         return load
