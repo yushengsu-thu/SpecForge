@@ -313,6 +313,8 @@ Common fields:
 | `training.role` | `all` | Use `all` for offline colocated training; disaggregated entrypoints select `auto`, `producer`, or `consumer`. |
 | `training.seed` | `42` | Run and per-rank RNG seed. |
 | `training.prompt_seed` | `null` | Optional online prompt-shuffle seed. `null` preserves the historical behavior of using `training.seed`. |
+| `training.prompt_plan_skip` | `0` | Online producer only: drop the first N entries of the seeded per-epoch prompt plan, e.g. `global_step * dp_size * batch_size * accumulation_steps` to fork a checkpoint onto the stream it would have seen next. |
+| `training.prompt_exclude_file` | `null` | Online producer only: a JSON list of dataset row indices to drop from the prompt plan without changing its order (e.g. the rows a spike window trained on). |
 
 Strategy-specific fields should be written only when tuning that objective:
 

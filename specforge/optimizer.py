@@ -9,6 +9,40 @@ from specforge.utils import print_on_rank0
 
 logger = logging.getLogger(__name__)
 
+# Module wrappers that FSDP, activation checkpointing, torch.compile and DDP put
+# in front of the parameter names.
+_WRAPPER_SEGMENTS = frozenset(
+    {"_fsdp_wrapped_module", "_checkpoint_wrapped_module", "_orig_mod", "module"}
+)
+_LAYER_KINDS = {"attn", "router", "experts", "shared_expert", "mlp", "norm"}
+
+
+def grad_norm_group(name):
+    """The grad-norm group of a parameter: ``layer{i}/{attn|router|experts|
+    shared_expert|mlp|norm}`` inside a decoder layer, else its top-level module
+    (``fc``, ``norm``, ``markov_head``, ...). Wrapper prefixes are ignored."""
+    parts = [part for part in name.split(".") if part not in _WRAPPER_SEGMENTS]
+    if not parts:
+        return name
+    if len(parts) >= 3 and parts[0] == "layers" and parts[1].isdigit():
+        block = parts[2]
+        if block == "self_attn":
+            kind = "attn"
+        elif block == "mlp":
+            inner = parts[3] if len(parts) > 3 else ""
+            kind = {
+                "gate": "router",
+                "experts": "experts",
+                "shared_expert": "shared_expert",
+                "shared_expert_gate": "shared_expert",
+            }.get(inner, "mlp")
+        elif block.endswith("norm"):
+            kind = "norm"
+        else:
+            kind = block
+        return f"layer{parts[1]}/{kind}"
+    return parts[0]
+
 
 def _sum_of_squares(tensors):
     """FP32 sum of squared L2 norms of ``tensors``.
@@ -81,6 +115,15 @@ class BF16Optimizer:
         self.last_grad_norm = None
         self._grad_norm_process_group = None
         self._reduce_grad_norm_across_ranks = True
+        # Per-module grad norms (``grad_norm/layer0/router``, ``grad_norm/layer0``,
+        # ``grad_norm/layers/router``, ``grad_norm/fc``, ...), pre-clip and pooled
+        # over the shard ranks like the total, refreshed by every step().
+        self._grad_norm_groups = self._build_grad_norm_groups(model)
+        self.last_grad_norm_groups = None
+        # The same groups after the step: the applied AdamW update (post-clip) and
+        # the fp32 master weights, so update_norm / param_norm reads per module.
+        self.last_update_norm_groups = None
+        self.last_param_norm_groups = None
         scheduler_types = {
             "constant": ConstantWarmupLR,
             "cosine": CosineAnnealingWarmupLR,
@@ -138,7 +181,127 @@ class BF16Optimizer:
         else:
             device = self.model_params[0].device if self.model_params else "cpu"
             total_norm_sq = torch.zeros((), dtype=torch.float32, device=device)
+        self.last_grad_norm_groups = self._grad_norm_breakdown()
         return self._reduce_grad_norm(total_norm_sq)
+
+    def _build_grad_norm_groups(self, model):
+        """Leaf groups -> indices into ``model_params``, in parameter order."""
+        named = getattr(model, "named_parameters", None)
+        if named is None:
+            return {}
+        ids = {id(p): i for i, p in enumerate(self.model_params)}
+        groups = {}
+        for name, p in named():
+            index = ids.get(id(p))
+            if index is not None:
+                groups.setdefault(grad_norm_group(name), []).append(index)
+        return groups
+
+    def _grad_norm_breakdown(self):
+        """Pre-clip grad norms per leaf group, per layer, per kind over the layers,
+        and per top-level module: one stacked all-reduce beside the total's."""
+        if not self._grad_norm_groups or not self.model_params:
+            return None
+
+        def grads_of(indices):
+            return [
+                self.model_params[i].grad.detach()
+                for i in indices
+                if self.model_params[i].grad is not None
+            ]
+
+        return self._pooled_norms("grad_norm", grads_of)
+
+    def _update_and_param_breakdown(self):
+        """After ``optimizer.step()``: the norm of the AdamW update it applied
+        (rebuilt from the moments, so no copy of the masters is kept) and the
+        norm of the fp32 masters, per group. The decoupled weight-decay term uses
+        the post-step weights, exact at weight_decay 0."""
+        if not self._grad_norm_groups or not self.fp32_params:
+            return None, None
+        group = self.optimizer.param_groups[0]
+        lr, wd, eps = group["lr"], group["weight_decay"], group["eps"]
+        beta1, beta2 = group["betas"]
+        stepped = [
+            mp for mp in self.fp32_params if "exp_avg" in self.optimizer.state.get(mp, {})
+        ]
+        if not stepped:
+            return None, None
+        t = self.optimizer.state[stepped[0]]["step"]
+        t = t.to(self.fp32_params[0].device) if isinstance(t, torch.Tensor) else t
+        bias_correction1 = 1 - beta1**t
+        bias_correction2_sqrt = (1 - beta2**t) ** 0.5
+
+        def updates_of(indices):
+            out = []
+            for i in indices:
+                mp = self.fp32_params[i]
+                state = self.optimizer.state.get(mp)
+                if not state or "exp_avg" not in state:
+                    continue
+                denom = state["exp_avg_sq"].sqrt().div_(bias_correction2_sqrt).add_(eps)
+                update = state["exp_avg"] / denom * (lr / bias_correction1)
+                if wd:
+                    update = update + (lr * wd) * mp.detach()
+                out.append(update)
+            return out
+
+        def masters_of(indices):
+            return [self.fp32_params[i].detach() for i in indices]
+
+        return (
+            self._pooled_norms("update_norm", updates_of),
+            self._pooled_norms("param_norm", masters_of),
+        )
+
+    def _pooled_norms(self, prefix, tensors_of):
+        """Sum of squares per leaf group, pooled over the shard ranks in one
+        all-reduce, then sqrt: ``{prefix}/{leaf}``, ``{prefix}/layer{i}`` and
+        ``{prefix}/layers/{kind}``."""
+        device = self.model_params[0].device
+        leaves = list(self._grad_norm_groups)
+        sums = []
+        for leaf in leaves:
+            tensors = tensors_of(self._grad_norm_groups[leaf])
+            sums.append(
+                _sum_of_squares(tensors).to(device)
+                if tensors
+                else torch.zeros((), dtype=torch.float32, device=device)
+            )
+        packed = torch.stack(sums)
+        if (
+            self._reduce_grad_norm_across_ranks
+            and dist.is_available()
+            and dist.is_initialized()
+        ):
+            dist.all_reduce(
+                packed, op=dist.ReduceOp.SUM, group=self._grad_norm_process_group
+            )
+        out = {}
+        layers, kinds = {}, {}
+        for index, leaf in enumerate(leaves):
+            out[f"{prefix}/{leaf}"] = packed[index]
+            if "/" in leaf:
+                layer, kind = leaf.split("/", 1)
+                layers.setdefault(layer, []).append(index)
+                kinds.setdefault(kind, []).append(index)
+        for layer, indices in layers.items():
+            out[f"{prefix}/{layer}"] = packed[indices].sum()
+        for kind, indices in kinds.items():
+            out[f"{prefix}/layers/{kind}"] = packed[indices].sum()
+        return {name: value.sqrt() for name, value in out.items()}
+
+    def last_breakdown(self):
+        """The last step's per-module grad, update and weight norms in one dict."""
+        out = {}
+        for part in (
+            self.last_grad_norm_groups,
+            self.last_update_norm_groups,
+            self.last_param_norm_groups,
+        ):
+            if part:
+                out.update(part)
+        return out or None
 
     def _clip_grad_norm(self):
         """Clip already-populated FP32 master gradients in place.
@@ -240,6 +403,9 @@ class BF16Optimizer:
                 torch._foreach_mul_(master_grads, clip_coefficient)
         self.last_grad_norm = grad_norm.detach()
         self.optimizer.step()
+        self.last_update_norm_groups, self.last_param_norm_groups = (
+            self._update_and_param_breakdown()
+        )
         self.optimizer.zero_grad()
         self.scheduler.step()
         with torch.no_grad():

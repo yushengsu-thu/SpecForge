@@ -169,6 +169,12 @@ class TrainingBackend(abc.ABC):
     @abc.abstractmethod
     def step(self) -> Optional[torch.Tensor]: ...
 
+    def optimizer_breakdown(self) -> Optional[Dict[str, torch.Tensor]]:
+        """The last step's per-module pre-clip grad norms, applied-update norms and
+        weight norms (``grad_norm/...``, ``update_norm/...``, ``param_norm/...``),
+        when the optimizer reports them."""
+        return None
+
     @abc.abstractmethod
     def state_dict(self) -> dict: ...
 
@@ -385,6 +391,10 @@ class FSDPTrainingBackend(TrainingBackend):
         if loss_denominator is None:
             return self.optimizer.step()
         return self.optimizer.step(loss_denominator=loss_denominator)
+
+    def optimizer_breakdown(self) -> Optional[Dict[str, torch.Tensor]]:
+        last = getattr(self.optimizer, "last_breakdown", None)
+        return last() if callable(last) else None
 
     def state_dict(self) -> dict:
         """Full training state ``{"model", "optimizer", "rng"}`` for resume.

@@ -2,6 +2,7 @@
 """balance.py and its wiring: loss, hooks, objective folds and the step boundary."""
 
 import copy
+import math
 import unittest
 from unittest import mock
 
@@ -29,14 +30,17 @@ from specforge.modeling.draft.moe.balance import (
     count_tokens_per_expert,
     dispatch_balance,
     load_balance_loss,
+    router_metrics,
     router_z_loss,
     set_moe_token_mask,
     step_moe_balancing,
     take_moe_aux_loss,
+    take_moe_router_metrics,
     take_moe_z_loss,
 )
 from specforge.modeling.draft.moe.families.qwen3_5_moe import build_moe
 from specforge.modeling.draft.moe.router import TopKRouter
+from specforge.optimizer import BF16Optimizer, grad_norm_group
 from specforge.runtime.contracts import TrainBatch
 from specforge.training.backend import TrainingBackend
 from specforge.training.controller import TrainerCore
@@ -175,6 +179,134 @@ class FP32BuffersTest(unittest.TestCase):
         torch.testing.assert_close(router.tokens_per_expert, torch.full((E,), 1001.0))
         self.assertIn("selection_bias", router.state_dict())
         self.assertNotIn("tokens_per_expert", router.state_dict())
+
+
+class RouterMetricsTest(unittest.TestCase):
+    """The router health metrics: how peaked the scores are and how large the
+    logits grew, read independently of where the dispatch sent the tokens."""
+
+    BASE = {
+        "top1_prob", "prob_balance", "logit_gap", "logit_absmax", "bias_flip_frac",
+        "entropy", "logsumexp_sq", "top1_logit",
+    }
+    NAMES = BASE | {f"mean_prob/e{k}" for k in range(E)}
+
+    def test_metrics_read_uniform_and_saturated_routers(self):
+        flat = torch.zeros(6, E)  # every expert equally likely
+        scores = flat.softmax(dim=-1)
+        indices = scores.topk(K, dim=-1).indices
+        m = router_metrics(flat, scores, indices)
+        self.assertEqual(set(m), self.NAMES)
+        self.assertAlmostEqual(m["top1_prob"].item(), 1 / E, places=6)
+        self.assertAlmostEqual(m["prob_balance"].item(), 1.0, places=6)
+        self.assertEqual(m["logit_gap"].item(), 0.0)
+        self.assertEqual(m["logit_absmax"].item(), 0.0)
+        self.assertEqual(m["bias_flip_frac"].item(), 0.0)
+        self.assertAlmostEqual(m["entropy"].item(), math.log(E), places=5)
+        self.assertAlmostEqual(m["logsumexp_sq"].item(), math.log(E) ** 2, places=5)
+        self.assertEqual(m["top1_logit"].item(), 0.0)
+        self.assertAlmostEqual(m["mean_prob/e3"].item(), 1 / E, places=6)
+        peaked = flat.clone()
+        peaked[:, 3] = 20.0  # expert 3 wins every token by 20 nats: saturated
+        scores = peaked.softmax(dim=-1)
+        indices = scores.topk(K, dim=-1).indices
+        m = router_metrics(peaked, scores, indices)
+        self.assertAlmostEqual(m["top1_prob"].item(), 1.0, places=5)
+        self.assertAlmostEqual(m["prob_balance"].item(), float(E), places=4)
+        self.assertAlmostEqual(m["logit_gap"].item(), 20.0, places=5)
+        self.assertEqual(m["logit_absmax"].item(), 20.0)
+        self.assertAlmostEqual(m["entropy"].item(), 0.0, places=4)
+        self.assertAlmostEqual(m["logsumexp_sq"].item(), 400.0, places=3)
+        self.assertEqual(m["top1_logit"].item(), 20.0)
+        self.assertAlmostEqual(m["mean_prob/e3"].item(), 1.0, places=5)
+        self.assertAlmostEqual(m["mean_prob/e0"].item(), 0.0, places=5)
+
+    def test_metrics_skip_masked_tokens_and_count_bias_flips(self):
+        logits = (torch.arange(E).float() * 0.1).repeat(4, 1)  # expert e scores 0.1 e
+        logits[2:] += 50.0  # tokens 2 and 3 are padding: huge logits that must not count
+        mask = torch.tensor([True, True, False, False])
+        scores = logits.softmax(dim=-1)
+        indices = scores.topk(K, dim=-1).indices
+        m = router_metrics(logits, scores, indices, mask)
+        torch.testing.assert_close(m["top1_prob"], scores[:2].max(dim=-1).values.mean())
+        self.assertAlmostEqual(m["logit_gap"].item(), 0.1, places=5)
+        self.assertAlmostEqual(m["logit_absmax"].item(), 0.7, places=5)
+        # A bias lifting expert 0 into the top-k changes every kept token's picks.
+        bias = torch.zeros(E)
+        bias[0] = 1.0
+        biased = (scores + bias).topk(K, dim=-1).indices
+        m = router_metrics(logits, scores, biased, mask, bias)
+        self.assertEqual(m["bias_flip_frac"].item(), 1.0)
+        m = router_metrics(logits, scores, indices, mask, bias)  # a bias that changed nothing
+        self.assertEqual(m["bias_flip_frac"].item(), 0.0)
+
+    def test_router_keeps_the_metrics_in_training_and_the_hook_pops_them(self):
+        torch.manual_seed(0)
+        layers = nn.ModuleList([_moe(), _moe(selection_bias=True)])
+        x = torch.randn(B, S, H)
+        for layer in layers:
+            layer(x)
+        for layer in layers:
+            self.assertEqual(set(layer.gate.metrics), self.NAMES)
+            for value in layer.gate.metrics.values():
+                self.assertFalse(value.requires_grad)
+        recorded = [dict(layer.gate.metrics) for layer in layers]
+        out = take_moe_router_metrics(layers)
+        torch.testing.assert_close(
+            out["moe/top1_prob"],
+            (recorded[0]["top1_prob"] + recorded[1]["top1_prob"]) / 2,
+        )
+        torch.testing.assert_close(out["moe/layer1/logit_gap"], recorded[1]["logit_gap"])
+        self.assertEqual(len(out), 3 * len(self.NAMES))  # the mean plus two layers
+        for layer in layers:
+            self.assertIsNone(layer.gate.metrics)
+        self.assertIsNone(take_moe_router_metrics(layers))
+        layers[0].eval()(x)
+        self.assertIsNone(layers[0].gate.metrics)  # eval records nothing
+
+    def test_step_reports_maxvio_dead_experts_and_the_bias_range(self):
+        layers = nn.ModuleList([_moe(selection_bias=True), _moe()])
+        with torch.no_grad():
+            collapsed = torch.zeros(E)
+            collapsed[0] = 8.0  # every slot went to expert 0
+            layers[0].gate.tokens_per_expert.copy_(collapsed)
+            layers[1].gate.tokens_per_expert.fill_(2.0)  # uniform
+        metrics = step_moe_balancing(layers)
+        self.assertAlmostEqual(metrics["moe/layer0/step_balance"].item(), float(E))
+        self.assertAlmostEqual(metrics["moe/layer0/maxvio"].item(), E - 1)
+        self.assertEqual(metrics["moe/layer0/dead_experts"].item(), E - 1)
+        self.assertAlmostEqual(metrics["moe/layer1/step_balance"].item(), 1.0)
+        self.assertEqual(metrics["moe/layer1/maxvio"].item(), 0.0)
+        self.assertEqual(metrics["moe/layer1/dead_experts"].item(), 0.0)
+        self.assertAlmostEqual(metrics["moe/maxvio"].item(), (E - 1) / 2)
+        bias = layers[0].gate.selection_bias
+        torch.testing.assert_close(metrics["moe/layer0/bias_range"], bias.max() - bias.min())
+        self.assertGreater(metrics["moe/layer0/bias_range"].item(), 0.0)  # the step moved it
+        self.assertEqual(metrics["moe/layer1/bias_range"].item(), 0.0)  # no bias there
+        self.assertEqual(metrics["moe/layer0/share/e0"].item(), 1.0)
+        self.assertEqual(metrics["moe/layer0/share/e1"].item(), 0.0)
+        self.assertAlmostEqual(metrics["moe/layer1/share/e5"].item(), 1 / E, places=6)
+        torch.testing.assert_close(metrics["moe/layer0/bias/e0"], bias[0])
+        self.assertNotIn("moe/layer1/bias/e0", metrics)  # no bias there
+        for layer in layers:
+            self.assertTrue(torch.all(layer.gate.tokens_per_expert == 0))
+
+    def test_objective_logs_the_router_metrics(self):
+        torch.manual_seed(0)
+        model = _online(_tiny_moe_draft())
+        _, _, metrics = model(
+            input_ids=torch.randint(0, V - 1, (1, 8)),
+            hidden_states=torch.randn(1, 8, H),
+            loss_mask=torch.ones(1, 8),
+        )
+        ratio = metrics["ratio_metrics"]
+        for name in self.BASE | {"mean_prob/e0", "mean_prob/e3"}:  # the tiny draft has 4 experts
+            value, weight = ratio[f"moe/{name}"]
+            self.assertEqual(weight.item(), 1.0)
+            self.assertFalse(value.requires_grad)
+            self.assertIn(f"moe/layer0/{name}", ratio)
+        self.assertGreaterEqual(ratio["moe/top1_prob"][0].item(), 1 / 4)  # 4 experts
+        self.assertIsNone(model.draft_model.layers[0].mlp.gate.metrics)
 
 
 class RouterZLossTest(unittest.TestCase):
@@ -409,6 +541,9 @@ class _Backend(TrainingBackend):
     def step(self):
         return torch.tensor(1.0)
 
+    def optimizer_breakdown(self):
+        return {"grad_norm/layer0/router": torch.tensor(0.5)}
+
     def state_dict(self):
         return {}
 
@@ -466,7 +601,97 @@ class StepHookTest(unittest.TestCase):
             dispatch_balance(2 * counts).item(),
             places=5,
         )
+        # The backend's per-module grad norms join the boundary step's metrics too.
+        self.assertAlmostEqual(second.metrics["grad_norm/layer0/router"], 0.5)
+        self.assertNotIn("grad_norm/layer0/router", first.metrics)
         self.assertIsNone(_MoEStrategy(nn.Linear(2, 2)).on_optimizer_step())
+
+
+class _DraftLike(nn.Module):
+    """Parameter names shaped like a DSpark MoE draft: fc, layers.{i}.{self_attn,mlp,norms}, norm."""
+
+    def __init__(self):
+        super().__init__()
+        self.fc = nn.Linear(4, 4, bias=False)
+        layer = nn.Module()
+        layer.self_attn = nn.Module()
+        layer.self_attn.q_proj = nn.Linear(4, 4, bias=False)
+        layer.self_attn.q_norm = nn.Linear(4, 1, bias=False)
+        layer.mlp = nn.Module()
+        layer.mlp.gate = nn.Linear(4, 2, bias=False)
+        layer.mlp.experts = nn.Module()
+        layer.mlp.experts.gate_up_proj = nn.Parameter(torch.randn(2, 4, 4))
+        layer.input_layernorm = nn.Linear(4, 1, bias=False)
+        self.layers = nn.ModuleList([layer])
+        self.norm = nn.Linear(4, 1, bias=False)
+
+    def forward(self, x):
+        h = self.fc(x)
+        layer = self.layers[0]
+        h = layer.self_attn.q_proj(h) + layer.self_attn.q_norm(h) + layer.input_layernorm(h)
+        h = h + layer.mlp.gate(h).sum(-1, keepdim=True) + (h @ layer.mlp.experts.gate_up_proj[0]) @ layer.mlp.experts.gate_up_proj[1]
+        return self.norm(h)
+
+
+class GradNormBreakdownTest(unittest.TestCase):
+    """Per-module pre-clip grad norms next to the global one."""
+
+    def test_group_names_follow_the_draft_layout_and_skip_wrappers(self):
+        self.assertEqual(grad_norm_group("layers.3.mlp.gate.weight"), "layer3/router")
+        self.assertEqual(grad_norm_group("layers.3.mlp.experts.down_proj"), "layer3/experts")
+        self.assertEqual(grad_norm_group("layers.0.mlp.gate_proj.weight"), "layer0/mlp")
+        self.assertEqual(grad_norm_group("layers.0.self_attn.q_proj.weight"), "layer0/attn")
+        self.assertEqual(grad_norm_group("layers.0.post_attention_layernorm.weight"), "layer0/norm")
+        self.assertEqual(
+            grad_norm_group("_fsdp_wrapped_module.layers.1._fsdp_wrapped_module.self_attn.k_norm.weight"),
+            "layer1/attn",
+        )
+        self.assertEqual(grad_norm_group("module.fc.weight"), "fc")
+        self.assertEqual(grad_norm_group("markov_head.markov_w1.weight"), "markov_head")
+        self.assertEqual(grad_norm_group("norm.weight"), "norm")
+
+    def test_step_reports_the_breakdown_consistent_with_the_total(self):
+        torch.manual_seed(0)
+        model = _DraftLike()
+        model(torch.randn(3, 4)).square().sum().backward()
+        want = {
+            grad_norm_group(name): float(p.grad.float().square().sum())
+            for name, p in model.named_parameters()
+            if p.grad is not None
+        }
+        expected_leaf = {}
+        for name, p in model.named_parameters():
+            expected_leaf[grad_norm_group(name)] = expected_leaf.get(grad_norm_group(name), 0.0) + float(p.grad.float().square().sum())
+        total = sum(expected_leaf.values()) ** 0.5
+        opt = BF16Optimizer(
+            model, lr=1e-3, max_grad_norm=1e9, total_steps=10, warmup_ratio=0.0,
+            lr_scheduler="constant",
+        )
+        norm = opt.step()
+        groups = opt.last_grad_norm_groups
+        self.assertAlmostEqual(norm.item(), total, places=4)
+        # The first AdamW step moves every weight with a non-zero grad by ~lr.
+        updates = opt.last_update_norm_groups
+        fc_numel = model.fc.weight.numel()
+        self.assertAlmostEqual(
+            updates["update_norm/fc"].item(), 1e-3 * fc_numel**0.5, delta=1e-3 * fc_numel**0.5 * 0.02
+        )
+        params = opt.last_param_norm_groups
+        self.assertAlmostEqual(params["param_norm/fc"].item(), model.fc.weight.float().norm().item(), places=4)
+        self.assertEqual({k.split("/", 1)[1] for k in updates}, {k.split("/", 1)[1] for k in groups})
+        self.assertEqual(set(opt.last_breakdown()), set(groups) | set(updates) | set(params))
+        for leaf, sq in expected_leaf.items():
+            self.assertAlmostEqual(groups[f"grad_norm/{leaf}"].item(), sq**0.5, places=4, msg=leaf)
+        layer0 = sum(sq for leaf, sq in expected_leaf.items() if leaf.startswith("layer0/")) ** 0.5
+        self.assertAlmostEqual(groups["grad_norm/layer0"].item(), layer0, places=4)
+        self.assertAlmostEqual(groups["grad_norm/layers/router"].item(), expected_leaf["layer0/router"] ** 0.5, places=4)
+        self.assertEqual(
+            set(groups),
+            {"grad_norm/fc", "grad_norm/norm", "grad_norm/layer0", "grad_norm/layer0/attn", "grad_norm/layer0/router",
+             "grad_norm/layer0/experts", "grad_norm/layer0/norm", "grad_norm/layers/attn", "grad_norm/layers/router",
+             "grad_norm/layers/experts", "grad_norm/layers/norm"},
+        )
+        self.assertTrue(all(not v.requires_grad for v in groups.values()))
 
 
 if __name__ == "__main__":

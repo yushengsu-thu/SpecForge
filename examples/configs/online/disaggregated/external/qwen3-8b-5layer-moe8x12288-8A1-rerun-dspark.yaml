@@ -1,0 +1,96 @@
+# RERUN of the 8E1A 1-epoch run (u2neo4z0) with the same config, hyper-parameters and seeds; only log_interval 10 -> 1 and a checkpoint every 100 steps (kept). Does the router saturate again? Every step logs the router metrics, per-module grad/update/param norms, and consumer-state/consumed_steps.jsonl names the prompt indices it trained on.
+# code: PR #25 branch exp/qwen3-8b-5layer-moe8e1a-router-guards (= PR #22 head f268321d + metrics only: router health, per-module grad/update/param norms); the router math is the PR #22 router
+model:
+  target_model_path: /scratch/moe5l1536/models/Qwen3-8B
+  draft_model_config: configs/qwen3-8b-5layer-moe8x12288-8A1-rerun-dspark.json   # as run: a per-pod copy of this file
+  use_liger_kernel: false   # Liger SwiGLU cannot run at intermediate 98304 (liger-kernel 0.8.5: n > 65536 Triton block limit); kernels are all-or-nothing
+  target_backend: sglang
+  trust_remote_code: true
+  embedding_key: model.embed_tokens.weight
+  torch_dtype: bfloat16
+  mask_token_id: 151669
+  sglang_attention_backend: triton
+  sglang_mem_fraction_static: 0.85
+  sglang_disable_radix_cache: true
+  sglang_context_length: 8208
+  sglang_max_running_requests: 4
+  sglang_max_total_tokens: 65536
+data:
+  # pre-rendered WITHOUT a system turn (tools/render_nosys.py: Qwen3 tokenizer chat template on the same 1,420,909 conversations,
+  # same record order); validated: preformatted path == conversation path with system_prompt="" (1,500 samples, 0 mismatches)
+  train_data_path: /scratch/moe5l-d98304/data/perfectblend_regen_nosys_text.jsonl
+  is_preformatted: true
+  max_length: 8192
+  chat_template: qwen3-instruct   # only its assistant-span + ignore_token (<think>\n\n</think>\n\n) masking rules are used for preformatted text; its system_prompt is NOT applied
+  cache_dir: /scratch/moe5l1536/cache/qwen3-8b-dspark-perfectblend-8192
+  cache_key: d98304-nosys-preformatted-8192   # explicit: never reuse the caches built with the system prompt
+  build_dataset_num_proc: 64
+  dataloader_num_workers: 8
+training:
+  strategy: dspark
+  num_epochs: 1
+  total_steps: 9666   # = 1,420,909 prompts x 1 epoch(s) // 147; explicit for multi-node
+  max_steps: null
+  tp_size: 1
+  batch_size: 1
+  accumulation_steps: 3
+  fsdp_sharding: SHARD_GRAD_OP   # x7s test: keep unsharded bf16 params between fwd and bwd = one fewer all-gather per micro-batch; peak ~125 GB
+  ddp_bucket_cap_mb: 128
+  optimizer_cpu_offload: false
+  learning_rate: 0.0006
+  lr_scheduler: cosine
+  warmup_ratio: 0.04
+  max_grad_norm: 1.0
+  attention_backend: flex_attention
+  num_anchors: 512
+  loss_decay_gamma: 7.0
+  objective_chunk_blocks: 128
+  dspark_ce_loss_alpha: 0.1
+  dspark_l1_loss_alpha: 0.9
+  dspark_confidence_head_alpha: 0.0
+  save_interval: 100   # a checkpoint every 100 steps, to roll back to just before a spike and replay with other data
+  max_checkpoints: 0   # keep all: ~23 GB per pod per checkpoint, ~2.2 TB per pod over the epoch
+  log_interval: 1   # every step: the router metrics around any spike
+  dist_timeout: 30
+  seed: 42
+  prompt_seed: 42
+tracking:
+  report_to: wandb
+  wandb_project: qwen3-8b-dspark
+  wandb_name: qwen3-8b-5layer-moe8e1a-12288-rerun-dspark-1ep
+  wandb_dir: /scratch/moe5l-d98304/outputs/qwen3-8b-5layer-moe8e1a-12288-rerun-dspark-1ep/wandb
+runtime:
+  producer_lease: 8
+  producer_concurrency: 8
+  in_flight_high_watermark: 528
+  in_flight_low_watermark: 396
+  resident_high_watermark_bytes: 214748364800
+  resident_low_watermark_bytes: 128849018880
+  feature_store_max_resident_bytes: 274877906944
+run_id: qwen3-8b-5layer-moe8e1a-12288-rerun-dspark-1ep
+output_dir: /scratch/moe5l-d98304/outputs/qwen3-8b-5layer-moe8e1a-12288-rerun-dspark-1ep
+deployment:
+  mode: disaggregated
+  trainer:
+    nnodes: 7
+    nproc_per_node: 7
+    master_addr: 172.16.224.128
+    master_port: 28711
+  disaggregated:
+    control_dir: /scratch/moe5l-d98304/outputs/qwen3-8b-5layer-moe8e1a-12288-rerun-dspark-1ep/control
+    consumer_state_dir: /scratch/moe5l-d98304/outputs/qwen3-8b-5layer-moe8e1a-12288-rerun-dspark-1ep/consumer-state
+    inbox_server_url: http://172.16.224.128:35900
+    backend: mooncake
+    client_buffer_size: 1073741824
+    server_urls:   # one capture server per pod on its GPU 7 (ranks 0-6)
+      - http://172.16.224.128:30000
+      - http://172.16.136.150:30000
+      - http://172.16.83.23:30000
+      - http://172.16.161.148:30000
+      - http://172.16.3.177:30000
+      - http://172.16.118.14:30000
+      - http://172.16.5.54:30000
+    mooncake_metadata_server: http://172.16.224.128:35880/metadata
+    mooncake_master_server_addr: 172.16.224.128:35551
+    mooncake_protocol: rdma   # pods: eth0 is a slow Calico overlay; IB gives 374 Gb/s between pods
+    mooncake_rdma_devices: "mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_6,mlx5_7"

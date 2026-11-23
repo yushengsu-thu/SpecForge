@@ -471,8 +471,12 @@ class TrainerCore:
                 grad_norm = self.backend.step()
             else:
                 grad_norm = self.backend.step(loss_denominator=loss_denominator)
-            # The model's per-step hook; whatever it reports joins this step's metrics.
+            # The model's per-step hook; whatever it reports joins this step's metrics,
+            # after the optimizer's per-module grad / update / weight norms.
+            breakdown = self.backend.optimizer_breakdown()
             step_metrics = self.strategy.on_optimizer_step()
+            if breakdown:
+                step_metrics = {**breakdown, **(step_metrics or {})}
         result_ratio_metrics = self._ratio_totals if stepped else ratio_metrics
         result = self._result(
             out,

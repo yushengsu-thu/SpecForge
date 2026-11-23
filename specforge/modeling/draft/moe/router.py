@@ -1,7 +1,7 @@
 # coding=utf-8
-"""Top-k routers for draft MoE layers: selection, the selection bias, the counts."""
+"""Top-k routers for draft MoE layers: selection, the selection bias, the counts, the metrics."""
 
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional
 
 import torch
 import torch.distributed as dist
@@ -11,6 +11,7 @@ from torch import nn
 from specforge.modeling.draft.moe.balance import (
     count_tokens_per_expert,
     load_balance_loss,
+    router_metrics,
     router_z_loss,
 )
 
@@ -74,6 +75,8 @@ class TopKRouter(nn.Module):
         # This micro-batch's load-balance (aux) loss, kept in training for the trainer.
         self.aux_loss: Optional[torch.Tensor] = None
         self.z_loss: Optional[torch.Tensor] = None
+        # This micro-batch's router health metrics (detached), kept in training.
+        self.metrics: Optional[Dict[str, torch.Tensor]] = None
         self.reset_parameters(initializer_range)
 
     def _apply(self, fn, recurse=True):
@@ -99,6 +102,7 @@ class TopKRouter(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """``x`` [T, H] -> fp32 scores [T, E], indices [T, K], fp32 weights [T, K]."""
         self.aux_loss = None  # per-forward state: never carry a stale loss into eval
+        self.metrics = None
         self.z_loss = None
         # Logits in x's dtype as in Qwen; DeepSeek-V4 projects in fp32.
         logits = F.linear(x, self.weight).float()
@@ -114,6 +118,9 @@ class TopKRouter(nn.Module):
             # Always kept in training: with coefficient 0 it is the balance metric.
             self.aux_loss = load_balance_loss(scores, self._aux_loss_load(counts), mask)
             self.z_loss = router_z_loss(logits, mask)
+            self.metrics = router_metrics(
+                logits, scores, indices, mask, self.selection_bias
+            )
         return scores, indices, weights * self.route_scale
 
     def _aux_loss_load(self, counts: torch.Tensor) -> torch.Tensor:
