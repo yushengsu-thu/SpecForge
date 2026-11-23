@@ -7,10 +7,14 @@ import os
 import tempfile
 import unittest
 
+import json as _json
+
 from specforge.launch import (
     _consumed_log_path,
     _epoch_online_prompts,
     _epoch_prompt_indices,
+    _iter_epoch_online_prompt_batches,
+    load_prompt_exclusions,
 )
 from specforge.runtime.contracts import FeatureSpec, SampleRef
 from specforge.runtime.control_plane.controller import DataFlowController
@@ -71,6 +75,31 @@ class ConsumedIndexLogTest(unittest.TestCase):
             self.assertTrue(lines[0]["optimizer_durable"])
             self.assertEqual(lines[1]["prompt_index"], [101, None])
             self.assertEqual(lines[1]["count"], 2)
+
+    def test_plan_skip_and_exclusions_fork_the_stream(self):
+        prompts = [{"task_id": f"t{i}", "payload": {"text": str(i)}} for i in range(20)]
+        order = _epoch_prompt_indices(prompts, 0, seed=3)
+        drop = {order[2], order[7]}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "exclude.json")
+            with open(path, "w", encoding="utf-8") as handle:
+                _json.dump(sorted(drop), handle)
+            exclude = load_prompt_exclusions(path)
+        self.assertEqual(exclude, frozenset(drop))
+        self.assertIsNone(load_prompt_exclusions(None))
+        kept = [i for i in order if i not in drop]
+        items = _epoch_online_prompts(prompts, 0, 1, seed=3, plan_skip=5, exclude=exclude)
+        self.assertEqual([it["metadata"]["prompt_index"] for it in items], kept[5:])
+        batches = list(
+            _iter_epoch_online_prompt_batches(
+                prompts, 0, 1, seed=3, batch_size=4, plan_skip=5, exclude=exclude
+            )
+        )
+        flat = [it["metadata"]["prompt_index"] for batch in batches for it in batch]
+        self.assertEqual(flat, kept[5:])
+        self.assertTrue(all(len(batch) <= 4 for batch in batches))
+        plain = _epoch_online_prompts(prompts, 0, 1, seed=3)  # defaults: the plain plan
+        self.assertEqual([it["metadata"]["prompt_index"] for it in plain], order)
 
     def test_no_log_without_a_path(self):
         dfc = DataFlowController("run0", metadata_store=InMemoryMetadataStore())

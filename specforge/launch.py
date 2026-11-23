@@ -420,12 +420,42 @@ def _epoch_online_prompts(
     prompt_epochs: int,
     *,
     seed: int = 0,
+    plan_skip: int = 0,
+    exclude=None,
 ):
     """Build one deterministic, epoch-specific online prompt plan."""
     return [
         _epoch_online_prompt(prompts[index], index, epoch, prompt_epochs)
-        for index in _epoch_prompt_indices(prompts, epoch, seed=seed)
+        for index in _planned_prompt_indices(
+            prompts, epoch, seed=seed, plan_skip=plan_skip, exclude=exclude
+        )
     ]
+
+
+def _planned_prompt_indices(prompts, epoch: int, *, seed: int, plan_skip: int = 0, exclude=None):
+    """The seeded epoch order minus ``exclude`` (dataset row indices), then the
+    first ``plan_skip`` entries dropped: the stream a run forked from a
+    checkpoint sees, with or without the rows that trained a given window."""
+    indices = _epoch_prompt_indices(prompts, epoch, seed=seed)
+    if exclude:
+        excluded = set(int(i) for i in exclude)
+        indices = [index for index in indices if index not in excluded]
+    if plan_skip:
+        indices = indices[int(plan_skip):]
+    return indices
+
+
+def load_prompt_exclusions(path: Optional[str]):
+    """Dataset row indices listed in a JSON file (a list, or {"indices": [...]})."""
+    if not path:
+        return None
+    import json
+
+    with open(path, encoding="utf-8") as handle:
+        data = json.load(handle)
+    if isinstance(data, dict):
+        data = data.get("indices", data.get("prompt_index", []))
+    return frozenset(int(i) for i in data)
 
 
 def _epoch_prompt_indices(prompts, epoch: int, *, seed: int = 0):
@@ -470,9 +500,13 @@ def _iter_epoch_online_prompt_batches(
     *,
     seed: int = 0,
     batch_size: int = 4096,
+    plan_skip: int = 0,
+    exclude=None,
 ):
     """Yield a shuffled epoch while bounding expanded token-list residency."""
-    indices = _epoch_prompt_indices(prompts, epoch, seed=seed)
+    indices = _planned_prompt_indices(
+        prompts, epoch, seed=seed, plan_skip=plan_skip, exclude=exclude
+    )
     for start in range(0, len(indices), batch_size):
         yield [
             _epoch_online_prompt(prompts[index], index, epoch, prompt_epochs)
@@ -847,6 +881,8 @@ def build_disagg_online_producer(
     prompt_epochs: int = 1,
     prompt_seed: int = 0,
     prompt_ingest_batch_size: int = 4096,
+    prompt_plan_skip: int = 0,
+    prompt_exclude=None,
 ):
     """Producer side of an ONLINE disaggregated run (rollout pool).
 
@@ -1421,6 +1457,8 @@ def build_disagg_online_producer(
                     prompt_epochs,
                     seed=prompt_seed,
                     batch_size=feed_size,
+                    plan_skip=prompt_plan_skip,
+                    exclude=prompt_exclude,
                 )
                 for batch_index, prompt_batch in enumerate(epoch_batches):
                     yield epoch, batch_index, prompt_batch

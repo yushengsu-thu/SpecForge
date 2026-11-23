@@ -2,7 +2,7 @@
 # code: PR #25 branch exp/qwen3-8b-5layer-moe8e1a-router-guards (= PR #22 head f268321d + metrics only: router health, per-module grad/update/param norms); the router math is the PR #22 router
 model:
   target_model_path: /scratch/moe5l1536/models/Qwen3-8B
-  draft_model_config: /scratch/moe5l-d98304/config/qwen3-8b-5layer-moe8e1a-12288-rerun-dspark.json
+  draft_model_config: configs/qwen3-8b-5layer-moe8x12288-8A1-rerun-dspark.json   # as run: a per-pod copy of this file
   use_liger_kernel: false   # Liger SwiGLU cannot run at intermediate 98304 (liger-kernel 0.8.5: n > 65536 Triton block limit); kernels are all-or-nothing
   target_backend: sglang
   trust_remote_code: true

@@ -644,7 +644,7 @@ def _build_online(
             ServerCaptureSchema,
             SGLangServerCaptureAdapter,
         )
-        from specforge.launch import build_disagg_online_producer
+        from specforge.launch import build_disagg_online_producer, load_prompt_exclusions
         from specforge.training.model_loading import resolve_draft_config
 
         # This check is independent of dataset size. Keep it before tokenizer
@@ -724,6 +724,8 @@ def _build_online(
             aux_hidden_state_layer_ids=layers,
             prompt_epochs=cfg.training.num_epochs,
             prompt_seed=_online_prompt_seed(cfg),
+            prompt_plan_skip=cfg.training.prompt_plan_skip,
+            prompt_exclude=load_prompt_exclusions(cfg.training.prompt_exclude_file),
             lease=cfg.runtime.producer_lease,
             in_flight_high_watermark=in_flight_high_watermark,
             in_flight_low_watermark=in_flight_low_watermark,

@@ -1075,6 +1075,13 @@ class TrainingConfig(StrictConfigModel):
     #: Deterministic online prompt ordering. ``None`` preserves the historical
     #: behavior of using the run RNG seed for both model and prompt sampling.
     prompt_seed: Optional[int] = None
+    #: Online producer only: skip the first N entries of the seeded prompt plan
+    #: (per epoch), e.g. global_step * dp_size * batch_size * accumulation_steps
+    #: to fork a run from a checkpoint onto the same stream.
+    prompt_plan_skip: int = Field(default=0, ge=0)
+    #: Online producer only: a JSON file holding a list of dataset row indices
+    #: to drop from the prompt plan (the plan order is otherwise unchanged).
+    prompt_exclude_file: Optional[str] = None
 
     @model_validator(mode="after")
     def _validate_training_shape(self):
