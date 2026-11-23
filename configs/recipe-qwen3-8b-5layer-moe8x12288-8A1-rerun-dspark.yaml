@@ -1,4 +1,4 @@
-# RERUN of the 8E1A 1-epoch run (u2neo4z0) with the same config, hyper-parameters and seeds; only log_interval 10 -> 1. Does the router saturate again? (PR #25 metrics: moe/top1_prob, prob_balance, logit_gap, bias_flip_frac, maxvio, z_loss...)
+# RERUN of the 8E1A 1-epoch run (u2neo4z0) with the same config, hyper-parameters and seeds; only log_interval 10 -> 1 and a checkpoint every 100 steps (kept). Does the router saturate again? Every step logs the router metrics, per-module grad/update/param norms, and consumer-state/consumed_steps.jsonl names the prompt indices it trained on.
 # code: PR #25 branch exp/qwen3-8b-5layer-moe8e1a-router-guards (= PR #22 head f268321d + metrics only: router health, per-module grad/update/param norms); the router math is the PR #22 router
 model:
   target_model_path: /scratch/moe5l1536/models/Qwen3-8B
@@ -48,8 +48,8 @@ training:
   dspark_ce_loss_alpha: 0.1
   dspark_l1_loss_alpha: 0.9
   dspark_confidence_head_alpha: 0.0
-  save_interval: 3222   # 3 per epoch of 9666 steps
-  max_checkpoints: 3
+  save_interval: 100   # a checkpoint every 100 steps, to roll back to just before a spike and replay with other data
+  max_checkpoints: 0   # keep all: ~23 GB per pod per checkpoint, ~2.2 TB per pod over the epoch
   log_interval: 1   # every step: the router metrics around any spike
   dist_timeout: 30
   seed: 42
