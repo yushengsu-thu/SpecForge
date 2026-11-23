@@ -1,5 +1,5 @@
 # coding=utf-8
-"""MoE load balancing: the loss math, and the hooks the DFlash-family model calls."""
+"""MoE load balancing: the loss math, the router health metrics, and the hooks the DFlash-family model calls."""
 
 from typing import Dict, List, Optional, Protocol, Tuple
 
@@ -43,6 +43,63 @@ def dispatch_balance(tokens_per_expert: torch.Tensor) -> torch.Tensor:
     return share.shape[-1] * share.square().sum()
 
 
+def dispatch_maxvio(tokens_per_expert: torch.Tensor) -> torch.Tensor:
+    """DeepSeek's MaxVio: the busiest expert's load over the balanced load, minus 1."""
+    # 0 when uniform, E - 1 when every slot went to one expert; 0 for an empty step.
+    share = tokens_per_expert / tokens_per_expert.sum().clamp(min=1)
+    return (share.shape[-1] * share.max() - 1).clamp(min=0)
+
+
+def dead_experts(tokens_per_expert: torch.Tensor, fraction: float = 0.25) -> torch.Tensor:
+    """How many experts got under ``fraction`` of their balanced share of the slots."""
+    share = tokens_per_expert / tokens_per_expert.sum().clamp(min=1)
+    return (share < fraction / share.shape[-1]).sum().to(share.dtype)
+
+
+@torch.no_grad()
+def router_metrics(
+    logits: torch.Tensor,
+    scores: torch.Tensor,
+    indices: torch.Tensor,
+    mask: Optional[torch.Tensor] = None,
+    selection_bias: Optional[torch.Tensor] = None,
+) -> Dict[str, torch.Tensor]:
+    """Router health over the kept tokens, detached: how peaked the scores are and
+    how large the logits grew, independently of where the dispatch sent the tokens.
+
+    ``top1_prob``: mean top score (1/E uniform, 1 saturated). ``prob_balance``:
+    ``E * sum_e share_e^2`` with the mean score shares standing in for the dispatch
+    (1 uniform, E collapsed) -- what the aux loss cannot see once the selection
+    bias has evened out the counts. ``logit_gap``: mean top-1 minus top-2 logit.
+    ``logit_absmax``: the largest |logit| of a kept token. ``bias_flip_frac``: the
+    kept tokens whose top-k the selection bias moved off the scores' top-k.
+    """
+    logits = logits.detach().float()
+    scores = scores.detach().float()
+    num_experts, top_k = scores.shape[-1], indices.shape[-1]
+    kept = scores.new_ones(scores.shape[0]) if mask is None else mask.to(scores.dtype)
+    n = kept.sum().clamp(min=1)
+    k2 = min(2, num_experts)
+    top_scores = scores.topk(k2, dim=-1).values
+    top_logits = logits.topk(k2, dim=-1).values
+    mean_score = (scores * kept.unsqueeze(-1)).sum(dim=0) / n
+    share = mean_score / mean_score.sum().clamp(min=1e-12)
+    gap = top_logits[:, 0] - top_logits[:, -1] if k2 == 2 else torch.zeros_like(kept)
+    if selection_bias is None:
+        moved = torch.zeros_like(kept)
+    else:
+        unbiased = scores.topk(top_k, dim=-1).indices.sort(dim=-1).values
+        picked = indices.sort(dim=-1).values
+        moved = (unbiased != picked).any(dim=-1).to(scores.dtype)
+    return {
+        "top1_prob": (top_scores[:, 0] * kept).sum() / n,
+        "prob_balance": num_experts * share.square().sum(),
+        "logit_gap": (gap * kept).sum() / n,
+        "logit_absmax": (logits.abs().amax(dim=-1) * kept).amax(),
+        "bias_flip_frac": (moved * kept).sum() / n,
+    }
+
+
 # Hooks the DFlash-family model calls; routers and layers are found by their state.
 
 
@@ -51,6 +108,7 @@ class _RouterLike(Protocol):
     selection_bias: Optional[torch.Tensor]
     aux_loss: Optional[torch.Tensor]
     aux_loss_coef: float
+    metrics: Optional[Dict[str, torch.Tensor]]
 
     def update_expert_bias(self, tokens_per_expert: torch.Tensor) -> None: ...
 
@@ -88,6 +146,27 @@ def take_moe_aux_loss(
     return aux, raw
 
 
+def take_moe_router_metrics(model: nn.Module) -> Optional[Dict[str, torch.Tensor]]:
+    """Pop this forward's router metrics: each under ``moe/`` as the mean over the
+    MoE layers, and per layer under ``moe/layer{i}/``."""
+    routers = _routers(model)
+    recorded = [
+        (index, router.metrics)
+        for index, router in enumerate(routers)
+        if getattr(router, "metrics", None) is not None
+    ]
+    for router in routers:
+        router.metrics = None
+    if not recorded:
+        return None
+    out: Dict[str, torch.Tensor] = {}
+    for name in recorded[0][1]:
+        out[f"moe/{name}"] = torch.stack([m[name] for _, m in recorded]).mean()
+        for index, m in recorded:
+            out[f"moe/layer{index}/{name}"] = m[name]
+    return out
+
+
 def step_moe_balancing(model: nn.Module) -> Dict[str, torch.Tensor]:
     """Optimizer step boundary: pool counts once, move the biases, score the step."""
     routers = _routers(model)
@@ -102,8 +181,26 @@ def step_moe_balancing(model: nn.Module) -> Dict[str, torch.Tensor]:
             router.update_expert_bias(pooled)
         router.tokens_per_expert.zero_()  # the next step's count window
     # The step's pooled load: the collapse signal, unlike the per-micro-batch loss.
-    balance = torch.stack([dispatch_balance(c) for c in counts]).mean()
-    return {"moe/step_balance": balance}
+    per_layer = {
+        "step_balance": [dispatch_balance(c) for c in counts],
+        "maxvio": [dispatch_maxvio(c) for c in counts],
+        "dead_experts": [dead_experts(c) for c in counts],
+        # The biases after this step's move: how much they are compensating.
+        "bias_range": [
+            (
+                router.selection_bias.max() - router.selection_bias.min()
+                if router.selection_bias is not None
+                else counts.new_zeros(())
+            )
+            for router in routers
+        ],
+    }
+    out: Dict[str, torch.Tensor] = {}
+    for name, values in per_layer.items():
+        out[f"moe/{name}"] = torch.stack(values).mean()
+        for index, value in enumerate(values):
+            out[f"moe/layer{index}/{name}"] = value
+    return out
 
 
 def _routers(model: nn.Module) -> List[_RouterLike]:
