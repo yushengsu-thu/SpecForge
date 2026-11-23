@@ -23,6 +23,7 @@ online consumers use one SQLite ledger shared by their ranks.
 from __future__ import annotations
 
 import dataclasses
+import json
 import threading
 import uuid
 from collections import OrderedDict, deque
@@ -44,10 +45,14 @@ class DataFlowController:
         metadata_store: Optional[MetadataStore] = None,
         max_prompt_attempts: Optional[int] = None,
         enable_sample_queue: bool = True,
+        consumed_log: Optional[str] = None,
     ) -> None:
         self.run_id = run_id
         self.sample_queue = SampleRefQueue() if enable_sample_queue else None
         self.store = metadata_store or InMemoryMetadataStore()
+        # Optional JSONL beside the ledger: one line per acked optimizer step
+        # with the plan positions of its samples (see _append_consumed).
+        self.consumed_log = consumed_log
         # Retryable-failure bound: a task failed this many attempts goes
         # terminal instead of requeueing (None = retry forever). Bounds a
         # poisoned prompt that would otherwise pin the pool non-empty forever.
@@ -222,8 +227,37 @@ class DataFlowController:
             for r in (self.store.get_committed(s) for s in sample_ids)
             if r is not None
         ]
+        if self.consumed_log is not None and global_step is not None:
+            self._append_consumed(global_step, optimizer_durable, sample_ids, refs)
         if self.sample_queue is not None:
             self.sample_queue.ack(refs)
+
+    def _append_consumed(
+        self,
+        global_step: int,
+        optimizer_durable: bool,
+        sample_ids: List[str],
+        refs: List[SampleRef],
+    ) -> None:
+        """Append one JSON line: the step and, per sample, its ``prompt_index``
+        and ``epoch`` from the ref metadata (None when a ref is unknown)."""
+        by_id = {ref.sample_id: ref for ref in refs}
+
+        def field_of(name):
+            return [
+                by_id[s].metadata.get(name) if s in by_id else None for s in sample_ids
+            ]
+
+        record = {
+            "global_step": int(global_step),
+            "optimizer_durable": bool(optimizer_durable),
+            "count": len(sample_ids),
+            "prompt_index": field_of("prompt_index"),
+            "epoch": field_of("epoch"),
+            "sample_ids": list(sample_ids),
+        }
+        with open(self.consumed_log, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
 
     def reconcile_on_restart(
         self, feature_store: Optional[Any] = None

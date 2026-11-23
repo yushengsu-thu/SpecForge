@@ -345,6 +345,12 @@ class SGLangServerCaptureAdapter:
                 "transport": "sglang_server_capture",
                 "server": self.base_url,  # which server captured it (provenance)
                 "generation": gen,  # the zero-copy get() locator
+                # The prompt's plan position, so refs.jsonl names the data.
+                **{
+                    key: task.metadata[key]
+                    for key in ("prompt_index", "epoch")
+                    if key in task.metadata
+                },
                 "valid_anchor_count": sum(
                     left > 0.5 and right > 0.5
                     for left, right in zip(

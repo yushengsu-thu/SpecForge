@@ -404,6 +404,16 @@ def _publish_refs_with_cleanup(
         raise
 
 
+def _consumed_log_path(metadata_db_path: Optional[str]) -> Optional[str]:
+    """Beside the durable ledger: one JSON line per optimizer step naming the
+    plan positions (``prompt_index``) of the samples it consumed."""
+    if not metadata_db_path:
+        return None
+    return os.path.join(
+        os.path.dirname(os.path.abspath(metadata_db_path)), "consumed_steps.jsonl"
+    )
+
+
 def _epoch_online_prompts(
     prompts,
     epoch: int,
@@ -428,16 +438,23 @@ def _epoch_prompt_indices(prompts, epoch: int, *, seed: int = 0):
 
 
 def _epoch_online_prompt(prompt, index: int, epoch: int, prompt_epochs: int):
-    """Apply epoch identity while preserving the single-epoch prompt shape."""
-    if prompt_epochs == 1:
-        return prompt
+    """Apply epoch identity while preserving the single-epoch prompt shape.
 
+    Every prompt carries its plan position (``prompt_index``, ``epoch``) in its
+    metadata, which the capture adapter copies into the sample ref, so the data
+    a step consumed can be named afterwards; at one epoch the task ids stay as
+    they were.
+    """
     item = dict(prompt)
     metadata = dict(prompt.get("metadata") or {})
-    if "task_id" in prompt:
-        metadata.setdefault("base_task_id", str(prompt["task_id"]))
     metadata["prompt_index"] = index
     metadata["epoch"] = epoch
+    if prompt_epochs == 1:
+        item["metadata"] = metadata
+        return item
+
+    if "task_id" in prompt:
+        metadata.setdefault("base_task_id", str(prompt["task_id"]))
     metadata["prompt_epochs"] = prompt_epochs
     item["metadata"] = metadata
     # The online feature store is consume-once and commit dedups by
@@ -1683,6 +1700,7 @@ def build_disagg_online_consumer(
                 metadata_store=store,
                 feature_store=feature_store,
                 process_group=ack_group,
+                consumed_log=_consumed_log_path(metadata_db_path),
             )
             skip_ids = None
             requeued_ids = None
