@@ -8,6 +8,7 @@ from unittest import mock
 
 import torch
 import torch.distributed as dist
+import torch.nn.functional as F
 from torch import nn
 from transformers import Qwen3Config
 from transformers.models.qwen3_5_moe.configuration_qwen3_5_moe import (
@@ -30,10 +31,12 @@ from specforge.modeling.draft.moe.balance import (
     dispatch_balance,
     load_balance_loss,
     router_metrics,
+    router_z_loss,
     set_moe_token_mask,
     step_moe_balancing,
     take_moe_aux_loss,
     take_moe_router_metrics,
+    take_moe_z_loss,
 )
 from specforge.modeling.draft.moe.families.qwen3_5_moe import build_moe
 from specforge.modeling.draft.moe.router import TopKRouter
@@ -306,6 +309,78 @@ class RouterMetricsTest(unittest.TestCase):
         self.assertIsNone(model.draft_model.layers[0].mlp.gate.metrics)
 
 
+class RouterZLossTest(unittest.TestCase):
+    """ST-MoE's router z-loss: a metric by default, a loss term by config."""
+
+    def test_z_loss_is_the_mean_squared_logsumexp_over_kept_tokens(self):
+        torch.manual_seed(0)
+        logits = torch.randn(B * S, E, requires_grad=True)
+        want = torch.logsumexp(logits, dim=-1).square()
+        torch.testing.assert_close(router_z_loss(logits), want.mean())
+        mask = _real_token_mask().reshape(-1)
+        torch.testing.assert_close(router_z_loss(logits, mask), want[mask].mean())
+        self.assertEqual(router_z_loss(logits, torch.zeros_like(mask)).item(), 0.0)
+        (grad,) = torch.autograd.grad(router_z_loss(logits, mask), logits)
+        self.assertTrue(torch.all(grad[~mask] == 0))
+        self.assertTrue(torch.any(grad[mask] != 0))
+
+    def test_gradient_survives_a_saturated_softmax(self):
+        # A collapsed router: one logit far ahead. The aux and main losses see
+        # P(1 - P) ~ 0 there; the z-loss gradient 2 * lse * P still pulls it down.
+        logits = torch.zeros(4, E, requires_grad=True)
+        with torch.no_grad():
+            logits[:, 0] = 30.0
+        (grad,) = torch.autograd.grad(router_z_loss(logits), logits)
+        self.assertGreater(grad[:, 0].min().item(), 1.0)
+
+    def test_router_keeps_the_z_loss_in_training_and_the_hook_pops_it(self):
+        torch.manual_seed(0)
+        layers = nn.ModuleList(
+            [_moe(coef=0.5, moe_router_z_loss_coef=1e-3), _moe(coef=0.5)]
+        )
+        gates = [layer.gate for layer in layers]
+        self.assertEqual(gates[0].z_loss_coef, 1e-3)
+        self.assertEqual(gates[1].z_loss_coef, 0.0)  # off by default: a metric only
+        x = torch.randn(B, S, H)
+        for layer in layers:
+            layer(x)
+        for gate in gates:
+            logits = F.linear(x.reshape(-1, H), gate.weight).float()
+            torch.testing.assert_close(gate.z_loss, router_z_loss(logits))
+        losses = [gate.z_loss for gate in gates]
+        z, raw = take_moe_z_loss(layers)
+        torch.testing.assert_close(z, 1e-3 * losses[0] + 0.0 * losses[1])
+        torch.testing.assert_close(raw, (losses[0] + losses[1]) / 2)
+        for gate in gates:
+            self.assertIsNone(gate.z_loss)
+        self.assertIsNone(take_moe_z_loss(layers))
+        (grad,) = torch.autograd.grad(losses[0], gates[0].weight)
+        self.assertTrue(torch.any(grad != 0))
+        layers[0].eval()(x)
+        self.assertIsNone(gates[0].z_loss)
+
+    def test_objective_folds_the_z_loss_and_logs_it(self):
+        torch.manual_seed(0)
+        inputs = dict(
+            input_ids=torch.randint(0, V - 1, (1, 8)),
+            hidden_states=torch.randn(1, 8, H),
+            loss_mask=torch.ones(1, 8),
+        )
+        with_z = _online(_tiny_moe_draft(coef=0.0, moe_router_z_loss_coef=0.5))
+        plain = copy.deepcopy(with_z)
+        plain.draft_model.layers[0].mlp.gate.z_loss_coef = 0.0
+        torch.manual_seed(1)
+        loss, _, metrics = with_z(**inputs)
+        torch.manual_seed(1)
+        plain_loss, _, plain_metrics = plain(**inputs)
+        raw, _ = metrics["ratio_metrics"]["moe/z_loss"]
+        plain_raw, _ = plain_metrics["ratio_metrics"]["moe/z_loss"]
+        torch.testing.assert_close(plain_raw, raw)  # the metric is coefficient-free
+        self.assertGreater(raw.item(), 0.0)
+        torch.testing.assert_close(loss - plain_loss, 0.5 * raw)
+        self.assertIsNone(with_z.draft_model.layers[0].mlp.gate.z_loss)
+
+
 class BalancingHooksTest(unittest.TestCase):
     """Two micro-batches and one optimizer step through the hooks in balance.py."""
 
@@ -366,6 +441,7 @@ class BalancingHooksTest(unittest.TestCase):
                 want = _zero_mean_sign_step(total + other)
                 torch.testing.assert_close(gate.selection_bias, want)
                 self.assertTrue(torch.all(gate.tokens_per_expert == 0))
+                self.assertTrue(torch.all(gate.own_tokens_per_expert == 0))
             want = torch.stack([dispatch_balance(t + other) for t in totals]).mean()
             torch.testing.assert_close(metrics["moe/step_balance"], want)
             uniform, collapsed = torch.full((E,), 3.0), torch.tensor([24.0] + [0.0] * 7)
@@ -384,6 +460,73 @@ class BalancingHooksTest(unittest.TestCase):
             layers[0].eval()(x)
             self.assertIsNone(gates[0].aux_loss)
             self.assertEqual(step_moe_balancing(nn.Linear(2, 2)), {})
+
+
+class UnbiasedAuxLoadTest(unittest.TestCase):
+    """With a selection bias the aux loss balances the router's own top-k picks."""
+
+    def _router(self, selection_bias):
+        # hidden_size = num_experts and an identity weight: logits == x.
+        router = TopKRouter(
+            E, E, 1, norm_topk_prob=False, initializer_range=0.5, selection_bias=selection_bias
+        )
+        with torch.no_grad():
+            router.weight.copy_(torch.eye(E))
+        return router
+
+    def _skewed_tokens(self):
+        # Every token likes expert 0 best (logit 2) and expert t second (logit 1).
+        x = torch.zeros(E, E)
+        x[:, 0] = 2.0
+        x[torch.arange(1, E), torch.arange(1, E)] = 1.0
+        return x
+
+    def test_bias_balanced_dispatch_does_not_blind_the_loss(self):
+        router, x = self._router(True), self._skewed_tokens()
+        # A bias that pushes expert 0 just below each token's second choice: the
+        # biased dispatch is one token per expert, the router's own picks are not.
+        router.selection_bias[0] = -0.3
+        scores, indices, _ = router(x)
+        self.assertTrue(torch.equal(indices.squeeze(-1), torch.arange(E)))
+        torch.testing.assert_close(router.tokens_per_expert, torch.ones(E))
+        own = torch.zeros(E)
+        own[0] = E
+        torch.testing.assert_close(router.own_tokens_per_expert, own)
+        # The biased load gives the flat loss 1 with no gradient: blind to the skew.
+        blind = load_balance_loss(scores, router.tokens_per_expert)
+        torch.testing.assert_close(blind, torch.tensor(1.0))
+        (grad,) = torch.autograd.grad(blind, router.weight, retain_graph=True)
+        torch.testing.assert_close(grad, torch.zeros_like(grad))
+        # The router's own load gives E x mean P_0 > 1, and a gradient on the weight.
+        torch.testing.assert_close(router.aux_loss, load_balance_loss(scores, own))
+        self.assertGreater(router.aux_loss.item(), 3.0)
+        (grad,) = torch.autograd.grad(router.aux_loss, router.weight)
+        self.assertTrue(torch.any(grad != 0))
+
+    def test_batch_wise_load_pools_the_own_counts(self):
+        router, x = self._router(True), self._skewed_tokens()
+        router.aux_loss_type = "batch_wise"
+        router.selection_bias[0] = -0.3
+        router(x)
+        scores, _, _ = router(x)  # second micro-batch of the same step
+        own = torch.zeros(E)
+        own[0] = 2 * E
+        torch.testing.assert_close(router.own_tokens_per_expert, own)
+        torch.testing.assert_close(router.aux_loss, load_balance_loss(scores, own))
+
+    def test_without_a_bias_nothing_changes(self):
+        torch.manual_seed(0)
+        router, x = self._router(False), torch.randn(B * S, E)
+        scores, indices, _ = router(x)
+        torch.testing.assert_close(router.own_tokens_per_expert, router.tokens_per_expert)
+        torch.testing.assert_close(
+            router.aux_loss, load_balance_loss(scores, count_tokens_per_expert(indices, None, E))
+        )
+
+    def test_fp32_buffer_and_state_dict(self):
+        router = self._router(True).bfloat16()
+        self.assertEqual(router.own_tokens_per_expert.dtype, torch.float32)
+        self.assertNotIn("own_tokens_per_expert", router.state_dict())
 
 
 class ObjectiveTest(unittest.TestCase):

@@ -36,6 +36,20 @@ def load_balance_loss(
     return probs.shape[-1] * (share * mean_prob).sum()
 
 
+def router_z_loss(
+    logits: torch.Tensor, mask: Optional[torch.Tensor] = None
+) -> torch.Tensor:
+    """ST-MoE's router z-loss: ``mean_t logsumexp(logits_t) ** 2`` over the kept tokens."""
+    # Penalizes large router logits so the softmax never saturates; ST-MoE and
+    # OLMoE weight it by 1e-3. Unlike the main and aux losses its gradient does not
+    # vanish at saturation, so it also pulls a collapsed router back.
+    z = torch.logsumexp(logits.float(), dim=-1).square()
+    if mask is None:
+        return z.mean()
+    kept = mask.to(z.dtype)
+    return (z * kept).sum() / kept.sum().clamp(min=1)
+
+
 def dispatch_balance(tokens_per_expert: torch.Tensor) -> torch.Tensor:
     """A dispatch's balance against itself: 1 when uniform, E / K when collapsed."""
     # load_balance_loss with the load standing in for the probabilities.
@@ -116,10 +130,13 @@ def router_metrics(
 
 class _RouterLike(Protocol):
     tokens_per_expert: torch.Tensor
+    own_tokens_per_expert: torch.Tensor
     selection_bias: Optional[torch.Tensor]
     aux_loss: Optional[torch.Tensor]
     aux_loss_coef: float
     metrics: Optional[Dict[str, torch.Tensor]]
+    z_loss: Optional[torch.Tensor]
+    z_loss_coef: float
 
     def update_expert_bias(self, tokens_per_expert: torch.Tensor) -> None: ...
 
@@ -178,6 +195,25 @@ def take_moe_router_metrics(model: nn.Module) -> Optional[Dict[str, torch.Tensor
     return out
 
 
+def take_moe_z_loss(
+    model: nn.Module,
+) -> Optional[Tuple[torch.Tensor, torch.Tensor]]:
+    """Pop this forward's router z-loss: (weighted sum over layers, raw mean)."""
+    layers = _moe_layers(model)
+    terms = [
+        (layer.gate.z_loss_coef, layer.gate.z_loss)
+        for layer in layers
+        if getattr(layer.gate, "z_loss", None) is not None
+    ]
+    for layer in layers:
+        layer.gate.z_loss = None
+    if not terms:
+        return None
+    z = torch.stack([coef * loss for coef, loss in terms]).sum()
+    raw = torch.stack([loss for _, loss in terms]).mean()
+    return z, raw
+
+
 def step_moe_balancing(model: nn.Module) -> Dict[str, torch.Tensor]:
     """Optimizer step boundary: pool counts once, move the biases, score the step."""
     routers = _routers(model)
@@ -191,6 +227,7 @@ def step_moe_balancing(model: nn.Module) -> Dict[str, torch.Tensor]:
         if router.selection_bias is not None:
             router.update_expert_bias(pooled)
         router.tokens_per_expert.zero_()  # the next step's count window
+        router.own_tokens_per_expert.zero_()
     # The step's pooled load: the collapse signal, unlike the per-micro-batch loss.
     per_layer = {
         "step_balance": [dispatch_balance(c) for c in counts],

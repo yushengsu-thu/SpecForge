@@ -23,6 +23,7 @@ from specforge.modeling.draft.moe.balance import (
     step_moe_balancing,
     take_moe_aux_loss,
     take_moe_router_metrics,
+    take_moe_z_loss,
 )
 
 try:
@@ -657,14 +658,19 @@ class OnlineDFlashModel(nn.Module):
     def _take_moe_aux_loss_and_log(
         self, ratio_metrics: Dict[str, object]
     ) -> Optional[torch.Tensor]:
-        """Take the draft's MoE aux loss and router metrics: log the raw values,
-        return the weighted mean."""
+        """Take the draft's MoE aux loss, z-loss and router metrics: log the raw
+        values, return the weighted sum of the two losses."""
+        z_terms = take_moe_z_loss(self.draft_model)
         terms = take_moe_aux_loss(self.draft_model)
         router_metrics = take_moe_router_metrics(self.draft_model)
         if terms is None:
             return None
         weighted_aux, raw_aux = terms
         ratio_metrics["moe/aux_loss"] = (raw_aux.detach(), torch.ones_like(raw_aux))
+        if z_terms is not None:
+            weighted_z, raw_z = z_terms
+            ratio_metrics["moe/z_loss"] = (raw_z.detach(), torch.ones_like(raw_z))
+            weighted_aux = weighted_aux + weighted_z
         for name, value in (router_metrics or {}).items():
             ratio_metrics[name] = (value, torch.ones_like(value))
         return weighted_aux

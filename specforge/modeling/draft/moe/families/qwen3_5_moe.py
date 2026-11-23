@@ -35,6 +35,8 @@ def build_moe(config: PretrainedConfig) -> MoELayer:
             # DeepSeek-style aux-loss-free balancing, moved once per optimizer step.
             selection_bias=bool(dflash_config.get("moe_router_selection_bias", False)),
             bias_update_rate=dflash_config.get("moe_router_bias_update_rate", 0.001),
+            # ST-MoE's router z-loss; 0 (the default) logs moe/z_loss as a metric only.
+            z_loss_coef=dflash_config.get("moe_router_z_loss_coef", 0.0),
         ),
         experts=RoutedExperts(
             config.num_experts,
