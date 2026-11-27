@@ -1747,9 +1747,22 @@ def build_disagg_online_consumer(
             )
             inbox_server_url = os.environ.get("DISAGG_INBOX_SERVER_URL")
             if inbox_server_url:
-                from specforge.runtime.data_plane.http_inbox import InboxHTTPServer
+                from specforge.runtime.data_plane.http_inbox import (
+                    InboxHTTPServer,
+                    InboxHTTPServerProcess,
+                )
 
-                inbox_server = InboxHTTPServer(
+                # DISAGG_INBOX_SERVER_MODE=process hosts the relay in its own
+                # interpreter so a GIL-bound rank 0 (tiny drafts) cannot starve it.
+                inbox_mode = os.environ.get("DISAGG_INBOX_SERVER_MODE", "thread")
+                if inbox_mode not in ("thread", "process"):
+                    raise ValueError(
+                        "DISAGG_INBOX_SERVER_MODE must be 'thread' or 'process'"
+                    )
+                inbox_server_cls = (
+                    InboxHTTPServerProcess if inbox_mode == "process" else InboxHTTPServer
+                )
+                inbox_server = inbox_server_cls(
                     inbox_dir,
                     dp_size,
                     inbox_server_url,

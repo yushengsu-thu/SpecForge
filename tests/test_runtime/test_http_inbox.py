@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import socket
 import tempfile
 import threading
@@ -11,7 +12,11 @@ from unittest import mock
 from urllib.request import Request, urlopen
 
 from specforge.runtime.contracts import FeatureSpec, SampleRef
-from specforge.runtime.data_plane.http_inbox import InboxHTTPServer, RemoteInboxChannel
+from specforge.runtime.data_plane.http_inbox import (
+    InboxHTTPServer,
+    InboxHTTPServerProcess,
+    RemoteInboxChannel,
+)
 from specforge.runtime.data_plane.ref_distributor import RefDistributor
 from specforge.runtime.data_plane.streaming_ref_channel import StreamingRefChannel
 
@@ -129,6 +134,42 @@ class TestHTTPInbox(unittest.TestCase):
     def test_invalid_origin_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "http://host:port"):
             RemoteInboxChannel("https://trainer.example:35900/path", 1)
+
+
+class TestHTTPInboxProcess(TestHTTPInbox):
+    """The same relay contract when the server lives in its own process."""
+
+    def setUp(self):
+        self.work = tempfile.mkdtemp(prefix="http-inbox-proc-")
+        self.path = RefDistributor.inbox_path(self.work, 1)
+        self.local = StreamingRefChannel(self.path)
+        self.origin = f"http://127.0.0.1:{_free_port()}"
+        self.server = InboxHTTPServerProcess(
+            self.work, 2, self.origin, bind_host="127.0.0.1"
+        ).start()
+        self.remote = RemoteInboxChannel(self.origin, 1)
+
+    def test_server_runs_in_a_separate_process_and_stops(self):
+        proc = self.server._proc
+        self.assertIsNotNone(proc)
+        self.assertNotEqual(proc.pid, os.getpid())
+        self.assertIsNone(proc.poll())
+        self.server.stop()
+        self.assertIsNotNone(proc.poll())
+        self.assertIsNone(self.server._proc)
+        # a second stop is a no-op, and the port is released
+        self.server.stop()
+        with self.assertRaises(OSError):
+            urlopen(f"{self.origin}/v1/inboxes/0?offset=0", timeout=1.0)
+
+    def test_startup_failure_is_reported(self):
+        # an address the child cannot bind (TEST-NET-3) makes it exit at startup;
+        # the parent surfaces the child's error instead of waiting for the timeout
+        origin = f"http://127.0.0.1:{_free_port()}"
+        with self.assertRaisesRegex(RuntimeError, "exited at startup"):
+            InboxHTTPServerProcess(
+                self.work, 2, origin, bind_host="203.0.113.1", startup_timeout_s=20.0
+            ).start()
 
 
 if __name__ == "__main__":
