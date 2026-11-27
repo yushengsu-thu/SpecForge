@@ -27,9 +27,13 @@ applied under a per-rank server lock.
 
 from __future__ import annotations
 
+import argparse
 import base64
 import json
 import os
+import signal
+import subprocess
+import sys
 import threading
 import time
 from http import HTTPStatus
@@ -230,6 +234,140 @@ class InboxHTTPServer:
         self._thread = None
 
 
+class InboxHTTPServerProcess:
+    """``InboxHTTPServer`` hosted in its own interpreter process.
+
+    Rank 0 normally serves the inbox from a thread inside the trainer.  With a
+    very small draft (FFN <= 768) the trainer's compiled backward keeps the
+    GIL busy (``cuLaunchKernel`` spins while the launch queue drains behind a
+    pending NCCL kernel), the serving thread starves, every other rank times
+    out on its ref pulls and the collective never completes.  The relay only
+    reads and writes files in ``inbox_dir``, so moving it out of the trainer
+    process removes the coupling without changing the protocol.
+    """
+
+    def __init__(
+        self,
+        inbox_dir: str,
+        dp_size: int,
+        origin: str,
+        *,
+        bind_host: str = "0.0.0.0",
+        startup_timeout_s: float = 60.0,
+    ) -> None:
+        parsed = _validated_origin(origin)
+        if dp_size < 2:
+            raise ValueError("inbox HTTP server requires dp_size >= 2")
+        self.inbox_dir = os.path.abspath(inbox_dir)
+        self.dp_size = dp_size
+        self.origin = origin.rstrip("/")
+        self.bind_host = bind_host
+        self.port = parsed.port
+        self.startup_timeout_s = startup_timeout_s
+        self._proc: subprocess.Popen | None = None
+
+    def _probe_origin(self) -> str:
+        host = "127.0.0.1" if self.bind_host in ("", "0.0.0.0", "::") else self.bind_host
+        return f"http://{host}:{self.port}"
+
+    def start(self) -> InboxHTTPServerProcess:
+        if self._proc is not None:
+            return self
+        cmd = [
+            sys.executable,
+            "-m",
+            "specforge.runtime.data_plane.http_inbox",
+            "--inbox-dir",
+            self.inbox_dir,
+            "--dp-size",
+            str(self.dp_size),
+            "--origin",
+            self.origin,
+            "--bind-host",
+            self.bind_host,
+        ]
+        # The child must import ``specforge`` the same way this process did
+        # (an editable checkout on PYTHONPATH is the common case on the pods).
+        import specforge
+
+        pkg_root = os.path.dirname(os.path.dirname(os.path.abspath(specforge.__file__)))
+        env = dict(os.environ)
+        env["PYTHONPATH"] = os.pathsep.join(
+            [pkg_root] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
+        )
+        self._proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
+        deadline = time.monotonic() + self.startup_timeout_s
+        probe = Request(f"{self._probe_origin()}/v1/inboxes/0?offset=0")
+        while True:
+            if self._proc.poll() is not None:
+                err = (self._proc.stderr.read() if self._proc.stderr else b"").decode(
+                    "utf-8", "replace"
+                )[-2000:]
+                self._proc = None
+                raise RuntimeError(f"inbox HTTP server process exited at startup: {err}")
+            try:
+                with urlopen(probe, timeout=2.0) as response:
+                    if response.status == 200:
+                        return self
+            except (URLError, OSError, TimeoutError):
+                pass
+            if time.monotonic() > deadline:
+                self.stop()
+                raise RuntimeError(
+                    f"inbox HTTP server process did not answer on {self.origin} "
+                    f"within {self.startup_timeout_s:.0f}s"
+                )
+            time.sleep(0.2)
+
+    def stop(self) -> None:
+        proc, self._proc = self._proc, None
+        if proc is None:
+            return
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5.0)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=5.0)
+        if proc.stderr is not None:
+            proc.stderr.close()
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Serve one inbox directory until SIGTERM/SIGINT (used by ``InboxHTTPServerProcess``)."""
+    parser = argparse.ArgumentParser(prog="specforge.runtime.data_plane.http_inbox")
+    parser.add_argument("--inbox-dir", required=True)
+    parser.add_argument("--dp-size", type=int, required=True)
+    parser.add_argument("--origin", required=True)
+    parser.add_argument("--bind-host", default="0.0.0.0")
+    args = parser.parse_args(argv)
+    server = InboxHTTPServer(
+        args.inbox_dir, args.dp_size, args.origin, bind_host=args.bind_host
+    )
+    httpd = server._httpd
+    stop_requested = threading.Event()
+
+    def _stop(_signum, _frame):
+        if not stop_requested.is_set():
+            stop_requested.set()
+            threading.Thread(target=httpd.shutdown, daemon=True).start()
+
+    signal.signal(signal.SIGTERM, _stop)
+    signal.signal(signal.SIGINT, _stop)
+    try:
+        httpd.serve_forever()
+    finally:
+        httpd.server_close()
+    return 0
+
+
 class RemoteInboxChannel:
     """Read one rank inbox and acknowledge it through ``InboxHTTPServer``."""
 
@@ -329,4 +467,8 @@ class RemoteInboxChannel:
         ) from transient_error
 
 
-__all__ = ["InboxHTTPServer", "RemoteInboxChannel"]
+__all__ = ["InboxHTTPServer", "InboxHTTPServerProcess", "RemoteInboxChannel", "main"]
+
+
+if __name__ == "__main__":  # pragma: no cover - exercised through InboxHTTPServerProcess
+    sys.exit(main())
